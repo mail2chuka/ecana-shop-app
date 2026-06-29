@@ -1,0 +1,85 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import { formatNaira, formatDate } from '@/lib/format';
+import toast from 'react-hot-toast';
+
+export default function CustomerDetailPage() {
+  const { id } = useParams();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/customers/${id}/statement`)
+      .then(r => r.json())
+      .then(d => { if (d.success) setData(d.data); else toast.error(d.error); })
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) return <div className="flex justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-gray-800 border-t-transparent rounded-full" /></div>;
+  if (!data) return <p className="text-gray-500">Customer not found</p>;
+
+  const { customer, ledger } = data;
+
+  return (
+    <div>
+      <div className="mb-6 flex justify-between items-start no-print">
+        <div>
+          <h1 className="text-xl font-bold">{customer.name}</h1>
+          {customer.businessName && <p className="text-sm text-gray-500">{customer.businessName}</p>}
+          <p className="text-sm text-gray-500">{customer.phone}</p>
+        </div>
+        <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Statement</button>
+      </div>
+
+      <div className={`rounded-lg p-4 mb-6 ${customer.balance < 0 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+        <p className="text-sm text-gray-600">Current Balance</p>
+        <p className={`text-3xl font-bold ${customer.balance < 0 ? 'text-red-600' : 'text-green-700'}`}>{formatNaira(customer.balance)}</p>
+        {customer.balance < 0 && <p className="text-sm text-red-600 mt-1">Customer owes this amount</p>}
+        {customer.creditLimit && <p className="text-xs text-gray-500 mt-1">Credit limit: {formatNaira(customer.creditLimit)}</p>}
+      </div>
+
+      <div className="bg-white border rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b flex justify-between">
+          <h3 className="font-semibold text-sm">Account Statement</h3>
+          <span className="text-xs text-gray-500">{ledger.length} entries</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-4 py-2 text-left">Date</th>
+                <th className="px-4 py-2 text-left">Ref</th>
+                <th className="px-4 py-2 text-left">Description</th>
+                <th className="px-4 py-2 text-right">Debit</th>
+                <th className="px-4 py-2 text-right">Credit</th>
+                <th className="px-4 py-2 text-right">Balance</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {ledger.map((entry, i) => (
+                <tr key={i}>
+                  <td className="px-4 py-2 whitespace-nowrap">{formatDate(entry.date)}</td>
+                  <td className="px-4 py-2">
+                    {entry.type === 'sale'
+                      ? <Link href={`/admin/sales/${entry.id}`} className="text-blue-600 hover:underline">{entry.ref}</Link>
+                      : <span className="text-gray-600">{entry.ref}</span>}
+                  </td>
+                  <td className="px-4 py-2 text-gray-600 max-w-xs truncate">{entry.description}</td>
+                  <td className="px-4 py-2 text-right text-red-600">{entry.debit > 0 ? formatNaira(entry.debit) : '-'}</td>
+                  <td className="px-4 py-2 text-right text-green-600">{entry.credit > 0 ? formatNaira(entry.credit) : '-'}</td>
+                  <td className={`px-4 py-2 text-right font-medium ${(entry.balance ?? 0) < 0 ? 'text-red-600' : ''}`}>
+                    {entry.balance !== undefined ? formatNaira(entry.balance) : '-'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {ledger.length === 0 && <p className="text-center text-gray-500 py-8">No transactions yet</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
