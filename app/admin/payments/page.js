@@ -76,25 +76,30 @@ export default function PaymentsPage() {
     if (!form.bankName) return toast.error('Enter bank name');
 
     setSubmitting(true);
-    const r = await fetch('/api/payments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...form,
-        amount: Number(form.amount),
-      }),
-    });
-    const d = await r.json();
-    setSubmitting(false);
+    try {
+      const r = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          amount: Number(form.amount),
+        }),
+      });
+      const d = await r.json();
 
-    if (d.success) {
-      toast.success('Payment recorded');
-      setShowModal(false);
-      setForm(blankForm);
-      setCustomerSearch('');
-      setSelectedCustomer(null);
-      load();
-    } else toast.error(d.error);
+      if (d.success) {
+        toast.success('Payment recorded');
+        setShowModal(false);
+        setForm(blankForm);
+        setCustomerSearch('');
+        setSelectedCustomer(null);
+        load();
+      } else toast.error(d.error);
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong, please try again');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const openModal = () => {

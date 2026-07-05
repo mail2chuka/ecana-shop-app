@@ -45,17 +45,22 @@ export default function CementBrandsPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    const url = editing ? `/api/cement-brands/${editing._id}` : '/api/cement-brands';
-    const method = editing ? 'PUT' : 'POST';
-    const body = { ...form, currentPricePerBag: Number(form.currentPricePerBag), bagSize: Number(form.bagSize) };
-    const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    const d = await r.json();
-    setSubmitting(false);
-    if (d.success) {
-      toast.success(editing ? 'Updated' : 'Created');
-      setShowModal(false);
-      load();
-    } else toast.error(d.error);
+    try {
+      const url = editing ? `/api/cement-brands/${editing._id}` : '/api/cement-brands';
+      const method = editing ? 'PUT' : 'POST';
+      const body = { ...form, currentPricePerBag: Number(form.currentPricePerBag), bagSize: Number(form.bagSize) };
+      const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const d = await r.json();
+      if (d.success) {
+        toast.success(editing ? 'Updated' : 'Created');
+        setShowModal(false);
+        load();
+      } else toast.error(d.error);
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong, please try again');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleDelete = async (b) => {
