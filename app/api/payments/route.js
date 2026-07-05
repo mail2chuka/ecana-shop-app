@@ -35,10 +35,14 @@ export async function POST(request) {
     }
     await dbConnect();
     const body = await request.json();
-    const { customer: customerId, amount, method, reference, notes, date } = body;
+    const { customer: customerId, amount, method, depositorName, bankName, reference, notes, date } = body;
     if (!customerId || !amount || amount <= 0 || !method) {
       await mongoSession.abortTransaction();
       return NextResponse.json({ error: 'Customer, amount and method required' }, { status: 400 });
+    }
+    if (!depositorName || !bankName) {
+      await mongoSession.abortTransaction();
+      return NextResponse.json({ error: 'Depositor name and bank name required' }, { status: 400 });
     }
     const customer = await Customer.findById(customerId).session(mongoSession);
     if (!customer) {
@@ -55,6 +59,8 @@ export async function POST(request) {
       transactionNumber,
       amount: Number(amount),
       method,
+      depositorName,
+      bankName,
       reference,
       notes,
       date: date ? new Date(date) : new Date(),
