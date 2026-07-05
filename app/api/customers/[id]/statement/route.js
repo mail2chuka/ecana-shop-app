@@ -24,6 +24,7 @@ export async function GET(request, { params }) {
     const ledger = [];
     sales.forEach(s => ledger.push({
       date: s.date,
+      createdAt: s.createdAt,
       type: 'sale',
       ref: s.saleNumber,
       description: `Sale: ${s.items.map(i => `${i.billQuantity} ${i.itemType === 'cement' ? 'bag' : 'tonne'} ${i.cementBrandName || `${i.quarryName} ${i.size}`}`).join(', ')}`,
@@ -34,6 +35,7 @@ export async function GET(request, { params }) {
     }));
     payments.forEach(p => ledger.push({
       date: p.date,
+      createdAt: p.createdAt,
       type: 'payment',
       ref: p.transactionNumber,
       description: `Payment via ${p.method}`,
@@ -48,7 +50,12 @@ export async function GET(request, { params }) {
       bankName: p.bankName,
       reference: p.reference,
     }));
-    ledger.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Latest first: sort by transaction date, then by creation time to break ties for same-day entries
+    ledger.sort((a, b) => {
+      const dateDiff = new Date(b.date) - new Date(a.date);
+      if (dateDiff !== 0) return dateDiff;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
 
     return NextResponse.json({ success: true, data: { customer, ledger } });
   } catch (e) {
