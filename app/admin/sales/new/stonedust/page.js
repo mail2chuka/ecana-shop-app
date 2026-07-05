@@ -24,14 +24,12 @@ export default function NewAggregateSalePage() {
   const [customerSearch, setCustomerSearch] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCustomerDrop, setShowCustomerDrop] = useState(false);
-  const [items, setItems] = useState([]);
 
-  const [showItemModal, setShowItemModal] = useState(false);
-  const [modalProduct, setModalProduct] = useState('');
-  const [modalBillQty, setModalBillQty] = useState('');
-  const [modalActualQty, setModalActualQty] = useState('');
-  const [modalUnitPrice, setModalUnitPrice] = useState('');
-  const [modalTotal, setModalTotal] = useState('');
+  const [productId, setProductId] = useState('');
+  const [billQty, setBillQty] = useState('');
+  const [actualQty, setActualQty] = useState('');
+  const [unitPrice, setUnitPrice] = useState('');
+  const [total, setTotal] = useState('');
 
   useEffect(() => {
     Promise.all([
@@ -53,46 +51,32 @@ export default function NewAggregateSalePage() {
       )
     : customers.slice(0, 20);
 
+  const selectedProduct = products.find(p => p._id === productId);
+
   const handleUnitPriceChange = (val) => {
-    setModalUnitPrice(val);
-    if (modalBillQty && val) setModalTotal((parseFloat(modalBillQty) * parseFloat(val)).toFixed(2));
+    setUnitPrice(val);
+    if (billQty && val) setTotal((parseFloat(billQty) * parseFloat(val)).toFixed(2));
   };
 
   const handleTotalChange = (val) => {
-    setModalTotal(val);
-    if (modalBillQty && val && parseFloat(modalBillQty) > 0) {
-      setModalUnitPrice((parseFloat(val) / parseFloat(modalBillQty)).toFixed(2));
+    setTotal(val);
+    if (billQty && val && parseFloat(billQty) > 0) {
+      setUnitPrice((parseFloat(val) / parseFloat(billQty)).toFixed(2));
     }
   };
 
-  const addItem = () => {
-    if (!modalProduct || !modalBillQty || !modalUnitPrice) {
-      toast.error('Select product, quantity and price'); return;
-    }
-    const prod = products.find(p => p._id === modalProduct);
-    setItems(prev => [...prev, {
-      itemType: 'stonedust',
-      stoneDustProduct: prod._id,
-      quarryName: prod.quarryName,
-      size: prod.size,
-      billQuantity: parseFloat(modalBillQty),
-      actualQuantity: parseFloat(modalActualQty || modalBillQty),
-      unitPrice: parseFloat(modalUnitPrice),
-      lineTotal: parseFloat(modalTotal || (parseFloat(modalBillQty) * parseFloat(modalUnitPrice))),
-    }]);
-    setShowItemModal(false);
-    setModalProduct(''); setModalBillQty(''); setModalActualQty('');
-    setModalUnitPrice(''); setModalTotal('');
+  const handleBillQtyChange = (val) => {
+    setBillQty(val);
+    if (unitPrice) setTotal((parseFloat(val || 0) * parseFloat(unitPrice)).toFixed(2));
   };
 
-  const removeItem = (i) => setItems(prev => prev.filter((_, idx) => idx !== i));
-  const subtotal = items.reduce((s, i) => s + i.lineTotal, 0);
+  const subtotal = (parseFloat(total) || (parseFloat(billQty) || 0) * (parseFloat(unitPrice) || 0)) || 0;
   const grandTotal = subtotal - (parseFloat(discount) || 0) + (parseFloat(transportFee) || 0);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedCustomer) { toast.error('Select a customer'); return; }
-    if (items.length === 0) { toast.error('Add at least one item'); return; }
+    if (!productId || !billQty || !unitPrice) { toast.error('Select product, quantity and price'); return; }
 
     if (!transportFee || transportFee === '' || transportFee === '0') {
       setShowTransportWarning(true);
@@ -107,6 +91,17 @@ export default function NewAggregateSalePage() {
     setShowTransportWarning(false);
     setSubmitting(true);
     try {
+      const item = {
+        itemType: 'stonedust',
+        stoneDustProduct: selectedProduct._id,
+        quarryName: selectedProduct.quarryName,
+        size: selectedProduct.size,
+        billQuantity: parseFloat(billQty),
+        actualQuantity: parseFloat(actualQty || billQty),
+        unitPrice: parseFloat(unitPrice),
+        lineTotal: parseFloat(total || (parseFloat(billQty) * parseFloat(unitPrice))),
+      };
+
       const res = await fetch('/api/sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -114,7 +109,7 @@ export default function NewAggregateSalePage() {
           saleType: 'stonedust',
           customer: selectedCustomer._id,
           truck: truckId || undefined,
-          date, items,
+          date, items: [item],
           discount: parseFloat(discount) || 0,
           transportFee: parseFloat(transportFee) || 0,
           notes,
@@ -190,37 +185,46 @@ export default function NewAggregateSalePage() {
           )}
         </div>
 
-        <div className="bg-white border rounded-lg p-4">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="font-medium text-sm">Sale Items</h3>
-            <button type="button" onClick={() => setShowItemModal(true)} className="px-3 py-1 bg-gray-900 text-white rounded text-sm">+ Add Item</button>
+        <div className="bg-white border rounded-lg p-4 space-y-4">
+          <h3 className="font-medium text-sm">Product</h3>
+          <div>
+            <label className="block text-sm font-medium mb-1">Quarry Product</label>
+            <select value={productId}
+              onChange={e => {
+                setProductId(e.target.value);
+                const p = products.find(x => x._id === e.target.value);
+                if (p) handleUnitPriceChange(String(p.currentPricePerTonne));
+              }}
+              className="w-full px-3 py-2 border rounded text-sm" required>
+              <option value="">Choose product...</option>
+              {products.map(p => <option key={p._id} value={p._id}>{p.quarryName} — {p.size}</option>)}
+            </select>
           </div>
-          {items.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-4">No items yet.</p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50"><tr>
-                <th className="px-3 py-2 text-left">Product</th>
-                <th className="px-3 py-2 text-right">Bill Qty</th>
-                <th className="px-3 py-2 text-right">Actual Qty</th>
-                <th className="px-3 py-2 text-right">Unit Price</th>
-                <th className="px-3 py-2 text-right">Total</th>
-                <th className="px-3 py-2"></th>
-              </tr></thead>
-              <tbody className="divide-y">
-                {items.map((item, i) => (
-                  <tr key={i}>
-                    <td className="px-3 py-2"><p className="font-medium">{item.quarryName}</p><p className="text-xs text-gray-500">{item.size}</p></td>
-                    <td className="px-3 py-2 text-right">{item.billQuantity}t</td>
-                    <td className="px-3 py-2 text-right">{item.actualQuantity}t</td>
-                    <td className="px-3 py-2 text-right">{formatNaira(item.unitPrice)}/t</td>
-                    <td className="px-3 py-2 text-right font-medium">{formatNaira(item.lineTotal)}</td>
-                    <td className="px-3 py-2 text-right"><button type="button" onClick={() => removeItem(i)} className="text-red-500 text-xs">Remove</button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">Bill Qty (tonnes)</label>
+              <input type="number" step="0.01" min="0.01" value={billQty}
+                onChange={e => handleBillQtyChange(e.target.value)}
+                className="w-full px-3 py-2 border rounded text-sm" placeholder="Customer pays for" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Actual Qty (tonnes)</label>
+              <input type="number" step="0.01" min="0.01" value={actualQty} onChange={e => setActualQty(e.target.value)}
+                className="w-full px-3 py-2 border rounded text-sm" placeholder="From quarry" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">Price per Tonne (₦)</label>
+              <CurrencyInput value={unitPrice} onChange={handleUnitPriceChange}
+                className="w-full px-3 py-2 border rounded text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Total Amount (₦)</label>
+              <CurrencyInput value={total} onChange={handleTotalChange}
+                className="w-full px-3 py-2 border rounded text-sm" />
+            </div>
+          </div>
         </div>
 
         <div className="bg-white border rounded-lg p-4 grid sm:grid-cols-3 gap-4">
@@ -252,54 +256,6 @@ export default function NewAggregateSalePage() {
           </button>
         </div>
       </form>
-
-      {showItemModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">Add Aggregate Item</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Product</label>
-                <select value={modalProduct}
-                  onChange={e => { setModalProduct(e.target.value); const p = products.find(x => x._id === e.target.value); if (p) setModalUnitPrice(String(p.currentPricePerTonne)); }}
-                  className="w-full px-3 py-2 border rounded text-sm">
-                  <option value="">Choose product...</option>
-                  {products.map(p => <option key={p._id} value={p._id}>{p.quarryName} — {p.size}</option>)}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Bill Qty (tonnes)</label>
-                  <input type="number" step="0.01" min="0.01" value={modalBillQty}
-                    onChange={e => { setModalBillQty(e.target.value); if (modalUnitPrice) setModalTotal((parseFloat(e.target.value || 0) * parseFloat(modalUnitPrice)).toFixed(2)); }}
-                    className="w-full px-3 py-2 border rounded text-sm" placeholder="Customer pays for" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Actual Qty (tonnes)</label>
-                  <input type="number" step="0.01" min="0.01" value={modalActualQty} onChange={e => setModalActualQty(e.target.value)}
-                    className="w-full px-3 py-2 border rounded text-sm" placeholder="From quarry" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Price per Tonne (₦)</label>
-                  <CurrencyInput value={modalUnitPrice} onChange={handleUnitPriceChange}
-                    className="w-full px-3 py-2 border rounded text-sm" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Total Amount (₦)</label>
-                  <CurrencyInput value={modalTotal} onChange={handleTotalChange}
-                    className="w-full px-3 py-2 border rounded text-sm" />
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-3 mt-5">
-              <button onClick={() => setShowItemModal(false)} className="flex-1 px-4 py-2 border rounded text-sm">Cancel</button>
-              <button onClick={addItem} className="flex-1 px-4 py-2 bg-gray-900 text-white rounded text-sm">Add</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Transport Fee Warning Modal */}
       {showTransportWarning && (
