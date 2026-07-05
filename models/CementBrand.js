@@ -6,8 +6,7 @@ const CementBrandSchema = new mongoose.Schema({
   grade: String,
   bagSize: { type: Number, default: 50 },
   currentPricePerBag: { type: Number, required: true, default: 0 },
-  supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },
-  supplierName: String,
+  depotName: String,
   isActive: { type: Boolean, default: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });

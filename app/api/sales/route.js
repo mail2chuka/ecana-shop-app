@@ -9,6 +9,7 @@ import Customer from '@/models/Customer';
 import Truck from '@/models/Truck';
 import StoneDustProduct from '@/models/StoneDustProduct';
 import { logAudit } from '@/lib/audit';
+import { generateTransactionNumber } from '@/lib/transaction';
 
 async function nextSaleNumber() {
   const year = new Date().getFullYear();
@@ -138,12 +139,12 @@ export async function POST(request) {
       } else if (item.itemType === 'stonedust') {
         if (!item.stoneDustProduct) {
           await mongoSession.abortTransaction();
-          return NextResponse.json({ error: 'Stone dust item must reference a product' }, { status: 400 });
+          return NextResponse.json({ error: 'Aggregate item must reference a product' }, { status: 400 });
         }
         const product = await StoneDustProduct.findById(item.stoneDustProduct).session(mongoSession);
         if (!product) {
           await mongoSession.abortTransaction();
-          return NextResponse.json({ error: 'Stone dust product not found' }, { status: 404 });
+          return NextResponse.json({ error: 'Aggregate product not found' }, { status: 404 });
         }
         processedItems.push({
           itemType: 'stonedust',
@@ -181,9 +182,11 @@ export async function POST(request) {
     }
 
     const saleNumber = await nextSaleNumber();
+    const transactionNumber = await generateTransactionNumber('SAL');
 
     const sale = await Sale.create([{
       saleNumber,
+      transactionNumber,
       saleType,
       customer: customer._id,
       customerName: customer.name,

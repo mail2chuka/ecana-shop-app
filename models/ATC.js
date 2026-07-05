@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const ATCSchema = new mongoose.Schema({
   atcNumber: { type: String, required: true, unique: true, trim: true },
+  transactionNumber: { type: String, required: true, unique: true },
   cementBrand: { type: mongoose.Schema.Types.ObjectId, ref: 'CementBrand', required: true },
   cementBrandName: String,
   supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },

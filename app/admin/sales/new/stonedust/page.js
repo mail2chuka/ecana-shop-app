@@ -5,13 +5,15 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira } from '@/lib/format';
 
-export default function NewStoneDustSalePage() {
+export default function NewAggregateSalePage() {
   const router = useRouter();
   const [products, setProducts] = useState([]);
   const [trucks, setTrucks] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showTransportWarning, setShowTransportWarning] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState(false);
 
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [truckId, setTruckId] = useState('');
@@ -86,10 +88,22 @@ export default function NewStoneDustSalePage() {
   const subtotal = items.reduce((s, i) => s + i.lineTotal, 0);
   const grandTotal = subtotal - (parseFloat(discount) || 0) + (parseFloat(transportFee) || 0);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedCustomer) { toast.error('Select a customer'); return; }
     if (items.length === 0) { toast.error('Add at least one item'); return; }
+
+    if (!transportFee || transportFee === '' || transportFee === '0') {
+      setShowTransportWarning(true);
+      setPendingSubmit(true);
+      return;
+    }
+
+    proceedWithSubmit();
+  };
+
+  const proceedWithSubmit = async () => {
+    setShowTransportWarning(false);
     setSubmitting(true);
     const res = await fetch('/api/sales', {
       method: 'POST',
@@ -106,6 +120,7 @@ export default function NewStoneDustSalePage() {
     });
     const data = await res.json();
     setSubmitting(false);
+    setPendingSubmit(false);
     if (data.success) {
       toast.success(`Sale ${data.data.saleNumber} created`);
       router.push(`/admin/sales/${data.data._id}`);
@@ -119,7 +134,7 @@ export default function NewStoneDustSalePage() {
   return (
     <div className="max-w-3xl">
       <div className="mb-6">
-        <h1 className="text-xl font-bold">New Stone Dust Sale</h1>
+        <h1 className="text-xl font-bold">New Aggregate Sale</h1>
         <p className="text-sm text-gray-500">Record a quarry product delivery</p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -235,7 +250,7 @@ export default function NewStoneDustSalePage() {
       {showItemModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">Add Stone Dust Item</h2>
+            <h2 className="text-lg font-bold mb-4">Add Aggregate Item</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Product</label>
@@ -275,6 +290,39 @@ export default function NewStoneDustSalePage() {
             <div className="flex gap-3 mt-5">
               <button onClick={() => setShowItemModal(false)} className="flex-1 px-4 py-2 border rounded text-sm">Cancel</button>
               <button onClick={addItem} className="flex-1 px-4 py-2 bg-gray-900 text-white rounded text-sm">Add</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Transport Fee Warning Modal */}
+      {showTransportWarning && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold mb-3 text-amber-600">⚠ Transport Fee Not Entered</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              You haven't entered a transport fee. This is fine if transportation is complimentary, but we want to make sure it wasn't missed by mistake.
+            </p>
+            <p className="text-sm font-medium text-gray-700 mb-6">Do you want to:</p>
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowTransportWarning(false);
+                  setPendingSubmit(false);
+                }}
+                className="w-full px-4 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50 font-medium"
+              >
+                Go Back & Add Transport Fee
+              </button>
+              <button
+                type="button"
+                onClick={proceedWithSubmit}
+                disabled={submitting}
+                className="w-full px-4 py-2 bg-amber-600 text-white rounded text-sm hover:bg-amber-700 font-medium disabled:opacity-50"
+              >
+                {submitting ? 'Submitting...' : 'Continue Without Fee'}
+              </button>
             </div>
           </div>
         </div>

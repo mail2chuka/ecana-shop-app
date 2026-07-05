@@ -73,7 +73,7 @@ export default function ProductReportPage() {
 
       {stone.length > 0 && (
         <div className="bg-white border rounded-lg overflow-hidden">
-          <div className="px-4 py-3 border-b"><h3 className="font-semibold text-sm">Stone Dust / Quarry Products</h3></div>
+          <div className="px-4 py-3 border-b"><h3 className="font-semibold text-sm">Aggregate / Quarry Products</h3></div>
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>

@@ -47,7 +47,7 @@ export default function SalesPage() {
         action={
           <div className="flex gap-2">
             <Link href="/admin/sales/new/cement" className="px-3 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">New Cement Sale</Link>
-            <Link href="/admin/sales/new/stonedust" className="px-3 py-2 bg-gray-700 text-white rounded text-sm hover:bg-gray-800">New Stone Dust Sale</Link>
+            <Link href="/admin/sales/new/stonedust" className="px-3 py-2 bg-gray-700 text-white rounded text-sm hover:bg-gray-800">New Aggregate Sale</Link>
           </div>
         }
       />
@@ -59,7 +59,7 @@ export default function SalesPage() {
             <select value={filter.type} onChange={e => setFilter({ ...filter, type: e.target.value })} className={inputCls}>
               <option value="">All types</option>
               <option value="cement">Cement</option>
-              <option value="stonedust">Stone dust</option>
+              <option value="stonedust">Aggregate</option>
               <option value="mixed">Mixed</option>
             </select>
           </div>

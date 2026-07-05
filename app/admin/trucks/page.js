@@ -111,7 +111,7 @@ export default function TrucksPage() {
           <Field label="Truck type" required>
             <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className={inputCls} required disabled={editing}>
               <option value="cement">Cement (Bags)</option>
-              <option value="stonedust">Stone Dust (Tonnes)</option>
+              <option value="stonedust">Aggregate (Tonnes)</option>
             </select>
           </Field>
           <Field label="Capacity (tonnes)">

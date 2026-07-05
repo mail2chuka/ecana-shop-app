@@ -6,6 +6,7 @@ import ATC from '@/models/ATC';
 import CementBrand from '@/models/CementBrand';
 import Supplier from '@/models/Supplier';
 import { logAudit } from '@/lib/audit';
+import { generateTransactionNumber } from '@/lib/transaction';
 
 export async function GET(request) {
   try {
@@ -57,8 +58,11 @@ export async function POST(request) {
       if (s) supplierData = { supplier: s._id, supplierName: s.name };
     }
 
+    const transactionNumber = await generateTransactionNumber('ATC');
+
     const atc = await ATC.create({
       atcNumber: atcNumber.trim(),
+      transactionNumber,
       cementBrand,
       cementBrandName: brand.name,
       ...supplierData,

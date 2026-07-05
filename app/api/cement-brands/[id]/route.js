@@ -14,8 +14,15 @@ export async function PUT(request, { params }) {
     const body = await request.json();
     const before = await CementBrand.findById(id);
     if (!before) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    // Don't allow direct price change here (use /price endpoint for history)
     delete body.currentPricePerBag;
+
+    if (body.depot) {
+      body.depotName = body.depot;
+    } else {
+      body.depotName = null;
+    }
+    delete body.depot;
+
     const updated = await CementBrand.findByIdAndUpdate(id, body, { new: true });
     await logAudit({ userId: session.user.id, userName: session.user.name, action: 'updated', entity: 'CementBrand', entityId: id, before, after: updated });
     return NextResponse.json({ success: true, data: updated });

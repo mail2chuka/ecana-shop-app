@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Loader, PageHeader, Card, StatusPill, EmptyRow, Modal, FormButtons, Field, inputCls } from '@/components/ui';
 import toast from 'react-hot-toast';
 
-const blankForm = { name: '', type: 'cement_depot', address: '', phone: '' };
+const blankForm = { name: '', type: 'quarry', address: '', phone: '' };
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState([]);
@@ -15,7 +15,7 @@ export default function SuppliersPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const load = async () => {
-    const r = await fetch('/api/suppliers');
+    const r = await fetch('/api/suppliers?type=quarry');
     const d = await r.json();
     if (d.success) setSuppliers(d.data);
     setLoading(false);
@@ -65,9 +65,9 @@ export default function SuppliersPage() {
   return (
     <div>
       <PageHeader
-        title="Suppliers"
-        subtitle="Cement depots and quarries you buy from"
-        action={<button onClick={openCreate} className="px-4 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">Add Supplier</button>}
+        title="Quarry"
+        subtitle="Quarries you buy aggregate products from"
+        action={<button onClick={openCreate} className="px-4 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">Add Quarry</button>}
       />
 
       <Card className="overflow-hidden">
@@ -75,20 +75,16 @@ export default function SuppliersPage() {
           <thead className="bg-gray-50 border-b">
             <tr>
               <th className="px-4 py-3 text-left font-medium text-gray-500">Name</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Type</th>
               <th className="px-4 py-3 text-left font-medium text-gray-500">Phone</th>
               <th className="px-4 py-3 text-left font-medium text-gray-500">Address</th>
               <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
-            {suppliers.length === 0 && <EmptyRow colSpan={5} text="No suppliers yet" />}
+            {suppliers.length === 0 && <EmptyRow colSpan={4} text="No quarries added yet" />}
             {suppliers.map(s => (
               <tr key={s._id}>
                 <td className="px-4 py-3 font-medium">{s.name}</td>
-                <td className="px-4 py-3">
-                  <StatusPill status={s.type === 'cement_depot' ? 'Cement Depot' : 'Quarry'} color={s.type === 'cement_depot' ? 'blue' : 'yellow'} />
-                </td>
                 <td className="px-4 py-3 text-gray-500">{s.phone || '-'}</td>
                 <td className="px-4 py-3 text-gray-500">{s.address || '-'}</td>
                 <td className="px-4 py-3 text-right">
@@ -101,16 +97,10 @@ export default function SuppliersPage() {
         </table>
       </Card>
 
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Supplier' : 'Add Supplier'}>
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Quarry' : 'Add Quarry'}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Field label="Name" required>
             <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputCls} required />
-          </Field>
-          <Field label="Type" required>
-            <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className={inputCls}>
-              <option value="cement_depot">Cement Depot</option>
-              <option value="quarry">Quarry</option>
-            </select>
           </Field>
           <Field label="Phone">
             <input type="text" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className={inputCls} />

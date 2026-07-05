@@ -11,9 +11,9 @@ const menu = [
   {
     group: 'Setup',
     items: [
-      { label: 'Suppliers', href: '/admin/suppliers' },
+      { label: 'Quarry', href: '/admin/suppliers' },
       { label: 'Cement Brands', href: '/admin/cement-brands' },
-      { label: 'Stone Dust', href: '/admin/stonedust' },
+      { label: 'Aggregate', href: '/admin/stonedust' },
       { label: 'Trucks', href: '/admin/trucks' },
       { label: 'Customers', href: '/admin/customers' },
     ],
@@ -24,7 +24,9 @@ const menu = [
       { label: 'ATCs', href: '/admin/atcs' },
       { label: 'Sales', href: '/admin/sales' },
       { label: 'New Cement Sale', href: '/admin/sales/new/cement' },
-      { label: 'New Stone Dust Sale', href: '/admin/sales/new/stonedust' },
+      { label: 'New Aggregate Sale', href: '/admin/sales/new/stonedust' },
+      { label: 'Walk-in Cement Sales', href: '/admin/sales/walk-in' },
+      { label: 'Shop Inventory', href: '/admin/shop-inventory' },
       { label: 'Customer Payments', href: '/admin/payments' },
     ],
   },
@@ -36,6 +38,7 @@ const menu = [
       { label: 'Per Customer', href: '/admin/reports/customers' },
       { label: 'Per Product', href: '/admin/reports/products' },
       { label: 'Truck Utilization', href: '/admin/reports/trucks' },
+      { label: 'Walk-in Sales', href: '/admin/reports/walk-in' },
     ],
   },
   { label: 'Audit Log', href: '/admin/audit-log' },
@@ -92,7 +95,7 @@ export default function AdminShell({ children }) {
         }`}
       >
         <div className="flex items-center justify-between h-14 px-4 border-b border-gray-800">
-          <span className="font-bold text-white">Ecana Materials</span>
+          <span className="font-bold text-white">GSM</span>
           <button className="lg:hidden text-gray-400" onClick={() => setOpen(false)}>
             <FiX size={20} />
           </button>
@@ -131,7 +134,7 @@ export default function AdminShell({ children }) {
           <button onClick={() => setOpen(true)} className="p-2 -ml-2 text-gray-600">
             <FiMenu size={20} />
           </button>
-          <span className="ml-2 font-semibold">Ecana Materials</span>
+          <span className="ml-2 font-semibold text-sm">GSM - Goods Sales and Management</span>
         </header>
         <main className="flex-1 p-4 lg:p-6 overflow-auto">{children}</main>
       </div>

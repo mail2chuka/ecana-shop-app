@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 
 const blankForm = { quarry: '', size: '', currentPricePerTonne: '' };
 
-export default function StoneDustPage() {
+export default function AggregatePage() {
   const [products, setProducts] = useState([]);
   const [quarries, setQuarries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,7 +76,7 @@ export default function StoneDustPage() {
   return (
     <div>
       <PageHeader
-        title="Stone Dust Products"
+        title="Aggregate Products"
         subtitle="Quarry products defined by quarry + size + per-tonne price"
         action={
           quarries.length === 0
@@ -96,7 +96,7 @@ export default function StoneDustPage() {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {products.length === 0 && <EmptyRow colSpan={4} text="No stone dust products" />}
+            {products.length === 0 && <EmptyRow colSpan={4} text="No aggregate products" />}
             {products.map(p => (
               <tr key={p._id}>
                 <td className="px-4 py-3 font-medium">{p.quarryName}</td>
@@ -113,7 +113,7 @@ export default function StoneDustPage() {
         </table>
       </Card>
 
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Stone Dust' : 'Add Stone Dust'}>
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Aggregate' : 'Add Aggregate'}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Field label="Quarry" required>
             <select value={form.quarry} onChange={e => setForm({ ...form, quarry: e.target.value })} className={inputCls} required disabled={editing}>

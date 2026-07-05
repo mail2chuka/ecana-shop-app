@@ -7,7 +7,7 @@ const SaleItemSchema = new mongoose.Schema({
   atcNumber: String,
   cementBrand: { type: mongoose.Schema.Types.ObjectId, ref: 'CementBrand' },
   cementBrandName: String,
-  // Stone dust-specific
+  // Aggregate-specific
   stoneDustProduct: { type: mongoose.Schema.Types.ObjectId, ref: 'StoneDustProduct' },
   quarryName: String,
   size: String,
@@ -20,6 +20,7 @@ const SaleItemSchema = new mongoose.Schema({
 
 const SaleSchema = new mongoose.Schema({
   saleNumber: { type: String, required: true, unique: true },
+  transactionNumber: { type: String, required: true, unique: true },
   saleType: { type: String, enum: ['cement', 'stonedust', 'mixed'], required: true },
 
   customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },

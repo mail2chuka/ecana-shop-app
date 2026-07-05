@@ -5,11 +5,10 @@ import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls
 import { formatNaira } from '@/lib/format';
 import toast from 'react-hot-toast';
 
-const blankForm = { name: '', abbreviation: '', grade: '', bagSize: 50, currentPricePerBag: '', supplier: '' };
+const blankForm = { name: '', abbreviation: '', grade: '', bagSize: 50, currentPricePerBag: '', depot: '' };
 
 export default function CementBrandsPage() {
   const [brands, setBrands] = useState([]);
-  const [depots, setDepots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -21,12 +20,8 @@ export default function CementBrandsPage() {
   const [priceReason, setPriceReason] = useState('');
 
   const load = async () => {
-    const [b, s] = await Promise.all([
-      fetch('/api/cement-brands').then(r => r.json()),
-      fetch('/api/suppliers?type=cement_depot').then(r => r.json()),
-    ]);
+    const b = await fetch('/api/cement-brands').then(r => r.json());
     if (b.success) setBrands(b.data);
-    if (s.success) setDepots(s.data);
     setLoading(false);
   };
 
@@ -42,7 +37,7 @@ export default function CementBrandsPage() {
     setEditing(b);
     setForm({
       name: b.name, abbreviation: b.abbreviation || '', grade: b.grade || '', bagSize: b.bagSize,
-      currentPricePerBag: b.currentPricePerBag, supplier: b.supplier || '',
+      currentPricePerBag: b.currentPricePerBag, depot: b.depotName || '',
     });
     setShowModal(true);
   };
@@ -119,7 +114,7 @@ export default function CementBrandsPage() {
                 <td className="px-4 py-3 font-medium">{b.name}</td>
                 <td className="px-4 py-3 font-mono font-bold text-gray-900">{b.abbreviation || '-'}</td>
                 <td className="px-4 py-3 text-gray-500">{b.grade || '-'}</td>
-                <td className="px-4 py-3 text-gray-500">{b.supplierName || '-'}</td>
+                <td className="px-4 py-3 text-gray-500">{b.depotName || '-'}</td>
                 <td className="px-4 py-3 text-right">{b.bagSize}kg</td>
                 <td className="px-4 py-3 text-right font-medium">{formatNaira(b.currentPricePerBag)}</td>
                 <td className="px-4 py-3 text-right">
@@ -145,11 +140,8 @@ export default function CementBrandsPage() {
           <Field label="Grade">
             <input type="text" value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value })} className={inputCls} placeholder="e.g. 42.5N" />
           </Field>
-          <Field label="Depot (supplier)">
-            <select value={form.supplier} onChange={e => setForm({ ...form, supplier: e.target.value })} className={inputCls}>
-              <option value="">— None —</option>
-              {depots.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
-            </select>
+          <Field label="Depot (optional)">
+            <input type="text" value={form.depot} onChange={e => setForm({ ...form, depot: e.target.value })} className={inputCls} placeholder="e.g. Central Warehouse, Port Depot" />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Bag size (kg)">

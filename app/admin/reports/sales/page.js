@@ -65,7 +65,7 @@ export default function SalesReportPage() {
               <p className="text-xl font-bold mt-1">{formatNaira(cementTotal)}</p>
             </div>
             <div className="bg-white border rounded-lg p-4">
-              <p className="text-xs text-gray-500">Stone Dust Sales</p>
+              <p className="text-xs text-gray-500">Aggregate Sales</p>
               <p className="text-xl font-bold mt-1">{formatNaira(stoneTotal)}</p>
             </div>
             <div className="bg-white border rounded-lg p-4">

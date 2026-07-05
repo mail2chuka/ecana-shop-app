@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import Customer from '@/models/Customer';
 import CustomerPayment from '@/models/CustomerPayment';
 import { logAudit } from '@/lib/audit';
+import { generateTransactionNumber } from '@/lib/transaction';
 
 export async function GET(request) {
   try {
@@ -46,10 +47,12 @@ export async function POST(request) {
     }
     const balanceBefore = customer.balance;
     const balanceAfter = balanceBefore + Number(amount);
+    const transactionNumber = await generateTransactionNumber('PAY');
 
     const payment = await CustomerPayment.create([{
       customer: customerId,
       customerName: customer.name,
+      transactionNumber,
       amount: Number(amount),
       method,
       reference,

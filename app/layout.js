@@ -5,7 +5,7 @@ import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata = { title: 'Ecana Materials', description: 'Building materials sales & inventory' };
+export const metadata = { title: 'GSM - Goods Sales and Management', description: 'Sales and inventory management system' };
 
 export default function RootLayout({ children }) {
   return (

@@ -35,12 +35,18 @@ export async function GET(request, { params }) {
     payments.forEach(p => ledger.push({
       date: p.date,
       type: 'payment',
-      ref: p.reference || p.method,
+      ref: p.transactionNumber,
       description: `Payment via ${p.method}`,
       debit: 0,
       credit: p.amount,
       balance: p.balanceAfter,
       id: p._id,
+      transactionNumber: p.transactionNumber,
+      method: p.method,
+      amount: p.amount,
+      depositorName: p.depositorName,
+      bankName: p.bankName,
+      reference: p.reference,
     }));
     ledger.sort((a, b) => new Date(b.date) - new Date(a.date));
 

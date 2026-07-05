@@ -55,7 +55,7 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-500 mt-1">Sell cement from an active ATC</p>
         </Link>
         <Link href="/admin/sales/new/stonedust" className="block bg-white border rounded-lg p-4 hover:bg-gray-50">
-          <h3 className="font-medium">New Stone Dust Sale</h3>
+          <h3 className="font-medium">New Aggregate Sale</h3>
           <p className="text-sm text-gray-500 mt-1">Record a quarry product sale</p>
         </Link>
         <Link href="/admin/atcs" className="block bg-white border rounded-lg p-4 hover:bg-gray-50">

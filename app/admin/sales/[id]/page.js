@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
 
@@ -62,6 +63,7 @@ export default function SaleDetailPage() {
           <p className="text-sm text-gray-500">{formatDateTime(sale.date)} · {sale.saleType}</p>
         </div>
         <div className="flex gap-2">
+          <Link href={`/admin/sales/${id}/invoice`} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">View Invoice</Link>
           <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Invoice</button>
           {sale.status === 'active' && (
             <button onClick={() => setShowCancel(true)} className="px-4 py-2 border border-red-300 text-red-600 rounded text-sm hover:bg-red-50">Cancel Sale</button>
@@ -83,7 +85,7 @@ export default function SaleDetailPage() {
           <div className="flex justify-between">
             <div>
               <h2 className="text-2xl font-bold">INVOICE</h2>
-              <p className="text-sm text-gray-500 mt-1">Ecana Materials</p>
+              <p className="text-sm text-gray-500 mt-1">Ecana Family Limited</p>
             </div>
             <div className="text-right text-sm">
               <p className="font-bold text-lg">{sale.saleNumber}</p>
@@ -134,7 +136,7 @@ export default function SaleDetailPage() {
                   ) : (
                     <>
                       <p className="font-medium">{item.quarryName} — {item.size}</p>
-                      <p className="text-xs text-gray-500">Stone Dust / Quarry Product</p>
+                      <p className="text-xs text-gray-500">Aggregate / Quarry Product</p>
                     </>
                   )}
                 </td>
