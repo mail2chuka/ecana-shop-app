@@ -4,7 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FiMenu, FiX, FiLogOut, FiChevronDown } from 'react-icons/fi';
+import { FiMenu, FiX, FiLogOut, FiChevronDown, FiArrowLeft } from 'react-icons/fi';
 
 const menu = [
   { label: 'Dashboard', href: '/admin' },
@@ -136,6 +136,14 @@ export default function AdminShell({ children }) {
           </button>
           <span className="ml-2 font-semibold text-sm">GSM - Goods Sales and Management</span>
         </header>
+        <div className="h-12 bg-white border-b flex items-center px-4 lg:px-6 no-print">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+          >
+            <FiArrowLeft size={16} /> Back
+          </button>
+        </div>
         <main className="flex-1 p-4 lg:p-6 overflow-auto">{children}</main>
       </div>
     </div>
