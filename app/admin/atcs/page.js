@@ -54,12 +54,17 @@ export default function ATCsPage() {
   const handleCreate = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    const body = { ...form, bagsPaidFor: Number(form.bagsPaidFor) };
-    const r = await fetch('/api/atcs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    const d = await r.json();
-    setSubmitting(false);
-    if (d.success) { toast.success('ATC recorded'); setShowCreate(false); setForm(blankForm); load(); }
-    else toast.error(d.error);
+    try {
+      const body = { ...form, bagsPaidFor: Number(form.bagsPaidFor) };
+      const r = await fetch('/api/atcs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const d = await r.json();
+      if (d.success) { toast.success('ATC recorded'); setShowCreate(false); setForm(blankForm); load(); }
+      else toast.error(d.error);
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong, please try again');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleAssign = async (e) => {
