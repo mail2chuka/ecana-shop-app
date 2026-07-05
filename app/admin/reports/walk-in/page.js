@@ -6,6 +6,7 @@ import { formatNaira, formatDate } from '@/lib/format';
 
 export default function WalkInReportPage() {
   const [rows, setRows] = useState([]);
+  const [cementBrands, setCementBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
@@ -13,10 +14,18 @@ export default function WalkInReportPage() {
     return d.toISOString().split('T')[0];
   });
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [brandId, setBrandId] = useState('');
+  const [sortDir, setSortDir] = useState('desc');
 
-  const fetchData = async () => {
+  useEffect(() => {
+    fetch('/api/cement-brands').then(r => r.json()).then(b => { if (b.success) setCementBrands(b.data); });
+  }, []);
+
+  const fetchData = async (overrideSortDir) => {
     setLoading(true);
-    const res = await fetch(`/api/reports/walk-in?startDate=${startDate}&endDate=${endDate}`);
+    const params = new URLSearchParams({ startDate, endDate, sortDir: overrideSortDir || sortDir });
+    if (brandId) params.set('brandId', brandId);
+    const res = await fetch(`/api/reports/walk-in?${params.toString()}`);
     const d = await res.json();
     if (d.success) setRows(d.data);
     setLoading(false);
@@ -25,6 +34,12 @@ export default function WalkInReportPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const toggleSort = () => {
+    const next = sortDir === 'desc' ? 'asc' : 'desc';
+    setSortDir(next);
+    fetchData(next);
+  };
 
   const totalSales = rows.reduce((s, r) => s + r.total, 0);
   const totalBags = rows.reduce((s, r) => s + r.bagsSold, 0);
@@ -35,7 +50,7 @@ export default function WalkInReportPage() {
 
       {/* Filters */}
       <div className="bg-white border rounded-lg p-4 mb-6">
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-4 gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
@@ -44,8 +59,15 @@ export default function WalkInReportPage() {
             <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
           </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Brand</label>
+            <select value={brandId} onChange={e => setBrandId(e.target.value)} className="w-full px-3 py-2 border rounded text-sm">
+              <option value="">All brands</option>
+              {cementBrands.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
+            </select>
+          </div>
           <div className="flex items-end">
-            <button onClick={fetchData} disabled={loading} className="w-full py-2 bg-gray-900 text-white rounded text-sm disabled:opacity-50">
+            <button onClick={() => fetchData()} disabled={loading} className="w-full py-2 bg-gray-900 text-white rounded text-sm disabled:opacity-50">
               {loading ? 'Loading...' : 'Run'}
             </button>
           </div>
@@ -73,7 +95,11 @@ export default function WalkInReportPage() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b">
             <tr>
-              <th className="px-4 py-2 text-left">Date</th>
+              <th className="px-4 py-2 text-left">
+                <button onClick={toggleSort} className="flex items-center gap-1 font-medium hover:text-gray-900">
+                  Date {sortDir === 'desc' ? '↓' : '↑'}
+                </button>
+              </th>
               <th className="px-4 py-2 text-left">ATC</th>
               <th className="px-4 py-2 text-left">Brand</th>
               <th className="px-4 py-2 text-right">Bags</th>

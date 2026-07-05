@@ -5,15 +5,30 @@ import { formatNaira } from '@/lib/format';
 
 export default function ProductReportPage() {
   const [rows, setRows] = useState([]);
+  const [cementBrands, setCementBrands] = useState([]);
+  const [stoneProducts, setStoneProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState(() => {
     const d = new Date(); d.setDate(1); return d.toISOString().split('T')[0];
   });
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [brandId, setBrandId] = useState('');
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/cement-brands').then(r => r.json()),
+      fetch('/api/stonedust').then(r => r.json()),
+    ]).then(([b, p]) => {
+      if (b.success) setCementBrands(b.data);
+      if (p.success) setStoneProducts(p.data);
+    });
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
-    const res = await fetch(`/api/reports/products?startDate=${startDate}&endDate=${endDate}`);
+    const params = new URLSearchParams({ startDate, endDate });
+    if (brandId) params.set('brandId', brandId);
+    const res = await fetch(`/api/reports/products?${params.toString()}`);
     const d = await res.json();
     if (d.success) setRows(d.data);
     setLoading(false);
@@ -28,7 +43,7 @@ export default function ProductReportPage() {
     <div>
       <h1 className="text-xl font-bold mb-6">Sales Per Product</h1>
       <div className="bg-white border rounded-lg p-4 mb-6">
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-4 gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
@@ -36,6 +51,22 @@ export default function ProductReportPage() {
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Brand / Product</label>
+            <select value={brandId} onChange={e => setBrandId(e.target.value)} className="w-full px-3 py-2 border rounded text-sm">
+              <option value="">All brands / products</option>
+              {cementBrands.length > 0 && (
+                <optgroup label="Cement Brands">
+                  {cementBrands.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
+                </optgroup>
+              )}
+              {stoneProducts.length > 0 && (
+                <optgroup label="Aggregate / Quarry Products">
+                  {stoneProducts.map(p => <option key={p._id} value={p._id}>{p.quarryName} — {p.size}</option>)}
+                </optgroup>
+              )}
+            </select>
           </div>
           <div className="flex items-end">
             <button onClick={fetchData} disabled={loading} className="w-full py-2 bg-gray-900 text-white rounded text-sm disabled:opacity-50">

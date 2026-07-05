@@ -6,19 +6,41 @@ import { formatNaira, formatDate } from '@/lib/format';
 export default function SalesReportPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [cementBrands, setCementBrands] = useState([]);
+  const [stoneProducts, setStoneProducts] = useState([]);
   const [startDate, setStartDate] = useState(() => {
     const d = new Date(); d.setDate(1);
     return d.toISOString().split('T')[0];
   });
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [groupBy, setGroupBy] = useState('day');
+  const [brandId, setBrandId] = useState('');
+  const [sortDir, setSortDir] = useState('desc');
 
-  const fetchReport = async () => {
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/cement-brands').then(r => r.json()),
+      fetch('/api/stonedust').then(r => r.json()),
+    ]).then(([b, p]) => {
+      if (b.success) setCementBrands(b.data);
+      if (p.success) setStoneProducts(p.data);
+    });
+  }, []);
+
+  const fetchReport = async (overrideSortDir) => {
     setLoading(true);
-    const res = await fetch(`/api/reports/sales?startDate=${startDate}&endDate=${endDate}&groupBy=${groupBy}`);
+    const params = new URLSearchParams({ startDate, endDate, groupBy, sortDir: overrideSortDir || sortDir });
+    if (brandId) params.set('brandId', brandId);
+    const res = await fetch(`/api/reports/sales?${params.toString()}`);
     const d = await res.json();
     if (d.success) setData(d.data);
     setLoading(false);
+  };
+
+  const toggleSort = () => {
+    const next = sortDir === 'desc' ? 'asc' : 'desc';
+    setSortDir(next);
+    fetchReport(next);
   };
 
   useEffect(() => { fetchReport(); }, []);
@@ -49,11 +71,27 @@ export default function SalesReportPage() {
               <option value="year">Year</option>
             </select>
           </div>
-          <div className="flex items-end">
-            <button onClick={fetchReport} disabled={loading} className="w-full py-2 bg-gray-900 text-white rounded text-sm disabled:opacity-50">
-              {loading ? 'Loading...' : 'Run Report'}
-            </button>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Brand / Product</label>
+            <select value={brandId} onChange={e => setBrandId(e.target.value)} className="w-full px-3 py-2 border rounded text-sm">
+              <option value="">All brands / products</option>
+              {cementBrands.length > 0 && (
+                <optgroup label="Cement Brands">
+                  {cementBrands.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
+                </optgroup>
+              )}
+              {stoneProducts.length > 0 && (
+                <optgroup label="Aggregate / Quarry Products">
+                  {stoneProducts.map(p => <option key={p._id} value={p._id}>{p.quarryName} — {p.size}</option>)}
+                </optgroup>
+              )}
+            </select>
           </div>
+        </div>
+        <div className="mt-4">
+          <button onClick={fetchReport} disabled={loading} className="px-6 py-2 bg-gray-900 text-white rounded text-sm disabled:opacity-50">
+            {loading ? 'Loading...' : 'Run Report'}
+          </button>
         </div>
       </div>
 
@@ -78,7 +116,14 @@ export default function SalesReportPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="px-4 py-2 text-left">Period</th>
+                  <th className="px-4 py-2 text-left">
+                    <button
+                      onClick={toggleSort}
+                      className="flex items-center gap-1 font-medium hover:text-gray-900"
+                    >
+                      Period {sortDir === 'desc' ? '↓' : '↑'}
+                    </button>
+                  </th>
                   <th className="px-4 py-2 text-left">Type</th>
                   <th className="px-4 py-2 text-right">Transactions</th>
                   <th className="px-4 py-2 text-right">Total</th>

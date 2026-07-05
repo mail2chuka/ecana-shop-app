@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
+import mongoose from 'mongoose';
 import Sale from '@/models/Sale';
 
 export async function GET(request) {
@@ -13,6 +14,8 @@ export async function GET(request) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const groupBy = searchParams.get('groupBy') || 'day';
+    const brandId = searchParams.get('brandId');
+    const sortDir = searchParams.get('sortDir') === 'asc' ? 1 : -1;
 
     const match = { status: 'active' };
     if (startDate || endDate) {
@@ -23,6 +26,10 @@ export async function GET(request) {
         e.setHours(23, 59, 59, 999);
         match.date.$lte = e;
       }
+    }
+    if (brandId) {
+      const oid = new mongoose.Types.ObjectId(brandId);
+      match.$or = [{ 'items.cementBrand': oid }, { 'items.stoneDustProduct': oid }];
     }
 
     let dateFormat;
@@ -39,7 +46,7 @@ export async function GET(request) {
           count: { $sum: 1 },
         },
       },
-      { $sort: { '_id.period': -1 } },
+      { $sort: { '_id.period': sortDir } },
     ]);
 
     const totals = await Sale.aggregate([
