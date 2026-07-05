@@ -7,6 +7,7 @@ import Customer from '@/models/Customer';
 import CustomerPayment from '@/models/CustomerPayment';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
+import { ApiError } from '@/lib/apiError';
 
 export async function GET(request) {
   try {
@@ -25,62 +26,61 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  await dbConnect();
+  const body = await request.json();
+  const { customer: customerId, amount, method, depositorName, bankName, reference, notes, date } = body;
+  if (!customerId || !amount || amount <= 0 || !method) {
+    return NextResponse.json({ error: 'Customer, amount and method required' }, { status: 400 });
+  }
+  if (!depositorName || !bankName) {
+    return NextResponse.json({ error: 'Depositor name and bank name required' }, { status: 400 });
+  }
+
   const mongoSession = await mongoose.startSession();
-  mongoSession.startTransaction();
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
-      await mongoSession.abortTransaction();
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    await dbConnect();
-    const body = await request.json();
-    const { customer: customerId, amount, method, depositorName, bankName, reference, notes, date } = body;
-    if (!customerId || !amount || amount <= 0 || !method) {
-      await mongoSession.abortTransaction();
-      return NextResponse.json({ error: 'Customer, amount and method required' }, { status: 400 });
-    }
-    if (!depositorName || !bankName) {
-      await mongoSession.abortTransaction();
-      return NextResponse.json({ error: 'Depositor name and bank name required' }, { status: 400 });
-    }
-    const customer = await Customer.findById(customerId).session(mongoSession);
-    if (!customer) {
-      await mongoSession.abortTransaction();
-      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
-    }
-    const balanceBefore = customer.balance;
-    const balanceAfter = balanceBefore + Number(amount);
-    const transactionNumber = await generateTransactionNumber('PAY');
+    let createdPayment;
 
-    const payment = await CustomerPayment.create([{
-      customer: customerId,
-      customerName: customer.name,
-      transactionNumber,
-      amount: Number(amount),
-      method,
-      depositorName,
-      bankName,
-      reference,
-      notes,
-      date: date ? new Date(date) : new Date(),
-      balanceBefore,
-      balanceAfter,
-      recordedBy: session.user.id,
-      recordedByName: session.user.name,
-    }], { session: mongoSession });
+    await mongoSession.withTransaction(async () => {
+      const customer = await Customer.findById(customerId).session(mongoSession);
+      if (!customer) throw new ApiError('Customer not found', 404);
 
-    customer.balance = balanceAfter;
-    await customer.save({ session: mongoSession });
+      const balanceBefore = customer.balance;
+      const balanceAfter = balanceBefore + Number(amount);
+      const transactionNumber = await generateTransactionNumber('PAY');
 
-    await logAudit({ userId: session.user.id, userName: session.user.name, action: 'created', entity: 'CustomerPayment', entityId: payment[0]._id, after: payment[0], session: mongoSession });
+      const payment = await CustomerPayment.create([{
+        customer: customerId,
+        customerName: customer.name,
+        transactionNumber,
+        amount: Number(amount),
+        method,
+        depositorName,
+        bankName,
+        reference,
+        notes,
+        date: date ? new Date(date) : new Date(),
+        balanceBefore,
+        balanceAfter,
+        recordedBy: session.user.id,
+        recordedByName: session.user.name,
+      }], { session: mongoSession });
 
-    await mongoSession.commitTransaction();
-    return NextResponse.json({ success: true, data: payment[0] }, { status: 201 });
+      customer.balance = balanceAfter;
+      await customer.save({ session: mongoSession });
+
+      await logAudit({ userId: session.user.id, userName: session.user.name, action: 'created', entity: 'CustomerPayment', entityId: payment[0]._id, after: payment[0], session: mongoSession });
+
+      createdPayment = payment[0];
+    });
+
+    return NextResponse.json({ success: true, data: createdPayment }, { status: 201 });
   } catch (e) {
-    await mongoSession.abortTransaction();
-    return NextResponse.json({ error: e.message }, { status: 400 });
+    return NextResponse.json({ error: e.message }, { status: e.status || 400 });
   } finally {
-    mongoSession.endSession();
+    await mongoSession.endSession();
   }
 }

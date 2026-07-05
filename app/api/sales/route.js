@@ -10,6 +10,7 @@ import Truck from '@/models/Truck';
 import StoneDustProduct from '@/models/StoneDustProduct';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
+import { ApiError } from '@/lib/apiError';
 
 async function nextSaleNumber() {
   const year = new Date().getFullYear();
@@ -57,168 +58,145 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  await dbConnect();
+  const body = await request.json();
+  const { saleType, customer: customerId, truck: truckId, date, items, discount, transportFee, notes, deliveryDeparture, deliveryReturn } = body;
+
+  if (!saleType || !customerId || !items || items.length === 0) {
+    return NextResponse.json({ error: 'Sale type, customer and at least one item required' }, { status: 400 });
+  }
+
   const mongoSession = await mongoose.startSession();
-  mongoSession.startTransaction();
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
-      await mongoSession.abortTransaction();
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    await dbConnect();
-    const body = await request.json();
-    const { saleType, customer: customerId, truck: truckId, date, items, discount, transportFee, notes, deliveryDeparture, deliveryReturn } = body;
+    let createdSale;
 
-    if (!saleType || !customerId || !items || items.length === 0) {
-      await mongoSession.abortTransaction();
-      return NextResponse.json({ error: 'Sale type, customer and at least one item required' }, { status: 400 });
-    }
+    await mongoSession.withTransaction(async () => {
+      const customer = await Customer.findById(customerId).session(mongoSession);
+      if (!customer) throw new ApiError('Customer not found', 404);
 
-    const customer = await Customer.findById(customerId).session(mongoSession);
-    if (!customer) {
-      await mongoSession.abortTransaction();
-      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
-    }
-
-    let truckData = {};
-    if (truckId) {
-      const truck = await Truck.findById(truckId).session(mongoSession);
-      if (truck) {
-        truckData = { truck: truck._id, truckPlate: truck.plateNumber, driverName: truck.driverName };
-      }
-    }
-
-    // Process items
-    const processedItems = [];
-    let subtotal = 0;
-
-    for (const item of items) {
-      const billQty = Number(item.billQuantity);
-      const actualQty = Number(item.actualQuantity || item.billQuantity);
-      const unitPrice = Number(item.unitPrice);
-      if (billQty <= 0 || unitPrice < 0) {
-        await mongoSession.abortTransaction();
-        return NextResponse.json({ error: 'Invalid quantity or price in items' }, { status: 400 });
-      }
-      const lineTotal = billQty * unitPrice;
-
-      if (item.itemType === 'cement') {
-        if (!item.atc) {
-          await mongoSession.abortTransaction();
-          return NextResponse.json({ error: 'Cement item must reference an ATC' }, { status: 400 });
+      let truckData = {};
+      if (truckId) {
+        const truck = await Truck.findById(truckId).session(mongoSession);
+        if (truck) {
+          truckData = { truck: truck._id, truckPlate: truck.plateNumber, driverName: truck.driverName };
         }
-        const atc = await ATC.findById(item.atc).session(mongoSession);
-        if (!atc) {
-          await mongoSession.abortTransaction();
-          return NextResponse.json({ error: 'ATC not found' }, { status: 404 });
-        }
-        if (atc.status === 'closed') {
-          await mongoSession.abortTransaction();
-          return NextResponse.json({ error: `ATC ${atc.atcNumber} is closed` }, { status: 400 });
-        }
-        if (actualQty > atc.bagsRemaining) {
-          await mongoSession.abortTransaction();
-          return NextResponse.json({ error: `Only ${atc.bagsRemaining} bags remaining on ATC ${atc.atcNumber}` }, { status: 400 });
-        }
-
-        atc.bagsRemaining -= actualQty;
-        if (atc.bagsRemaining === 0) atc.status = 'closed';
-        await atc.save({ session: mongoSession });
-
-        processedItems.push({
-          itemType: 'cement',
-          atc: atc._id,
-          atcNumber: atc.atcNumber,
-          cementBrand: atc.cementBrand,
-          cementBrandName: atc.cementBrandName,
-          billQuantity: billQty,
-          actualQuantity: actualQty,
-          unitPrice,
-          lineTotal,
-        });
-      } else if (item.itemType === 'stonedust') {
-        if (!item.stoneDustProduct) {
-          await mongoSession.abortTransaction();
-          return NextResponse.json({ error: 'Aggregate item must reference a product' }, { status: 400 });
-        }
-        const product = await StoneDustProduct.findById(item.stoneDustProduct).session(mongoSession);
-        if (!product) {
-          await mongoSession.abortTransaction();
-          return NextResponse.json({ error: 'Aggregate product not found' }, { status: 404 });
-        }
-        processedItems.push({
-          itemType: 'stonedust',
-          stoneDustProduct: product._id,
-          quarryName: product.quarryName,
-          size: product.size,
-          billQuantity: billQty,
-          actualQuantity: actualQty,
-          unitPrice,
-          lineTotal,
-        });
-      } else {
-        await mongoSession.abortTransaction();
-        return NextResponse.json({ error: 'Invalid item type' }, { status: 400 });
       }
 
-      subtotal += lineTotal;
-    }
+      // Process items
+      const processedItems = [];
+      let subtotal = 0;
 
-    const disc = Number(discount) || 0;
-    const transport = Number(transportFee) || 0;
-    const grandTotal = subtotal - disc + transport;
+      for (const item of items) {
+        const billQty = Number(item.billQuantity);
+        const actualQty = Number(item.actualQuantity || item.billQuantity);
+        const unitPrice = Number(item.unitPrice);
+        if (billQty <= 0 || unitPrice < 0) {
+          throw new ApiError('Invalid quantity or price in items', 400);
+        }
+        const lineTotal = billQty * unitPrice;
 
-    // Credit limit check
-    const balanceBefore = customer.balance;
-    const balanceAfter = balanceBefore - grandTotal;
-    if (customer.creditLimit !== null && customer.creditLimit !== undefined) {
-      // creditLimit = max they can owe (i.e. how negative balance can go)
-      if (balanceAfter < -customer.creditLimit) {
-        await mongoSession.abortTransaction();
-        return NextResponse.json({
-          error: `Credit limit exceeded. Customer can owe up to ₦${customer.creditLimit.toLocaleString()}.`
-        }, { status: 400 });
+        if (item.itemType === 'cement') {
+          if (!item.atc) throw new ApiError('Cement item must reference an ATC', 400);
+          const atc = await ATC.findById(item.atc).session(mongoSession);
+          if (!atc) throw new ApiError('ATC not found', 404);
+          if (atc.status === 'closed') throw new ApiError(`ATC ${atc.atcNumber} is closed`, 400);
+          if (actualQty > atc.bagsRemaining) {
+            throw new ApiError(`Only ${atc.bagsRemaining} bags remaining on ATC ${atc.atcNumber}`, 400);
+          }
+
+          atc.bagsRemaining -= actualQty;
+          if (atc.bagsRemaining === 0) atc.status = 'closed';
+          await atc.save({ session: mongoSession });
+
+          processedItems.push({
+            itemType: 'cement',
+            atc: atc._id,
+            atcNumber: atc.atcNumber,
+            cementBrand: atc.cementBrand,
+            cementBrandName: atc.cementBrandName,
+            billQuantity: billQty,
+            actualQuantity: actualQty,
+            unitPrice,
+            lineTotal,
+          });
+        } else if (item.itemType === 'stonedust') {
+          if (!item.stoneDustProduct) throw new ApiError('Aggregate item must reference a product', 400);
+          const product = await StoneDustProduct.findById(item.stoneDustProduct).session(mongoSession);
+          if (!product) throw new ApiError('Aggregate product not found', 404);
+          processedItems.push({
+            itemType: 'stonedust',
+            stoneDustProduct: product._id,
+            quarryName: product.quarryName,
+            size: product.size,
+            billQuantity: billQty,
+            actualQuantity: actualQty,
+            unitPrice,
+            lineTotal,
+          });
+        } else {
+          throw new ApiError('Invalid item type', 400);
+        }
+
+        subtotal += lineTotal;
       }
-    }
 
-    const saleNumber = await nextSaleNumber();
-    const transactionNumber = await generateTransactionNumber('SAL');
+      const disc = Number(discount) || 0;
+      const transport = Number(transportFee) || 0;
+      const grandTotal = subtotal - disc + transport;
 
-    const sale = await Sale.create([{
-      saleNumber,
-      transactionNumber,
-      saleType,
-      customer: customer._id,
-      customerName: customer.name,
-      customerPhone: customer.phone,
-      ...truckData,
-      date: date ? new Date(date) : new Date(),
-      items: processedItems,
-      subtotal,
-      discount: disc,
-      transportFee: transport,
-      grandTotal,
-      paymentMethod: 'balance',
-      balanceBefore,
-      balanceAfter,
-      deliveryDeparture: deliveryDeparture ? new Date(deliveryDeparture) : undefined,
-      deliveryReturn: deliveryReturn ? new Date(deliveryReturn) : undefined,
-      notes,
-      createdBy: session.user.id,
-      createdByName: session.user.name,
-    }], { session: mongoSession });
+      // Credit limit check
+      const balanceBefore = customer.balance;
+      const balanceAfter = balanceBefore - grandTotal;
+      if (customer.creditLimit !== null && customer.creditLimit !== undefined) {
+        // creditLimit = max they can owe (i.e. how negative balance can go)
+        if (balanceAfter < -customer.creditLimit) {
+          throw new ApiError(`Credit limit exceeded. Customer can owe up to ₦${customer.creditLimit.toLocaleString()}.`, 400);
+        }
+      }
 
-    customer.balance = balanceAfter;
-    await customer.save({ session: mongoSession });
+      const saleNumber = await nextSaleNumber();
+      const transactionNumber = await generateTransactionNumber('SAL');
 
-    await logAudit({ userId: session.user.id, userName: session.user.name, action: 'created', entity: 'Sale', entityId: sale[0]._id, after: sale[0], session: mongoSession });
+      const sale = await Sale.create([{
+        saleNumber,
+        transactionNumber,
+        saleType,
+        customer: customer._id,
+        customerName: customer.name,
+        customerPhone: customer.phone,
+        ...truckData,
+        date: date ? new Date(date) : new Date(),
+        items: processedItems,
+        subtotal,
+        discount: disc,
+        transportFee: transport,
+        grandTotal,
+        paymentMethod: 'balance',
+        balanceBefore,
+        balanceAfter,
+        deliveryDeparture: deliveryDeparture ? new Date(deliveryDeparture) : undefined,
+        deliveryReturn: deliveryReturn ? new Date(deliveryReturn) : undefined,
+        notes,
+        createdBy: session.user.id,
+        createdByName: session.user.name,
+      }], { session: mongoSession });
 
-    await mongoSession.commitTransaction();
-    return NextResponse.json({ success: true, data: sale[0] }, { status: 201 });
+      customer.balance = balanceAfter;
+      await customer.save({ session: mongoSession });
+
+      await logAudit({ userId: session.user.id, userName: session.user.name, action: 'created', entity: 'Sale', entityId: sale[0]._id, after: sale[0], session: mongoSession });
+
+      createdSale = sale[0];
+    });
+
+    return NextResponse.json({ success: true, data: createdSale }, { status: 201 });
   } catch (e) {
-    await mongoSession.abortTransaction();
-    return NextResponse.json({ error: e.message }, { status: 400 });
+    return NextResponse.json({ error: e.message }, { status: e.status || 400 });
   } finally {
-    mongoSession.endSession();
+    await mongoSession.endSession();
   }
 }
