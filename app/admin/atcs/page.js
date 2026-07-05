@@ -202,7 +202,14 @@ export default function ATCsPage() {
             <Field label="Truck" required>
               <select value={selectedTruck} onChange={e => setSelectedTruck(e.target.value)} className={inputCls} required>
                 <option value="">— Select truck —</option>
-                {trucks.map(t => <option key={t._id} value={t._id}>{t.plateNumber} — {t.driverName}</option>)}
+                {trucks.map(t => {
+                  const busyOn = atcs.find(a => a._id !== assignModal._id && a.assignedTruck === t._id && a.status === 'assigned');
+                  return (
+                    <option key={t._id} value={t._id} disabled={!!busyOn}>
+                      {t.plateNumber} — {t.driverName}{busyOn ? ` (busy on ${formatAtcNumber(busyOn, brands)})` : ''}
+                    </option>
+                  );
+                })}
               </select>
             </Field>
             <FormButtons onCancel={() => setAssignModal(null)} submitLabel="Assign" />

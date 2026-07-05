@@ -22,6 +22,11 @@ export async function POST(request, { params }) {
     const truck = await Truck.findById(truckId);
     if (!truck) return NextResponse.json({ error: 'Truck not found' }, { status: 404 });
 
+    const busyOn = await ATC.findOne({ _id: { $ne: id }, assignedTruck: truck._id, status: 'assigned' });
+    if (busyOn) {
+      return NextResponse.json({ error: `Truck ${truck.plateNumber} is still out on ATC ${busyOn.atcNumber} — it'll be free once that one arrives or closes` }, { status: 400 });
+    }
+
     atc.assignedTruck = truck._id;
     atc.assignedTruckPlate = truck.plateNumber;
     atc.assignedDriverName = truck.driverName;
