@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Loader, PageHeader, Card, StatusPill, EmptyRow, Modal, FormButtons, Field, inputCls } from '@/components/ui';
 import toast from 'react-hot-toast';
 
@@ -84,7 +85,9 @@ export default function SuppliersPage() {
             {suppliers.length === 0 && <EmptyRow colSpan={4} text="No quarries added yet" />}
             {suppliers.map(s => (
               <tr key={s._id}>
-                <td className="px-4 py-3 font-medium">{s.name}</td>
+                <td className="px-4 py-3 font-medium">
+                  <Link href={`/admin/suppliers/${s._id}`} className="hover:underline">{s.name}</Link>
+                </td>
                 <td className="px-4 py-3 text-gray-500">{s.phone || '-'}</td>
                 <td className="px-4 py-3 text-gray-500">{s.address || '-'}</td>
                 <td className="px-4 py-3 text-right">

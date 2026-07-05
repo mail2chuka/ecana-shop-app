@@ -106,27 +106,32 @@ export default function NewAggregateSalePage() {
   const proceedWithSubmit = async () => {
     setShowTransportWarning(false);
     setSubmitting(true);
-    const res = await fetch('/api/sales', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        saleType: 'stonedust',
-        customer: selectedCustomer._id,
-        truck: truckId || undefined,
-        date, items,
-        discount: parseFloat(discount) || 0,
-        transportFee: parseFloat(transportFee) || 0,
-        notes,
-      }),
-    });
-    const data = await res.json();
-    setSubmitting(false);
-    setPendingSubmit(false);
-    if (data.success) {
-      toast.success(`Sale ${data.data.saleNumber} created`);
-      router.push(`/admin/sales/${data.data._id}`);
-    } else {
-      toast.error(data.error);
+    try {
+      const res = await fetch('/api/sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          saleType: 'stonedust',
+          customer: selectedCustomer._id,
+          truck: truckId || undefined,
+          date, items,
+          discount: parseFloat(discount) || 0,
+          transportFee: parseFloat(transportFee) || 0,
+          notes,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Sale ${data.data.saleNumber} created`);
+        router.push(`/admin/sales/${data.data._id}`);
+      } else {
+        toast.error(data.error);
+      }
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong, please try again');
+    } finally {
+      setSubmitting(false);
+      setPendingSubmit(false);
     }
   };
 
