@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls } from '@/components/ui';
+import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput } from '@/components/ui';
 import { formatNaira } from '@/lib/format';
 import toast from 'react-hot-toast';
 
@@ -125,7 +125,7 @@ export default function AggregatePage() {
             <input type="text" value={form.size} onChange={e => setForm({ ...form, size: e.target.value })} className={inputCls} required placeholder="e.g. 6mm, 10mm, 20mm" />
           </Field>
           <Field label={editing ? 'Price (use Price button to change)' : 'Price per tonne (₦)'} required={!editing}>
-            <input type="number" step="0.01" value={form.currentPricePerTonne} onChange={e => setForm({ ...form, currentPricePerTonne: e.target.value })} className={inputCls} required={!editing} disabled={editing} />
+            <CurrencyInput value={form.currentPricePerTonne} onChange={val => setForm({ ...form, currentPricePerTonne: val })} className={inputCls} required={!editing} disabled={editing} />
           </Field>
           <FormButtons onCancel={() => setShowModal(false)} submitting={submitting} />
         </form>
@@ -139,7 +139,7 @@ export default function AggregatePage() {
               <p><span className="text-gray-500">Current:</span> <span className="font-medium">{formatNaira(priceModal.currentPricePerTonne)}</span></p>
             </div>
             <Field label="New price (₦/tonne)" required>
-              <input type="number" step="0.01" value={newPrice} onChange={e => setNewPrice(e.target.value)} className={inputCls} required />
+              <CurrencyInput value={newPrice} onChange={setNewPrice} className={inputCls} required />
             </Field>
             <Field label="Reason">
               <input type="text" value={priceReason} onChange={e => setPriceReason(e.target.value)} className={inputCls} placeholder="optional" />

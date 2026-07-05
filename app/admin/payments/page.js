@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls } from '@/components/ui';
+import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput } from '@/components/ui';
 import { formatNaira, formatDate } from '@/lib/format';
 import toast from 'react-hot-toast';
 
@@ -226,15 +226,12 @@ export default function PaymentsPage() {
 
           {/* Amount */}
           <Field label="Amount (₦)" required>
-            <input
-              type="number"
-              step="0.01"
+            <CurrencyInput
               value={form.amount}
-              onChange={e => setForm({ ...form, amount: e.target.value })}
+              onChange={val => setForm({ ...form, amount: val })}
               placeholder="0.00"
               className={inputCls}
               required
-              min="0.01"
             />
           </Field>
 

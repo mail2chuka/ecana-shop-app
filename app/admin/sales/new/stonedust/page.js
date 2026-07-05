@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira } from '@/lib/format';
+import { CurrencyInput } from '@/components/ui';
 
 export default function NewAggregateSalePage() {
   const router = useRouter();
@@ -220,11 +221,11 @@ export default function NewAggregateSalePage() {
         <div className="bg-white border rounded-lg p-4 grid sm:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Discount (₦)</label>
-            <input type="number" step="0.01" min="0" value={discount} onChange={e => setDiscount(e.target.value)} placeholder="0.00" className="w-full px-3 py-2 border rounded text-sm" />
+            <CurrencyInput value={discount} onChange={setDiscount} placeholder="0.00" className="w-full px-3 py-2 border rounded text-sm" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Transport Fee (₦)</label>
-            <input type="number" step="0.01" min="0" value={transportFee} onChange={e => setTransportFee(e.target.value)} placeholder="0.00" className="w-full px-3 py-2 border rounded text-sm" />
+            <CurrencyInput value={transportFee} onChange={setTransportFee} placeholder="0.00" className="w-full px-3 py-2 border rounded text-sm" />
           </div>
           <div className="flex flex-col justify-end">
             <div className="bg-gray-50 rounded p-3 text-right">
@@ -277,12 +278,12 @@ export default function NewAggregateSalePage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium mb-1">Price per Tonne (₦)</label>
-                  <input type="number" step="0.01" min="0" value={modalUnitPrice} onChange={e => handleUnitPriceChange(e.target.value)}
+                  <CurrencyInput value={modalUnitPrice} onChange={handleUnitPriceChange}
                     className="w-full px-3 py-2 border rounded text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Total Amount (₦)</label>
-                  <input type="number" step="0.01" min="0" value={modalTotal} onChange={e => handleTotalChange(e.target.value)}
+                  <CurrencyInput value={modalTotal} onChange={handleTotalChange}
                     className="w-full px-3 py-2 border rounded text-sm" />
                 </div>
               </div>

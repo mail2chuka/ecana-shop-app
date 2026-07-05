@@ -87,3 +87,37 @@ export function Field({ label, children, required }) {
 }
 
 export const inputCls = 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-gray-500';
+
+export function CurrencyInput({ value, onChange, className = inputCls, placeholder, required, disabled, allowNegative = false, id }) {
+  const formatDisplay = (val) => {
+    if (val === '' || val === null || val === undefined) return '';
+    const str = String(val);
+    const negative = allowNegative && str.trim().startsWith('-');
+    const [intPart, decPart] = str.replace('-', '').split('.');
+    const formattedInt = intPart.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const formatted = decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt;
+    return negative ? `-${formatted}` : formatted;
+  };
+
+  const handleChange = (e) => {
+    const raw = e.target.value.replace(/,/g, '');
+    const pattern = allowNegative ? /^-?\d*\.?\d*$/ : /^\d*\.?\d*$/;
+    if (raw === '' || raw === '-' || pattern.test(raw)) {
+      onChange(raw);
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={formatDisplay(value)}
+      onChange={handleChange}
+      className={className}
+      placeholder={placeholder}
+      required={required}
+      disabled={disabled}
+      id={id}
+    />
+  );
+}

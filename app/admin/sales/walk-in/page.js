@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira } from '@/lib/format';
+import { CurrencyInput } from '@/components/ui';
 
 export default function WalkInSalePage() {
   const router = useRouter();
@@ -184,11 +185,9 @@ export default function WalkInSalePage() {
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1">Price/Bag (₦)</label>
-                <input
-                  type="number"
-                  step="0.01"
+                <CurrencyInput
                   value={pricePerBag}
-                  onChange={e => setPricePerBag(e.target.value)}
+                  onChange={setPricePerBag}
                   className="w-full px-2 py-2 border rounded text-sm"
                   placeholder="0.00"
                 />

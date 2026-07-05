@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls } from '@/components/ui';
+import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput } from '@/components/ui';
 import { formatNaira } from '@/lib/format';
 import toast from 'react-hot-toast';
 
@@ -98,12 +98,11 @@ export default function CustomersPage() {
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Phone</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Business</th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500">Balance</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">Credit Limit</th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {customers.length === 0 && <EmptyRow colSpan={6} text="No customers found" />}
+              {customers.length === 0 && <EmptyRow colSpan={5} text="No customers found" />}
               {customers.map(c => (
                 <tr key={c._id}>
                   <td className="px-4 py-3 font-medium">
@@ -114,7 +113,6 @@ export default function CustomersPage() {
                   <td className={`px-4 py-3 text-right font-medium ${c.balance < 0 ? 'text-red-600' : c.balance > 0 ? 'text-green-600' : ''}`}>
                     {formatNaira(c.balance)}
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-500">{c.creditLimit ? formatNaira(c.creditLimit) : 'None'}</td>
                   <td className="px-4 py-3 text-right">
                     <Link href={`/admin/customers/${c._id}`} className="text-sm text-blue-600 hover:text-blue-800 mr-3">View</Link>
                     <button onClick={() => openEdit(c)} className="text-sm text-gray-600 hover:text-gray-900 mr-3">Edit</button>
@@ -143,12 +141,12 @@ export default function CustomersPage() {
           </Field>
           {!editing && (
             <Field label="Opening balance (₦)">
-              <input type="number" step="0.01" value={form.openingBalance} onChange={e => setForm({ ...form, openingBalance: e.target.value })} className={inputCls} />
+              <CurrencyInput value={form.openingBalance} onChange={val => setForm({ ...form, openingBalance: val })} className={inputCls} allowNegative />
               <p className="text-xs text-gray-500 mt-1">Positive = credit (we owe them). Negative = debt (they owe us).</p>
             </Field>
           )}
           <Field label="Credit limit (₦)">
-            <input type="number" step="0.01" value={form.creditLimit} onChange={e => setForm({ ...form, creditLimit: e.target.value })} className={inputCls} placeholder="Leave blank for no limit" />
+            <CurrencyInput value={form.creditLimit} onChange={val => setForm({ ...form, creditLimit: val })} className={inputCls} placeholder="Leave blank for no limit" />
             <p className="text-xs text-gray-500 mt-1">Maximum amount this customer can owe.</p>
           </Field>
           <FormButtons onCancel={() => setShowModal(false)} submitting={submitting} />

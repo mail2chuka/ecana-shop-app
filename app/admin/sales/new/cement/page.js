@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira } from '@/lib/format';
+import { CurrencyInput } from '@/components/ui';
 
 export default function NewCementSalePage() {
   const router = useRouter();
@@ -291,11 +292,9 @@ export default function NewCementSalePage() {
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1">Price/Bag</label>
-                <input
-                  type="number"
-                  step="0.01"
+                <CurrencyInput
                   value={formPrice}
-                  onChange={e => setFormPrice(e.target.value)}
+                  onChange={setFormPrice}
                   placeholder="Price"
                   className="w-full px-2 py-2 border rounded text-sm"
                 />
@@ -372,11 +371,9 @@ export default function NewCementSalePage() {
         {/* Transport Fee */}
         <div className="bg-white border rounded-lg p-4">
           <label className="block text-sm font-medium mb-2">Transport Fee (₦)</label>
-          <input
-            type="number"
-            step="0.01"
+          <CurrencyInput
             value={transportFee}
-            onChange={e => setTransportFee(e.target.value)}
+            onChange={setTransportFee}
             placeholder="Enter transport fee (0 if complimentary)"
             className="w-full px-3 py-2 border rounded text-sm"
           />

@@ -35,11 +35,17 @@ export default function CustomerDetailPage() {
         <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Statement</button>
       </div>
 
-      <div className={`rounded-lg p-4 mb-6 ${customer.balance < 0 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
-        <p className="text-sm text-gray-600">Current Balance</p>
-        <p className={`text-3xl font-bold ${customer.balance < 0 ? 'text-red-600' : 'text-green-700'}`}>{formatNaira(customer.balance)}</p>
-        {customer.balance < 0 && <p className="text-sm text-red-600 mt-1">Customer owes this amount</p>}
-        {customer.creditLimit && <p className="text-xs text-gray-500 mt-1">Credit limit: {formatNaira(customer.creditLimit)}</p>}
+      <div className="grid sm:grid-cols-2 gap-4 mb-6">
+        <div className={`rounded-lg p-4 ${customer.balance < 0 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+          <p className="text-sm text-gray-600">Current Balance</p>
+          <p className={`text-3xl font-bold ${customer.balance < 0 ? 'text-red-600' : 'text-green-700'}`}>{formatNaira(customer.balance)}</p>
+          {customer.balance < 0 && <p className="text-sm text-red-600 mt-1">Customer owes this amount</p>}
+        </div>
+        <div className="rounded-lg p-4 bg-gray-50 border border-gray-200">
+          <p className="text-sm text-gray-600">Credit Limit</p>
+          <p className="text-3xl font-bold text-gray-800">{customer.creditLimit ? formatNaira(customer.creditLimit) : 'None'}</p>
+          <p className="text-xs text-gray-500 mt-1">Maximum amount this customer can owe</p>
+        </div>
       </div>
 
       <div className="bg-white border rounded-lg overflow-hidden">
