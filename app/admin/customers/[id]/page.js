@@ -4,20 +4,67 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { formatNaira, formatDate } from '@/lib/format';
+import { Modal, Field, FormButtons, inputCls, CurrencyInput } from '@/components/ui';
 import toast from 'react-hot-toast';
+
+const blankPaymentForm = {
+  amount: '',
+  method: 'transfer',
+  depositorName: '',
+  bankName: '',
+  reference: '',
+  notes: '',
+  date: new Date().toISOString().split('T')[0],
+};
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentForm, setPaymentForm] = useState(blankPaymentForm);
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
+  const load = () => {
     fetch(`/api/customers/${id}/statement`)
       .then(r => r.json())
       .then(d => { if (d.success) setData(d.data); else toast.error(d.error); })
       .finally(() => setLoading(false));
-  }, [id]);
+  };
+
+  useEffect(() => { load(); }, [id]);
+
+  const openPaymentModal = () => {
+    setPaymentForm(blankPaymentForm);
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault();
+    if (!paymentForm.amount || paymentForm.amount <= 0) return toast.error('Enter amount');
+    if (!paymentForm.depositorName) return toast.error('Enter depositor name');
+    if (!paymentForm.bankName) return toast.error('Enter bank name');
+
+    setSubmitting(true);
+    try {
+      const r = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...paymentForm, customer: id, amount: Number(paymentForm.amount) }),
+      });
+      const d = await r.json();
+      if (d.success) {
+        toast.success('Payment recorded');
+        setShowPaymentModal(false);
+        load();
+      } else toast.error(d.error);
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong, please try again');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) return <div className="flex justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-gray-800 border-t-transparent rounded-full" /></div>;
   if (!data) return <p className="text-gray-500">Customer not found</p>;
@@ -32,7 +79,10 @@ export default function CustomerDetailPage() {
           {customer.businessName && <p className="text-sm text-gray-500">{customer.businessName}</p>}
           <p className="text-sm text-gray-500">{customer.phone}</p>
         </div>
-        <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Statement</button>
+        <div className="flex gap-2">
+          <button onClick={openPaymentModal} className="px-4 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">Record Payment</button>
+          <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Statement</button>
+        </div>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4 mb-6">
@@ -134,6 +184,77 @@ export default function CustomerDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Record Payment Modal */}
+      <Modal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} title={`Record Payment — ${customer.name}`}>
+        <form onSubmit={handlePaymentSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Payment Method" required>
+              <select value={paymentForm.method} onChange={e => setPaymentForm({ ...paymentForm, method: e.target.value })} className={inputCls}>
+                <option value="transfer">Bank Transfer</option>
+                <option value="cash">Cash</option>
+                <option value="pos">POS</option>
+                <option value="cheque">Cheque</option>
+              </select>
+            </Field>
+            <Field label="Date" required>
+              <input type="date" value={paymentForm.date} onChange={e => setPaymentForm({ ...paymentForm, date: e.target.value })} className={inputCls} required />
+            </Field>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Depositor Name" required>
+              <input
+                type="text"
+                value={paymentForm.depositorName}
+                onChange={e => setPaymentForm({ ...paymentForm, depositorName: e.target.value })}
+                placeholder="Name of person who made the deposit"
+                className={inputCls}
+                required
+              />
+            </Field>
+            <Field label="Bank Name" required>
+              <input
+                type="text"
+                value={paymentForm.bankName}
+                onChange={e => setPaymentForm({ ...paymentForm, bankName: e.target.value })}
+                placeholder="e.g., GTBank, Zenith, Access..."
+                className={inputCls}
+                required
+              />
+            </Field>
+          </div>
+          <Field label="Amount (₦)" required>
+            <CurrencyInput
+              value={paymentForm.amount}
+              onChange={val => setPaymentForm({ ...paymentForm, amount: val })}
+              placeholder="0.00"
+              className={inputCls}
+              required
+            />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Reference">
+              <input
+                type="text"
+                value={paymentForm.reference}
+                onChange={e => setPaymentForm({ ...paymentForm, reference: e.target.value })}
+                placeholder="Transfer ref, cheque #..."
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Remark">
+              <input
+                type="text"
+                value={paymentForm.notes}
+                onChange={e => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+                placeholder="Additional notes..."
+                className={inputCls}
+              />
+            </Field>
+          </div>
+          <FormButtons onCancel={() => setShowPaymentModal(false)} submitting={submitting} submitLabel="Record Payment" />
+        </form>
+      </Modal>
     </div>
   );
 }
