@@ -36,14 +36,19 @@ export default function TrucksPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    const url = editing ? `/api/trucks/${editing._id}` : '/api/trucks';
-    const method = editing ? 'PUT' : 'POST';
-    const body = { ...form, capacityTonnes: form.capacityTonnes ? Number(form.capacityTonnes) : null };
-    const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    const d = await r.json();
-    setSubmitting(false);
-    if (d.success) { toast.success(editing ? 'Updated' : 'Created'); setShowModal(false); load(); }
-    else toast.error(d.error);
+    try {
+      const url = editing ? `/api/trucks/${editing._id}` : '/api/trucks';
+      const method = editing ? 'PUT' : 'POST';
+      const body = { ...form, capacityTonnes: form.capacityTonnes ? Number(form.capacityTonnes) : null };
+      const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const d = await r.json();
+      if (d.success) { toast.success(editing ? 'Updated' : 'Created'); setShowModal(false); load(); }
+      else toast.error(d.error);
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong, please try again');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleDelete = async (t) => {
