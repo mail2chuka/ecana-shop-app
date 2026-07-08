@@ -159,10 +159,7 @@ export default function SaleDetailPage() {
           <Link href={`/admin/sales/${id}/invoice`} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">View Invoice</Link>
           <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Invoice</button>
           {sale.status === 'active' && (
-            <>
-              <button onClick={openEdit} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Edit Sale</button>
-              <button onClick={() => setShowCancel(true)} className="px-4 py-2 border border-red-300 text-red-600 rounded text-sm hover:bg-red-50">Cancel Sale</button>
-            </>
+            <button onClick={openEdit} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Edit Sale</button>
           )}
         </div>
       </div>
@@ -311,12 +308,27 @@ export default function SaleDetailPage() {
       <Modal open={showEdit} onClose={() => setShowEdit(false)} title={`Edit ${sale.saleNumber}`} size="xl">
         <form onSubmit={handleSaveEdit} className="space-y-4">
           <div className="space-y-3">
-            <h3 className="font-medium text-sm">Items</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium text-sm">Items</h3>
+              <button
+                type="button"
+                onClick={() => { setShowEdit(false); setShowCancel(true); }}
+                className="px-3 py-1.5 border border-red-300 text-red-600 rounded text-xs font-medium hover:bg-red-50"
+              >
+                Cancel Sale
+              </button>
+            </div>
             {editItems.map((item, i) => (
               <div key={i} className="border rounded p-3 space-y-2">
                 <div className="flex justify-between items-start">
                   <p className="text-sm font-medium">{item.label}</p>
-                  <button type="button" onClick={() => removeEditItem(i)} className="text-red-500 text-xs hover:underline">Remove</button>
+                  <button
+                    type="button"
+                    onClick={() => removeEditItem(i)}
+                    className="px-2 py-1 border border-red-300 text-red-600 rounded text-xs font-medium hover:bg-red-50"
+                  >
+                    Remove Sales Item
+                  </button>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <Field label="Bill Qty">
