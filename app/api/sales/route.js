@@ -8,6 +8,7 @@ import ATC from '@/models/ATC';
 import Customer from '@/models/Customer';
 import Truck from '@/models/Truck';
 import StoneDustProduct from '@/models/StoneDustProduct';
+import ShopProduct from '@/models/ShopProduct';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
 import { ApiError } from '@/lib/apiError';
@@ -64,10 +65,13 @@ export async function POST(request) {
   }
   await dbConnect();
   const body = await request.json();
-  const { saleType, customer: customerId, truck: truckId, date, items, discount, transportFee, notes, deliveryDeparture, deliveryReturn } = body;
+  const { saleType, customer: customerId, truck: truckId, date, items, discount, transportFee, notes, deliveryDeparture, deliveryReturn, paymentMethod } = body;
 
   if (!saleType || !customerId || !items || items.length === 0) {
     return NextResponse.json({ error: 'Sale type, customer and at least one item required' }, { status: 400 });
+  }
+  if (saleType === 'shop' && !['cash', 'transfer', 'pos', 'cheque'].includes(paymentMethod)) {
+    return NextResponse.json({ error: 'Payment method required for shop sales' }, { status: 400 });
   }
 
   const mongoSession = await mongoose.startSession();
@@ -137,6 +141,26 @@ export async function POST(request) {
             unitPrice,
             lineTotal,
           });
+        } else if (item.itemType === 'shop') {
+          if (!item.shopProduct) throw new ApiError('Shop item must reference a product', 400);
+          const product = await ShopProduct.findById(item.shopProduct).session(mongoSession);
+          if (!product) throw new ApiError('Shop product not found', 404);
+          if (billQty > product.stockQuantity) {
+            throw new ApiError(`Only ${product.stockQuantity} ${product.unit}(s) of ${product.name} in stock`, 400);
+          }
+
+          product.stockQuantity -= billQty;
+          await product.save({ session: mongoSession });
+
+          processedItems.push({
+            itemType: 'shop',
+            shopProduct: product._id,
+            shopProductName: product.name,
+            billQuantity: billQty,
+            actualQuantity: billQty,
+            unitPrice,
+            lineTotal,
+          });
         } else {
           throw new ApiError('Invalid item type', 400);
         }
@@ -148,10 +172,13 @@ export async function POST(request) {
       const transport = Number(transportFee) || 0;
       const grandTotal = subtotal - disc + transport;
 
-      // Credit limit check
+      // Shop sales are paid for immediately (cash/transfer/pos/cheque) — no credit extended,
+      // so the customer's running balance is untouched.
+      const isShopSale = saleType === 'shop';
       const balanceBefore = customer.balance;
-      const balanceAfter = balanceBefore - grandTotal;
-      if (customer.creditLimit !== null && customer.creditLimit !== undefined) {
+      const balanceAfter = isShopSale ? balanceBefore : balanceBefore - grandTotal;
+
+      if (!isShopSale && customer.creditLimit !== null && customer.creditLimit !== undefined) {
         // creditLimit = max they can owe (i.e. how negative balance can go)
         if (balanceAfter < -customer.creditLimit) {
           throw new ApiError(`Credit limit exceeded. Customer can owe up to ₦${customer.creditLimit.toLocaleString()}.`, 400);
@@ -175,7 +202,7 @@ export async function POST(request) {
         discount: disc,
         transportFee: transport,
         grandTotal,
-        paymentMethod: 'balance',
+        paymentMethod: isShopSale ? paymentMethod : 'balance',
         balanceBefore,
         balanceAfter,
         deliveryDeparture: deliveryDeparture ? new Date(deliveryDeparture) : undefined,
@@ -185,8 +212,10 @@ export async function POST(request) {
         createdByName: session.user.name,
       }], { session: mongoSession });
 
-      customer.balance = balanceAfter;
-      await customer.save({ session: mongoSession });
+      if (!isShopSale) {
+        customer.balance = balanceAfter;
+        await customer.save({ session: mongoSession });
+      }
 
       await logAudit({ userId: session.user.id, userName: session.user.name, action: 'created', entity: 'Sale', entityId: sale[0]._id, after: sale[0], session: mongoSession });
 

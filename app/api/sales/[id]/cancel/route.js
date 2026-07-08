@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import Sale from '@/models/Sale';
 import Customer from '@/models/Customer';
 import ATC from '@/models/ATC';
+import ShopProduct from '@/models/ShopProduct';
 import { logAudit } from '@/lib/audit';
 import { ApiError } from '@/lib/apiError';
 
@@ -27,14 +28,17 @@ export async function POST(request, { params }) {
       if (!sale) throw new ApiError('Not found', 404);
       if (sale.status === 'cancelled') throw new ApiError('Already cancelled', 400);
 
-      // Refund customer balance
-      const customer = await Customer.findById(sale.customer).session(mongoSession);
-      if (customer) {
-        customer.balance = customer.balance + sale.grandTotal;
-        await customer.save({ session: mongoSession });
+      // Shop sales are paid immediately and never touched the customer's balance,
+      // so cancelling one must not refund a balance that was never debited.
+      if (sale.saleType !== 'shop') {
+        const customer = await Customer.findById(sale.customer).session(mongoSession);
+        if (customer) {
+          customer.balance = customer.balance + sale.grandTotal;
+          await customer.save({ session: mongoSession });
+        }
       }
 
-      // Restore ATC bags
+      // Restore ATC bags / shop stock
       for (const item of sale.items) {
         if (item.itemType === 'cement' && item.atc) {
           const atc = await ATC.findById(item.atc).session(mongoSession);
@@ -42,6 +46,12 @@ export async function POST(request, { params }) {
             atc.bagsRemaining += item.actualQuantity;
             if (atc.status === 'closed' && atc.bagsRemaining > 0) atc.status = 'arrived';
             await atc.save({ session: mongoSession });
+          }
+        } else if (item.itemType === 'shop' && item.shopProduct) {
+          const product = await ShopProduct.findById(item.shopProduct).session(mongoSession);
+          if (product) {
+            product.stockQuantity += item.billQuantity;
+            await product.save({ session: mongoSession });
           }
         }
       }

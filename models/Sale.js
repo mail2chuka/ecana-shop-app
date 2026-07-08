@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const SaleItemSchema = new mongoose.Schema({
-  itemType: { type: String, enum: ['cement', 'stonedust'], required: true },
+  itemType: { type: String, enum: ['cement', 'stonedust', 'shop'], required: true },
   // Cement-specific
   atc: { type: mongoose.Schema.Types.ObjectId, ref: 'ATC' },
   atcNumber: String,
@@ -11,6 +11,9 @@ const SaleItemSchema = new mongoose.Schema({
   stoneDustProduct: { type: mongoose.Schema.Types.ObjectId, ref: 'StoneDustProduct' },
   quarryName: String,
   size: String,
+  // Shop-specific
+  shopProduct: { type: mongoose.Schema.Types.ObjectId, ref: 'ShopProduct' },
+  shopProductName: String,
   // Common
   billQuantity: { type: Number, required: true },     // what customer pays for
   actualQuantity: { type: Number, required: true },   // what was loaded
@@ -21,7 +24,7 @@ const SaleItemSchema = new mongoose.Schema({
 const SaleSchema = new mongoose.Schema({
   saleNumber: { type: String, required: true, unique: true },
   transactionNumber: { type: String, required: true, unique: true },
-  saleType: { type: String, enum: ['cement', 'stonedust', 'mixed'], required: true },
+  saleType: { type: String, enum: ['cement', 'stonedust', 'mixed', 'shop'], required: true },
 
   customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
   customerName: String,
@@ -40,7 +43,7 @@ const SaleSchema = new mongoose.Schema({
   transportFee: { type: Number, default: 0 },
   grandTotal: { type: Number, required: true },
 
-  paymentMethod: { type: String, enum: ['balance'], default: 'balance' },
+  paymentMethod: { type: String, enum: ['balance', 'cash', 'transfer', 'pos', 'cheque'], default: 'balance' },
   balanceBefore: Number,
   balanceAfter: Number,
 
