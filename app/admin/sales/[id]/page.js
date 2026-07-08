@@ -90,9 +90,9 @@ export default function SaleDetailPage() {
             <div className="text-right text-sm">
               <p className="font-bold text-lg">{sale.saleNumber}</p>
               <p className="text-gray-500">{formatDate(sale.date)}</p>
-              <p className={`font-medium mt-1 ${sale.status === 'cancelled' ? 'text-red-600' : 'text-green-600'}`}>
-                {sale.status.toUpperCase()}
-              </p>
+              {sale.status === 'cancelled' && (
+                <p className="font-medium mt-1 text-red-600">CANCELLED</p>
+              )}
             </div>
           </div>
         </div>
@@ -103,6 +103,7 @@ export default function SaleDetailPage() {
             <p className="text-xs text-gray-500 mb-1">BILL TO</p>
             <p className="font-semibold">{sale.customerName}</p>
             {sale.customerPhone && <p className="text-gray-600">{sale.customerPhone}</p>}
+            {sale.customerAddress && <p className="text-gray-600">{sale.customerAddress}</p>}
           </div>
           {sale.truckPlate && (
             <div>
@@ -173,11 +174,14 @@ export default function SaleDetailPage() {
           </div>
         </div>
 
-        {/* Balance snapshot */}
+        {/* Notes */}
         <div className="mt-6 border-t pt-4 text-xs text-gray-500">
-          <p>Balance before: {formatNaira(sale.balanceBefore)} → Balance after: <span className={sale.balanceAfter < 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>{formatNaira(sale.balanceAfter)}</span></p>
-          {sale.notes && <p className="mt-1">Notes: {sale.notes}</p>}
+          {sale.notes && <p>Notes: {sale.notes}</p>}
           <p className="mt-1">Recorded by: {sale.createdByName}</p>
+        </div>
+
+        <div className="mt-6 pt-4 text-center text-xs text-gray-400">
+          Thank you for your business.
         </div>
       </div>
 

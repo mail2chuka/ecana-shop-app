@@ -29,6 +29,7 @@ const SaleSchema = new mongoose.Schema({
   customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
   customerName: String,
   customerPhone: String,
+  customerAddress: String,
 
   truck: { type: mongoose.Schema.Types.ObjectId, ref: 'Truck' },
   truckPlate: String,

@@ -68,7 +68,7 @@ export default function AdminShell({ children }) {
       key={item.href}
       href={item.href}
       onClick={() => setOpen(false)}
-      className={`block px-3 py-2 rounded text-sm ${
+      className={`block px-3 py-2 rounded text-sm leading-snug whitespace-normal break-words ${
         pathname === item.href
           ? 'bg-gray-700 text-white'
           : 'text-gray-400 hover:bg-gray-800 hover:text-white'
@@ -88,23 +88,23 @@ export default function AdminShell({ children }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-60 bg-gray-900 transform transition-transform lg:translate-x-0 lg:static overflow-y-auto ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-gray-900 transform transition-transform lg:translate-x-0 lg:static flex flex-col ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between h-14 px-4 border-b border-gray-800">
+        <div className="flex items-center justify-between min-h-14 px-4 border-b border-gray-800 shrink-0">
           <span className="font-bold text-white">GSM</span>
           <button className="lg:hidden text-gray-400" onClick={() => setOpen(false)}>
             <FiX size={20} />
           </button>
         </div>
 
-        <nav className="p-3 space-y-1 pb-32">
+        <nav className="flex-1 min-h-0 overflow-y-auto p-3 space-y-1">
           {menu.map((entry, i) => {
             if (entry.group) {
               return (
                 <div key={entry.group} className="pt-3">
-                  <p className="text-xs font-semibold uppercase text-gray-500 px-3 mb-1">{entry.group}</p>
+                  <p className="text-xs font-semibold uppercase text-gray-500 px-3 mb-1 whitespace-normal break-words">{entry.group}</p>
                   {entry.items.map(renderItem)}
                 </div>
               );
@@ -113,26 +113,29 @@ export default function AdminShell({ children }) {
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-800 bg-gray-900">
+        <div className="shrink-0 p-3 border-t border-gray-800 bg-gray-900">
           <div className="mb-2 px-3">
-            <p className="text-sm text-white font-medium truncate">{session.user.name}</p>
+            <p className="text-sm text-white font-medium break-words" title={session.user.name}>{session.user.name}</p>
             <p className="text-xs text-gray-500 capitalize">{session.user.role}</p>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: '/' })}
             className="flex items-center w-full px-3 py-2 text-sm text-red-400 hover:bg-gray-800 rounded"
           >
-            <FiLogOut className="mr-2" /> Sign Out
+            <FiLogOut className="mr-2 shrink-0" /> Sign Out
           </button>
         </div>
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 bg-white border-b flex items-center px-4 lg:hidden no-print">
-          <button onClick={() => setOpen(true)} className="p-2 -ml-2 text-gray-600">
+        <header className="min-h-14 bg-white border-b flex items-center px-4 lg:hidden no-print">
+          <button onClick={() => setOpen(true)} className="p-2 -ml-2 text-gray-600 shrink-0">
             <FiMenu size={20} />
           </button>
-          <span className="ml-2 font-semibold text-sm">GSM - Goods Sales and Management</span>
+          <span className="ml-2 font-semibold text-sm truncate">
+            <span className="sm:hidden">GSM</span>
+            <span className="hidden sm:inline">GSM - Goods Sales and Management</span>
+          </span>
         </header>
         <div className="h-12 bg-white border-b flex items-center px-4 lg:px-6 no-print">
           <button

@@ -37,9 +37,9 @@ export default function SaleInvoicePage() {
             <div className="text-right text-sm">
               <p className="font-bold text-xl">{sale.saleNumber}</p>
               <p className="text-gray-600">{formatDate(sale.date)}</p>
-              <p className={`font-bold mt-2 ${sale.status === 'cancelled' ? 'text-red-600' : 'text-green-600'}`}>
-                {sale.status.toUpperCase()}
-              </p>
+              {sale.status === 'cancelled' && (
+                <p className="font-bold mt-2 text-red-600">CANCELLED</p>
+              )}
             </div>
           </div>
         </div>
@@ -49,7 +49,8 @@ export default function SaleInvoicePage() {
           <div>
             <p className="text-xs text-gray-500 font-medium mb-1">BILL TO</p>
             <p className="font-bold text-lg">{sale.customerName}</p>
-            <p className="text-sm text-gray-600">{sale.customerPhone}</p>
+            {sale.customerPhone && <p className="text-sm text-gray-600">{sale.customerPhone}</p>}
+            {sale.customerAddress && <p className="text-sm text-gray-600">{sale.customerAddress}</p>}
           </div>
           <div className="text-right">
             <p className="text-xs text-gray-500 font-medium mb-1">INVOICE DATE</p>
@@ -121,10 +122,8 @@ export default function SaleInvoicePage() {
           </div>
         </div>
 
-        {/* Balance Info */}
+        {/* Notes */}
         <div className="border-t pt-4 text-xs text-gray-600 space-y-1">
-          <p><span className="font-medium">Balance Before:</span> {formatNaira(sale.balanceBefore)}</p>
-          <p><span className="font-medium">Balance After:</span> <span className={sale.balanceAfter < 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>{formatNaira(sale.balanceAfter)}</span></p>
           {sale.notes && <p><span className="font-medium">Notes:</span> {sale.notes}</p>}
           <p className="pt-2"><span className="font-medium">Recorded by:</span> {sale.createdByName}</p>
           {sale.status === 'cancelled' && (
@@ -132,6 +131,10 @@ export default function SaleInvoicePage() {
               ⚠ This invoice has been cancelled{sale.cancellationReason && ` - ${sale.cancellationReason}`}
             </p>
           )}
+        </div>
+
+        <div className="mt-6 pt-4 text-center text-xs text-gray-400">
+          Thank you for your business.
         </div>
       </div>
 
