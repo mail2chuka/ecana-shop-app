@@ -53,31 +53,37 @@ export default function NewAggregateSalePage() {
     : customers.slice(0, 20);
 
   const selectedProduct = products.find(p => p._id === productId);
+  const effectiveBillQty = billQty || actualQty;
 
   const handleUnitPriceChange = (val) => {
     setUnitPrice(val);
-    if (billQty && val) setTotal((parseFloat(billQty) * parseFloat(val)).toFixed(2));
+    if (effectiveBillQty && val) setTotal((parseFloat(effectiveBillQty) * parseFloat(val)).toFixed(2));
   };
 
   const handleTotalChange = (val) => {
     setTotal(val);
-    if (billQty && val && parseFloat(billQty) > 0) {
-      setUnitPrice((parseFloat(val) / parseFloat(billQty)).toFixed(2));
+    if (effectiveBillQty && val && parseFloat(effectiveBillQty) > 0) {
+      setUnitPrice((parseFloat(val) / parseFloat(effectiveBillQty)).toFixed(2));
     }
+  };
+
+  const handleActualQtyChange = (val) => {
+    setActualQty(val);
+    if (!billQty && unitPrice) setTotal((parseFloat(val || 0) * parseFloat(unitPrice)).toFixed(2));
   };
 
   const handleBillQtyChange = (val) => {
     setBillQty(val);
-    if (unitPrice) setTotal((parseFloat(val || 0) * parseFloat(unitPrice)).toFixed(2));
+    if (unitPrice) setTotal((parseFloat(val || actualQty || 0) * parseFloat(unitPrice)).toFixed(2));
   };
 
-  const subtotal = (parseFloat(total) || (parseFloat(billQty) || 0) * (parseFloat(unitPrice) || 0)) || 0;
+  const subtotal = (parseFloat(total) || (parseFloat(effectiveBillQty) || 0) * (parseFloat(unitPrice) || 0)) || 0;
   const grandTotal = subtotal - (parseFloat(discount) || 0) + (parseFloat(transportFee) || 0);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedCustomer) { toast.error('Select a customer'); return; }
-    if (!productId || !billQty || !unitPrice) { toast.error('Select product, quantity and price'); return; }
+    if (!productId || !actualQty || !unitPrice) { toast.error('Select product, quantity and price'); return; }
 
     if (!transportFee || transportFee === '' || transportFee === '0') {
       setShowTransportWarning(true);
@@ -97,10 +103,10 @@ export default function NewAggregateSalePage() {
         stoneDustProduct: selectedProduct._id,
         quarryName: selectedProduct.quarryName,
         size: selectedProduct.size,
-        billQuantity: parseFloat(billQty),
-        actualQuantity: parseFloat(actualQty || billQty),
+        billQuantity: parseFloat(effectiveBillQty),
+        actualQuantity: parseFloat(actualQty),
         unitPrice: parseFloat(unitPrice),
-        lineTotal: parseFloat(total || (parseFloat(billQty) * parseFloat(unitPrice))),
+        lineTotal: parseFloat(total || (parseFloat(effectiveBillQty) * parseFloat(unitPrice))),
       };
 
       const res = await fetch('/api/sales', {
@@ -136,7 +142,7 @@ export default function NewAggregateSalePage() {
   return (
     <div className="max-w-3xl">
       <div className="mb-6">
-        <h1 className="text-xl font-bold">New Aggregate Sale</h1>
+        <h1 className="text-xl font-bold">Aggregate Sale</h1>
         <p className="text-sm text-gray-500">Record a quarry product delivery</p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -203,15 +209,15 @@ export default function NewAggregateSalePage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Bill Qty (tonnes)</label>
-              <input type="number" step="0.01" min="0.01" value={billQty}
-                onChange={e => handleBillQtyChange(e.target.value)}
-                className="w-full px-3 py-2 border rounded text-sm" placeholder="Customer pays for" required />
+              <label className="block text-sm font-medium mb-1">Actual Qty (tonnes)</label>
+              <input type="number" step="0.01" min="0.01" value={actualQty} onChange={e => handleActualQtyChange(e.target.value)}
+                className="w-full px-3 py-2 border rounded text-sm" placeholder="From quarry" required />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Actual Qty (tonnes)</label>
-              <input type="number" step="0.01" min="0.01" value={actualQty} onChange={e => setActualQty(e.target.value)}
-                className="w-full px-3 py-2 border rounded text-sm" placeholder="From quarry" />
+              <label className="block text-sm font-medium mb-1">Bill Qty (tonnes, optional)</label>
+              <input type="number" step="0.01" min="0.01" value={billQty}
+                onChange={e => handleBillQtyChange(e.target.value)}
+                className="w-full px-3 py-2 border rounded text-sm" placeholder="Defaults to Actual Qty" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">

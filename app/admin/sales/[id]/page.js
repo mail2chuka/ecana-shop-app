@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
+import { formatNaira, formatDate, formatDateTime, formatSaleTypeLabel } from '@/lib/format';
 import { Modal, Field, FormButtons, inputCls, CurrencyInput } from '@/components/ui';
 
 export default function SaleDetailPage() {
@@ -182,7 +182,7 @@ export default function SaleDetailPage() {
         <div className="border-b pb-4 mb-4">
           <div className="flex justify-between">
             <div>
-              <h2 className="text-2xl font-bold">INVOICE</h2>
+              <h2 className="text-2xl font-bold">{formatSaleTypeLabel(sale.saleType)}</h2>
               <p className="text-sm text-gray-500 mt-1">Ecana Family Limited</p>
             </div>
             <div className="text-right text-sm">

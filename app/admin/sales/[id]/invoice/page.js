@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
+import { formatNaira, formatDate, formatDateTime, formatSaleTypeLabel } from '@/lib/format';
 
 export default function SaleInvoicePage() {
   const { id } = useParams();
@@ -31,7 +31,7 @@ export default function SaleInvoicePage() {
         <div className="border-b pb-6 mb-6">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-3xl font-bold">INVOICE</h2>
+              <h2 className="text-3xl font-bold">{formatSaleTypeLabel(sale.saleType)}</h2>
               <p className="text-sm text-gray-600 mt-2">Ecana Family Limited</p>
             </div>
             <div className="text-right text-sm">

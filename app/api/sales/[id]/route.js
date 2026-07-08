@@ -143,8 +143,8 @@ export async function PUT(request, { params }) {
       let subtotal = 0;
 
       for (const item of items) {
-        const billQty = Number(item.billQuantity);
-        const actualQty = Number(item.actualQuantity || item.billQuantity);
+        const actualQty = Number(item.actualQuantity);
+        const billQty = Number(item.billQuantity || item.actualQuantity);
         const unitPrice = Number(item.unitPrice);
         if (billQty <= 0 || unitPrice < 0) throw new ApiError('Invalid quantity or price in items', 400);
         const lineTotal = billQty * unitPrice;

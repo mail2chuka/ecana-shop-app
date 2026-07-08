@@ -85,13 +85,13 @@ export default function NewCementSalePage() {
       toast.error('Select a customer');
       return;
     }
-    if (!formQty || !formBillQty || !formPrice) {
-      toast.error('Enter quantity, bill quantity, and price');
+    if (!formQty || !formPrice) {
+      toast.error('Enter quantity and price');
       return;
     }
 
     const qty = parseFloat(formQty);
-    const billQty = parseFloat(formBillQty);
+    const billQty = formBillQty ? parseFloat(formBillQty) : qty;
     const price = parseFloat(formPrice);
 
     if (qty <= 0 || qty > bagsRemaining) {
@@ -191,7 +191,7 @@ export default function NewCementSalePage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold text-center mb-8">SALE</h1>
+      <h1 className="text-2xl font-bold text-center mb-8">Cement Sale</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* ATC Selection */}
@@ -281,13 +281,13 @@ export default function NewCementSalePage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1">Bill QTY</label>
+                <label className="block text-xs font-medium mb-1">Bill QTY (optional)</label>
                 <input
                   type="number"
                   min="1"
                   value={formBillQty}
                   onChange={e => setFormBillQty(e.target.value)}
-                  placeholder="Bill Qty"
+                  placeholder="Defaults to Qty"
                   className="w-full px-2 py-2 border rounded text-sm"
                 />
               </div>
@@ -303,7 +303,7 @@ export default function NewCementSalePage() {
               <div>
                 <label className="block text-xs font-medium mb-1">Total</label>
                 <div className="w-full px-2 py-2 border rounded text-sm bg-gray-50 font-medium">
-                  {formBillQty && formPrice ? formatNaira(parseFloat(formBillQty) * parseFloat(formPrice)) : '-'}
+                  {formQty && formPrice ? formatNaira(parseFloat(formBillQty || formQty) * parseFloat(formPrice)) : '-'}
                 </div>
               </div>
             </div>
