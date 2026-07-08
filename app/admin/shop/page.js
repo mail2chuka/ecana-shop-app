@@ -200,16 +200,16 @@ export default function ShopPage() {
     }
   };
 
-  const cancelSale = async (sale) => {
-    const reason = prompt('Cancellation reason:');
+  const deleteSale = async (sale) => {
+    const reason = prompt(`Delete sale ${sale.saleNumber}? This permanently removes it and restores stock. Reason:`);
     if (!reason) return;
-    const r = await fetch(`/api/sales/${sale._id}/cancel`, {
-      method: 'POST',
+    const r = await fetch(`/api/sales/${sale._id}`, {
+      method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason }),
     });
     const d = await r.json();
-    if (d.success) { toast.success('Sale cancelled, stock restored'); load(); }
+    if (d.success) { toast.success('Sale deleted, stock restored'); load(); }
     else toast.error(d.error);
   };
 
@@ -383,7 +383,12 @@ export default function ShopPage() {
                 {sales.length === 0 && <EmptyRow colSpan={6} text="No shop sales yet" />}
                 {sales.map(s => (
                   <tr key={s._id}>
-                    <td className="px-4 py-3 font-medium">{s.saleNumber}</td>
+                    <td className="px-4 py-3 font-medium">
+                      {s.saleNumber}
+                      {s.editedAt && (
+                        <p className="text-xs text-amber-600 font-normal" title={formatDate(s.editedAt)}>Edited by {s.editedByName}</p>
+                      )}
+                    </td>
                     <td className="px-4 py-3">{formatDate(s.date)}</td>
                     <td className="px-4 py-3">
                       <Link href={`/admin/customers/${s.customer}`} className="hover:underline">{s.customerName}</Link>
@@ -393,7 +398,7 @@ export default function ShopPage() {
                     <td className="px-4 py-3 text-right">
                       <Link href={`/admin/sales/${s._id}/invoice`} className="text-sm text-blue-600 hover:text-blue-800 mr-3">Invoice</Link>
                       {s.status === 'active' && (
-                        <button onClick={() => cancelSale(s)} className="text-sm text-red-600 hover:text-red-800">Cancel</button>
+                        <button onClick={() => deleteSale(s)} className="text-sm text-red-600 hover:text-red-800">Delete</button>
                       )}
                     </td>
                   </tr>

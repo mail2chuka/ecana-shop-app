@@ -26,6 +26,66 @@ export async function GET(request, { params }) {
   }
 }
 
+export async function DELETE(request, { params }) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  await dbConnect();
+  const { id } = await params;
+  const { reason } = await request.json().catch(() => ({}));
+
+  const mongoSession = await mongoose.startSession();
+  try {
+    let deletedSnapshot;
+
+    await mongoSession.withTransaction(async () => {
+      const sale = await Sale.findById(id).session(mongoSession);
+      if (!sale) throw new ApiError('Not found', 404);
+      if (sale.status === 'cancelled') throw new ApiError('This sale was already cancelled', 400);
+
+      // Reverse the sale's effects on stock/balance, same as a cancellation would.
+      if (sale.saleType !== 'shop') {
+        const customer = await Customer.findById(sale.customer).session(mongoSession);
+        if (customer) {
+          customer.balance += sale.grandTotal;
+          await customer.save({ session: mongoSession });
+        }
+      }
+
+      for (const item of sale.items) {
+        if (item.itemType === 'cement' && item.atc) {
+          const atc = await ATC.findById(item.atc).session(mongoSession);
+          if (atc) {
+            atc.bagsRemaining += item.actualQuantity;
+            if (atc.status === 'closed' && atc.bagsRemaining > 0) atc.status = 'arrived';
+            await atc.save({ session: mongoSession });
+          }
+        } else if (item.itemType === 'shop' && item.shopProduct) {
+          const product = await ShopProduct.findById(item.shopProduct).session(mongoSession);
+          if (product) {
+            product.stockQuantity += item.billQuantity;
+            await product.save({ session: mongoSession });
+          }
+        }
+      }
+
+      deletedSnapshot = sale.toObject();
+
+      // Log the full snapshot before removing the document, so a deleted sale is still traceable in the audit log.
+      await logAudit({ userId: session.user.id, userName: session.user.name, action: 'deleted', entity: 'Sale', entityId: sale._id, before: deletedSnapshot, after: { reason: reason || null }, session: mongoSession });
+
+      await Sale.deleteOne({ _id: sale._id }).session(mongoSession);
+    });
+
+    return NextResponse.json({ success: true, data: deletedSnapshot });
+  } catch (e) {
+    return NextResponse.json({ error: e.message }, { status: e.status || 400 });
+  } finally {
+    await mongoSession.endSession();
+  }
+}
+
 export async function PUT(request, { params }) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== 'admin') {

@@ -14,9 +14,9 @@ export default function SaleDetailPage() {
   const [brands, setBrands] = useState([]);
   const [trucks, setTrucks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [cancelling, setCancelling] = useState(false);
-  const [showCancel, setShowCancel] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
 
   const [showEdit, setShowEdit] = useState(false);
   const [editItems, setEditItems] = useState([]);
@@ -49,19 +49,18 @@ export default function SaleDetailPage() {
 
   useEffect(() => { load(); }, [id]);
 
-  const handleCancel = async () => {
-    setCancelling(true);
-    const res = await fetch(`/api/sales/${id}/cancel`, {
-      method: 'POST',
+  const handleDelete = async () => {
+    setDeleting(true);
+    const res = await fetch(`/api/sales/${id}`, {
+      method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason: cancelReason }),
+      body: JSON.stringify({ reason: deleteReason }),
     });
     const data = await res.json();
-    setCancelling(false);
+    setDeleting(false);
     if (data.success) {
-      toast.success('Sale cancelled');
-      setSale(data.data);
-      setShowCancel(false);
+      toast.success('Sale deleted, balance and stock reversed');
+      router.push('/admin/sales');
     } else {
       toast.error(data.error);
     }
@@ -284,20 +283,20 @@ export default function SaleDetailPage() {
         </div>
       </div>
 
-      {/* Cancel Modal */}
-      {showCancel && (
+      {/* Delete Modal */}
+      {showDelete && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 no-print">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold mb-2">Cancel Sale</h2>
-            <p className="text-sm text-gray-500 mb-4">This will reverse the balance deduction and restore ATC bags.</p>
-            <textarea value={cancelReason} onChange={e => setCancelReason(e.target.value)}
-              placeholder="Reason for cancellation..." rows={3}
+            <h2 className="text-lg font-bold mb-2">Delete Sale</h2>
+            <p className="text-sm text-gray-500 mb-4">This permanently removes this sale, refunds the customer's balance (if any), and restores ATC bags / shop stock. This cannot be undone.</p>
+            <textarea value={deleteReason} onChange={e => setDeleteReason(e.target.value)}
+              placeholder="Reason for deletion..." rows={3}
               className="w-full px-3 py-2 border rounded text-sm mb-4" />
             <div className="flex gap-3">
-              <button onClick={() => setShowCancel(false)} className="flex-1 px-4 py-2 border rounded text-sm">Go Back</button>
-              <button onClick={handleCancel} disabled={cancelling}
+              <button onClick={() => setShowDelete(false)} className="flex-1 px-4 py-2 border rounded text-sm">Go Back</button>
+              <button onClick={handleDelete} disabled={deleting}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded text-sm disabled:opacity-50">
-                {cancelling ? 'Cancelling...' : 'Confirm Cancel'}
+                {deleting ? 'Deleting...' : 'Confirm Delete'}
               </button>
             </div>
           </div>
@@ -312,10 +311,10 @@ export default function SaleDetailPage() {
               <h3 className="font-medium text-sm">Items</h3>
               <button
                 type="button"
-                onClick={() => { setShowEdit(false); setShowCancel(true); }}
+                onClick={() => { setShowEdit(false); setShowDelete(true); }}
                 className="px-3 py-1.5 border border-red-300 text-red-600 rounded text-xs font-medium hover:bg-red-50"
               >
-                Cancel Sale
+                Delete Sale
               </button>
             </div>
             {editItems.map((item, i) => (
