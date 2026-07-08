@@ -2,14 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Loader, PageHeader, Card, EmptyRow, StatusPill, inputCls } from '@/components/ui';
 import { formatNaira, formatDate } from '@/lib/format';
 import toast from 'react-hot-toast';
 
 export default function SalesPage() {
+  const searchParams = useSearchParams();
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState({ type: '', status: 'active', startDate: '', endDate: '' });
+  const [filter, setFilter] = useState({
+    type: searchParams.get('type') || '',
+    status: searchParams.get('status') || 'active',
+    startDate: searchParams.get('startDate') || '',
+    endDate: searchParams.get('endDate') || '',
+  });
 
   const load = async () => {
     setLoading(true);
@@ -60,6 +67,7 @@ export default function SalesPage() {
               <option value="">All types</option>
               <option value="cement">Cement</option>
               <option value="stonedust">Aggregate</option>
+              <option value="shop">Shop</option>
               <option value="mixed">Mixed</option>
             </select>
           </div>
@@ -102,7 +110,9 @@ export default function SalesPage() {
                 {sales.length === 0 && <EmptyRow colSpan={8} text="No sales" />}
                 {sales.map(s => (
                   <tr key={s._id}>
-                    <td className="px-4 py-3 font-medium">{s.saleNumber}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <Link href={`/admin/sales/${s._id}`} className="text-blue-600 hover:underline">{s.saleNumber}</Link>
+                    </td>
                     <td className="px-4 py-3">{formatDate(s.date)}</td>
                     <td className="px-4 py-3">
                       <Link href={`/admin/customers/${s.customer}`} className="hover:underline">{s.customerName}</Link>

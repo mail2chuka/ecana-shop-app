@@ -1,7 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { formatNaira, formatDate } from '@/lib/format';
+
+function periodToDateRange(period, groupBy) {
+  if (groupBy === 'year') return { start: `${period}-01-01`, end: `${period}-12-31` };
+  if (groupBy === 'month') {
+    const [y, m] = period.split('-').map(Number);
+    const lastDay = new Date(y, m, 0).getDate();
+    return { start: `${period}-01`, end: `${period}-${String(lastDay).padStart(2, '0')}` };
+  }
+  return { start: period, end: period };
+}
 
 export default function SalesReportPage() {
   const [data, setData] = useState(null);
@@ -47,7 +58,8 @@ export default function SalesReportPage() {
 
   const cementTotal = data?.totals?.find(t => t._id === 'cement')?.total || 0;
   const stoneTotal = data?.totals?.find(t => t._id === 'stonedust')?.total || 0;
-  const grandTotal = cementTotal + stoneTotal;
+  const shopTotal = data?.totals?.find(t => t._id === 'shop')?.total || 0;
+  const grandTotal = cementTotal + stoneTotal + shopTotal;
 
   return (
     <div>
@@ -97,7 +109,7 @@ export default function SalesReportPage() {
 
       {data && (
         <>
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <div className="bg-white border rounded-lg p-4">
               <p className="text-xs text-gray-500">Cement Sales</p>
               <p className="text-xl font-bold mt-1">{formatNaira(cementTotal)}</p>
@@ -105,6 +117,10 @@ export default function SalesReportPage() {
             <div className="bg-white border rounded-lg p-4">
               <p className="text-xs text-gray-500">Aggregate Sales</p>
               <p className="text-xl font-bold mt-1">{formatNaira(stoneTotal)}</p>
+            </div>
+            <div className="bg-white border rounded-lg p-4">
+              <p className="text-xs text-gray-500">Shop Sales</p>
+              <p className="text-xl font-bold mt-1">{formatNaira(shopTotal)}</p>
             </div>
             <div className="bg-white border rounded-lg p-4">
               <p className="text-xs text-gray-500">Grand Total</p>
@@ -130,14 +146,22 @@ export default function SalesReportPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {data.grouped.map((row, i) => (
-                  <tr key={i}>
-                    <td className="px-4 py-2">{row._id.period}</td>
-                    <td className="px-4 py-2 capitalize">{row._id.saleType}</td>
-                    <td className="px-4 py-2 text-right">{row.count}</td>
-                    <td className="px-4 py-2 text-right font-medium">{formatNaira(row.total)}</td>
-                  </tr>
-                ))}
+                {data.grouped.map((row, i) => {
+                  const { start, end } = periodToDateRange(row._id.period, groupBy);
+                  const href = `/admin/sales?type=${row._id.saleType}&status=active&startDate=${start}&endDate=${end}`;
+                  return (
+                    <tr key={i} className="hover:bg-gray-50">
+                      <td className="px-4 py-2">
+                        <Link href={href} className="text-blue-600 hover:underline">{row._id.period}</Link>
+                      </td>
+                      <td className="px-4 py-2 capitalize">{row._id.saleType}</td>
+                      <td className="px-4 py-2 text-right">
+                        <Link href={href} className="text-blue-600 hover:underline">{row.count}</Link>
+                      </td>
+                      <td className="px-4 py-2 text-right font-medium">{formatNaira(row.total)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             {data.grouped.length === 0 && <p className="text-center py-8 text-gray-500">No sales in this period</p>}

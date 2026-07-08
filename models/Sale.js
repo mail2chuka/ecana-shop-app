@@ -59,6 +59,10 @@ const SaleSchema = new mongoose.Schema({
   notes: String,
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   createdByName: String,
+
+  editedAt: Date,
+  editedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  editedByName: String,
 }, { timestamps: true });
 
 SaleSchema.index({ customer: 1, date: -1 });
