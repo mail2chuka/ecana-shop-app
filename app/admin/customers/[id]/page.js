@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { formatNaira, formatDate } from '@/lib/format';
+import { formatNaira, formatDate, formatCustomerLabel } from '@/lib/format';
 import { Modal, Field, FormButtons, inputCls, CurrencyInput } from '@/components/ui';
 import toast from 'react-hot-toast';
 
@@ -75,7 +75,7 @@ export default function CustomerDetailPage() {
     <div>
       <div className="mb-6 flex justify-between items-start no-print">
         <div>
-          <h1 className="text-xl font-bold">{customer.name}</h1>
+          <h1 className="text-xl font-bold">{formatCustomerLabel(customer)}</h1>
           {customer.businessName && <p className="text-sm text-gray-500">{customer.businessName}</p>}
           <p className="text-sm text-gray-500">{customer.phone}</p>
         </div>
@@ -186,7 +186,7 @@ export default function CustomerDetailPage() {
       )}
 
       {/* Record Payment Modal */}
-      <Modal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} title={`Record Payment — ${customer.name}`}>
+      <Modal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} title={`Record Payment — ${formatCustomerLabel(customer)}`}>
         <form onSubmit={handlePaymentSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Payment Method" required>

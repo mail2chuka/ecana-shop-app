@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, StatusPill } from '@/components/ui';
-import { formatNaira, formatDate } from '@/lib/format';
+import { formatNaira, formatDate, formatCustomerLabel } from '@/lib/format';
 import toast from 'react-hot-toast';
 
 const blankProductForm = { name: '', unit: 'unit', price: '', stockQuantity: 0, cementBrand: '' };
@@ -66,7 +66,8 @@ export default function ShopPage() {
         customers.filter(c =>
           c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
           c.phone.includes(customerSearch) ||
-          (c.businessName || '').toLowerCase().includes(customerSearch.toLowerCase())
+          (c.businessName || '').toLowerCase().includes(customerSearch.toLowerCase()) ||
+          (c.customerId || '').includes(customerSearch)
         )
       );
       setShowCustomerDrop(true);
@@ -278,14 +279,14 @@ export default function ShopPage() {
             {selectedCustomer ? (
               <div className="flex justify-between items-center bg-gray-50 border rounded px-3 py-2">
                 <div>
-                  <p className="font-medium text-sm">{selectedCustomer.name}</p>
+                  <p className="font-medium text-sm">{formatCustomerLabel(selectedCustomer)}</p>
                   {selectedCustomer.phone && <p className="text-xs text-gray-500">{selectedCustomer.phone}</p>}
                 </div>
                 <button onClick={() => { setSelectedCustomer(null); setCustomerSearch(''); }} className="text-xs text-red-500">Change</button>
               </div>
             ) : (
               <div className="relative">
-                <input type="text" placeholder="Search customer (e.g. Walk-in Customer)..." value={customerSearch}
+                <input type="text" placeholder="Search customer by name, phone, or ID..." value={customerSearch}
                   onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDrop(true); }}
                   onFocus={() => setShowCustomerDrop(true)}
                   className={inputCls} />
@@ -295,7 +296,7 @@ export default function ShopPage() {
                       <button key={c._id} type="button"
                         onClick={() => { setSelectedCustomer(c); setShowCustomerDrop(false); setCustomerSearch(''); }}
                         className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm border-b last:border-0">
-                        <p className="font-medium">{c.name}</p>
+                        <p className="font-medium">{formatCustomerLabel(c)}</p>
                         <p className="text-xs text-gray-500">{c.phone}</p>
                       </button>
                     ))}

@@ -12,6 +12,7 @@ import ShopProduct from '@/models/ShopProduct';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
 import { ApiError } from '@/lib/apiError';
+import { formatCustomerLabel } from '@/lib/format';
 
 async function nextSaleNumber() {
   const year = new Date().getFullYear();
@@ -193,7 +194,7 @@ export async function POST(request) {
         transactionNumber,
         saleType,
         customer: customer._id,
-        customerName: customer.name,
+        customerName: formatCustomerLabel(customer),
         customerPhone: customer.phone,
         ...truckData,
         date: date ? new Date(date) : new Date(),

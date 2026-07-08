@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput } from '@/components/ui';
-import { formatNaira, formatDate } from '@/lib/format';
+import { formatNaira, formatDate, formatCustomerLabel } from '@/lib/format';
 import toast from 'react-hot-toast';
 
 const blankForm = {
@@ -54,7 +54,8 @@ export default function PaymentsPage() {
     const filtered = customers.filter(c =>
       c.name.toLowerCase().includes(query) ||
       c.phone.includes(query) ||
-      (c.businessName || '').toLowerCase().includes(query)
+      (c.businessName || '').toLowerCase().includes(query) ||
+      (c.customerId || '').includes(query)
     ).slice(0, 15); // Limit to 15 results for performance
 
     setFilteredCustomers(filtered);
@@ -199,7 +200,7 @@ export default function PaymentsPage() {
                 value={customerSearch}
                 onChange={e => setCustomerSearch(e.target.value)}
                 onFocus={() => filteredCustomers.length > 0 && setShowDropdown(true)}
-                placeholder="Search by name, phone, or business..."
+                placeholder="Search by name, phone, business, or ID..."
                 className={inputCls}
                 autoComplete="off"
               />
@@ -213,7 +214,7 @@ export default function PaymentsPage() {
                       onClick={() => selectCustomer(c)}
                       className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b transition"
                     >
-                      <p className="font-medium text-sm">{c.name}</p>
+                      <p className="font-medium text-sm">{formatCustomerLabel(c)}</p>
                       <p className="text-xs text-gray-500">{c.phone} · {c.businessName ? c.businessName : 'Individual'} · Balance: {formatNaira(c.balance)}</p>
                     </button>
                   ))}
@@ -222,7 +223,7 @@ export default function PaymentsPage() {
 
               {selectedCustomer && (
                 <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                  <p className="font-medium text-blue-900">{selectedCustomer.name}</p>
+                  <p className="font-medium text-blue-900">{formatCustomerLabel(selectedCustomer)}</p>
                   <p className="text-xs text-blue-700">{selectedCustomer.phone} · Current Balance: {formatNaira(selectedCustomer.balance)}</p>
                 </div>
               )}

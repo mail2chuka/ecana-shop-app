@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { formatNaira } from '@/lib/format';
+import { formatNaira, formatCustomerLabel } from '@/lib/format';
 import { CurrencyInput } from '@/components/ui';
 
 export default function NewAggregateSalePage() {
@@ -47,7 +47,8 @@ export default function NewAggregateSalePage() {
     ? customers.filter(c =>
         c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
         c.phone.includes(customerSearch) ||
-        (c.businessName || '').toLowerCase().includes(customerSearch.toLowerCase())
+        (c.businessName || '').toLowerCase().includes(customerSearch.toLowerCase()) ||
+        (c.customerId || '').includes(customerSearch)
       )
     : customers.slice(0, 20);
 
@@ -158,14 +159,14 @@ export default function NewAggregateSalePage() {
           {selectedCustomer ? (
             <div className="flex justify-between items-center bg-gray-50 border rounded px-3 py-2">
               <div>
-                <p className="font-medium text-sm">{selectedCustomer.name}</p>
+                <p className="font-medium text-sm">{formatCustomerLabel(selectedCustomer)}</p>
                 <p className="text-xs text-gray-500">{selectedCustomer.phone} · Balance: <span className={selectedCustomer.balance < 0 ? 'text-red-600' : 'text-green-600'}>{formatNaira(selectedCustomer.balance)}</span></p>
               </div>
               <button type="button" onClick={() => { setSelectedCustomer(null); setCustomerSearch(''); }} className="text-xs text-red-500">Change</button>
             </div>
           ) : (
             <div className="relative">
-              <input type="text" placeholder="Search customer..." value={customerSearch}
+              <input type="text" placeholder="Search customer by name, phone, or ID..." value={customerSearch}
                 onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDrop(true); }}
                 onFocus={() => setShowCustomerDrop(true)}
                 className="w-full px-3 py-2 border rounded text-sm" />
@@ -175,7 +176,7 @@ export default function NewAggregateSalePage() {
                     <button key={c._id} type="button"
                       onClick={() => { setSelectedCustomer(c); setShowCustomerDrop(false); setCustomerSearch(''); }}
                       className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm border-b last:border-0">
-                      <p className="font-medium">{c.name} {c.businessName && `(${c.businessName})`}</p>
+                      <p className="font-medium">{formatCustomerLabel(c)} {c.businessName && `— ${c.businessName}`}</p>
                       <p className="text-xs text-gray-500">{c.phone} · Bal: {formatNaira(c.balance)}</p>
                     </button>
                   ))}

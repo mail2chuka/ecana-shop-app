@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput } from '@/components/ui';
-import { formatNaira } from '@/lib/format';
+import { formatNaira, formatCustomerLabel } from '@/lib/format';
 import toast from 'react-hot-toast';
 
 const blankForm = {
@@ -89,7 +89,7 @@ export default function CustomersPage() {
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name, phone, or business name..."
+          placeholder="Search by name, phone, business name, or ID..."
           className={inputCls + ' max-w-md'}
         />
       </div>
@@ -111,7 +111,7 @@ export default function CustomersPage() {
               {customers.map(c => (
                 <tr key={c._id}>
                   <td className="px-4 py-3 font-medium">
-                    <Link href={`/admin/customers/${c._id}`} className="hover:underline">{c.name}</Link>
+                    <Link href={`/admin/customers/${c._id}`} className="hover:underline">{formatCustomerLabel(c)}</Link>
                   </td>
                   <td className="px-4 py-3 text-gray-500">{c.phone}</td>
                   <td className="px-4 py-3 text-gray-500">{c.businessName || '-'}</td>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { formatNaira } from '@/lib/format';
+import { formatNaira, formatCustomerLabel } from '@/lib/format';
 import { CurrencyInput } from '@/components/ui';
 
 export default function NewCementSalePage() {
@@ -67,7 +67,8 @@ export default function NewCementSalePage() {
       setFilteredCustomers(
         customers.filter(c =>
           c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-          c.phone.includes(customerSearch)
+          c.phone.includes(customerSearch) ||
+          (c.customerId || '').includes(customerSearch)
         )
       );
       setShowCustomerDrop(true);
@@ -101,7 +102,7 @@ export default function NewCementSalePage() {
     setDistributions([...distributions, {
       id: Date.now(),
       customer: formCustomer._id,
-      customerName: formCustomer.name,
+      customerName: formatCustomerLabel(formCustomer),
       qty,
       billQty,
       price,
@@ -250,19 +251,19 @@ export default function NewCementSalePage() {
                       type="button"
                       onClick={() => {
                         setFormCustomer(c);
-                        setCustomerSearch(c.name);
+                        setCustomerSearch(formatCustomerLabel(c));
                         setShowCustomerDrop(false);
                       }}
                       className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-b"
                     >
-                      <p className="font-medium">{c.name}</p>
+                      <p className="font-medium">{formatCustomerLabel(c)}</p>
                       <p className="text-xs text-gray-500">{c.phone}</p>
                     </button>
                   ))}
                 </div>
               )}
               {formCustomer && (
-                <p className="text-xs text-green-600 mt-1">✓ Selected: {formCustomer.name}</p>
+                <p className="text-xs text-green-600 mt-1">✓ Selected: {formatCustomerLabel(formCustomer)}</p>
               )}
             </div>
 

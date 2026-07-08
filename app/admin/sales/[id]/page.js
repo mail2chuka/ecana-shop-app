@@ -118,8 +118,7 @@ export default function SaleDetailPage() {
           <thead>
             <tr className="border-b">
               <th className="py-2 text-left">Description</th>
-              <th className="py-2 text-right">Bill Qty</th>
-              <th className="py-2 text-right">Actual Qty</th>
+              <th className="py-2 text-right">Qty</th>
               <th className="py-2 text-right">Unit Price</th>
               <th className="py-2 text-right">Amount</th>
             </tr>
@@ -141,7 +140,6 @@ export default function SaleDetailPage() {
                   )}
                 </td>
                 <td className="py-2 text-right">{item.billQuantity} {item.itemType === 'cement' ? 'bags' : 'tonnes'}</td>
-                <td className="py-2 text-right">{item.actualQuantity} {item.itemType === 'cement' ? 'bags' : 'tonnes'}</td>
                 <td className="py-2 text-right">{formatNaira(item.unitPrice)}</td>
                 <td className="py-2 text-right font-medium">{formatNaira(item.lineTotal)}</td>
               </tr>

@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Customer from '@/models/Customer';
 import { logAudit } from '@/lib/audit';
+import { generateCustomerId } from '@/lib/customerId';
 
 export async function GET(request) {
   try {
@@ -15,7 +16,7 @@ export async function GET(request) {
     const query = { isActive: true };
     if (search) {
       const re = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-      query.$or = [{ name: re }, { phone: re }, { businessName: re }];
+      query.$or = [{ name: re }, { phone: re }, { businessName: re }, { customerId: re }];
     }
     const customers = await Customer.find(query).sort({ name: 1 }).limit(500);
     return NextResponse.json({ success: true, data: customers });
@@ -31,7 +32,9 @@ export async function POST(request) {
     await dbConnect();
     const body = await request.json();
     if (!body.name || !body.phone) return NextResponse.json({ error: 'Name and phone required' }, { status: 400 });
+    const customerId = await generateCustomerId();
     const customer = await Customer.create({
+      customerId,
       name: body.name,
       phone: body.phone,
       address: body.address,

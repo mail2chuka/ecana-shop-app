@@ -8,6 +8,7 @@ import CustomerPayment from '@/models/CustomerPayment';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
 import { ApiError } from '@/lib/apiError';
+import { formatCustomerLabel } from '@/lib/format';
 
 export async function GET(request) {
   try {
@@ -54,7 +55,7 @@ export async function POST(request) {
 
       const payment = await CustomerPayment.create([{
         customer: customerId,
-        customerName: customer.name,
+        customerName: formatCustomerLabel(customer),
         transactionNumber,
         amount: Number(amount),
         method,
