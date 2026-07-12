@@ -35,8 +35,15 @@ const loadingOptions = [
 
 const LOADING_WINDOW_MS = 6 * 60 * 60 * 1000;
 
-const getStatusLabel = (atc) => {
-  if (atc.status === 'loaded') return 'Just Loaded';
+const getStatusLabel = (atc, nowMs) => {
+  if (atc.status === 'loaded') {
+    if (!atc.loadedAt) return 'Just Loaded';
+    const elapsedMs = nowMs - new Date(atc.loadedAt).getTime();
+    if (elapsedMs >= LOADING_WINDOW_MS) return 'Delivered';
+    if (elapsedMs < 60 * 60 * 1000) return 'Just Loaded';
+    const hours = Math.floor(elapsedMs / (60 * 60 * 1000));
+    return `Loaded ${hours} hour${hours === 1 ? '' : 's'} ago`;
+  }
   if (atc.status === 'delivered') return 'Delivered';
   return atc.status;
 };
@@ -221,7 +228,7 @@ export default function ATCsPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-500">{a.assignedTruckPlate || '-'}</td>
                     <td className="px-4 py-3">
-                      <StatusPill status={getStatusLabel(a)} color={statusColor[a.status]} />
+                      <StatusPill status={getStatusLabel(a, nowMs)} color={statusColor[a.status]} />
                       {a.status === 'loaded' && a.loadedAt && (
                         <div className="mt-1 text-xs text-gray-500">{formatCountdown(a.loadedAt, nowMs)}</div>
                       )}
@@ -232,7 +239,7 @@ export default function ATCsPage() {
                           Assign Truck
                         </button>
                       )}
-                      {a.assignedTruck && !['delivered', 'closed'].includes(a.status) && (
+                      {a.status === 'assigned' && a.assignedTruck && (
                         <>
                           <button onClick={() => setAssignModal(a)} className="text-sm text-blue-600 hover:text-blue-800 mr-3">
                             Reassign
@@ -241,11 +248,6 @@ export default function ATCsPage() {
                             Loading
                           </button>
                         </>
-                      )}
-                      {!a.assignedTruck && a.status !== 'pending' && !['delivered', 'closed'].includes(a.status) && (
-                        <button onClick={() => setAssignModal(a)} className="text-sm text-blue-600 hover:text-blue-800 mr-3">
-                          Assign Truck
-                        </button>
                       )}
                     </td>
                   </tr>
