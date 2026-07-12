@@ -116,13 +116,11 @@ export default function ATCsPage() {
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[800px]">
+          <table className="w-full text-sm min-w-[700px]">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">ATC #</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Brand</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">Paid For</th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500">Remaining</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Truck</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
@@ -130,13 +128,11 @@ export default function ATCsPage() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {atcs.length === 0 && <EmptyRow colSpan={8} text="No ATCs" />}
+              {atcs.length === 0 && <EmptyRow colSpan={6} text="No ATCs" />}
               {atcs.map(a => (
                 <tr key={a._id}>
                   <td className="px-4 py-3 font-medium">{formatAtcNumber(a, brands)}</td>
                   <td className="px-4 py-3">{formatDate(a.atcDate)}</td>
-                  <td className="px-4 py-3">{a.cementBrandName}</td>
-                  <td className="px-4 py-3 text-right">{formatNumber(a.bagsPaidFor)}</td>
                   <td className="px-4 py-3 text-right font-medium">{formatNumber(a.bagsRemaining)}</td>
                   <td className="px-4 py-3 text-gray-500">{a.assignedTruckPlate || '-'}</td>
                   <td className="px-4 py-3"><StatusPill status={a.status} color={statusColor[a.status]} /></td>
@@ -180,7 +176,7 @@ export default function ATCsPage() {
             <Field label="ATC Date" required>
               <input type="date" value={form.atcDate} onChange={e => setForm({ ...form, atcDate: e.target.value })} className={inputCls} required />
             </Field>
-            <Field label="Bags Paid For" required>
+            <Field label="Quantity in Bags" required>
               <input type="number" value={form.bagsPaidFor} onChange={e => setForm({ ...form, bagsPaidFor: e.target.value })} className={inputCls} required min="1" />
             </Field>
           </div>
