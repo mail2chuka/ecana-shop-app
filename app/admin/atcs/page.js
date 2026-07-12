@@ -176,19 +176,19 @@ export default function ATCsPage() {
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[1200px]">
+          <table className="w-full text-sm min-w-[980px]">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">ATC #</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Assigned Date</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Delivery Date</th>
+                <th className="px-3 py-3 text-left font-medium text-gray-500">Assigned Date</th>
+                <th className="px-3 py-3 text-left font-medium text-gray-500">Delivery Date</th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500">Remaining</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Qty Supplied</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Ref</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Truck</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
+                <th className="px-3 py-3 text-left font-medium text-gray-500">Qty Supplied</th>
+                <th className="px-3 py-3 text-left font-medium text-gray-500">Ref</th>
+                <th className="px-3 py-3 text-left font-medium text-gray-500">Truck</th>
+                <th className="px-3 py-3 text-left font-medium text-gray-500">Status</th>
+                <th className="px-3 py-3 text-right font-medium text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -201,12 +201,12 @@ export default function ATCsPage() {
                   <tr key={a._id}>
                     <td className="px-4 py-3 font-medium">{formatAtcNumber(a, brands)}</td>
                     <td className="px-4 py-3">{formatDate(a.atcDate)}</td>
-                    <td className="px-4 py-3">{a.assignedDate ? formatDate(a.assignedDate) : '-'}</td>
-                    <td className="px-4 py-3">{deliveryDate ? formatDate(deliveryDate) : '-'}</td>
-                    <td className="px-4 py-3 text-right font-medium">{formatQtyRatio(formatNumber(a.bagsRemaining), formatNumber(a.bagsPaidFor))}</td>
-                    <td className="px-4 py-3 align-top">
+                    <td className="px-3 py-3">{a.assignedDate ? formatDate(a.assignedDate) : '-'}</td>
+                    <td className="px-3 py-3">{deliveryDate ? formatDate(deliveryDate) : '-'}</td>
+                    <td className="px-4 py-3 text-right font-medium whitespace-nowrap">{formatQtyRatio(formatNumber(a.bagsRemaining), formatNumber(a.bagsPaidFor))}</td>
+                    <td className="px-3 py-3 align-top">
                       {supplies.length > 0 ? (
-                        <div className="space-y-1">
+                        <div className="space-y-1 text-xs">
                           {supplies.map((s, idx) => (
                             <div key={`${a._id}-qty-${idx}`} className="whitespace-nowrap">
                               {formatNumber(s.qtySupplied)}
@@ -215,9 +215,9 @@ export default function ATCsPage() {
                         </div>
                       ) : '-'}
                     </td>
-                    <td className="px-4 py-3 align-top">
+                    <td className="px-3 py-3 align-top">
                       {supplies.length > 0 ? (
-                        <div className="space-y-1">
+                        <div className="space-y-1 text-xs">
                           {supplies.map((s, idx) => (
                             <div key={`${a._id}-ref-${idx}`} className="whitespace-nowrap font-medium text-gray-700">
                               {s.reference}
@@ -226,14 +226,14 @@ export default function ATCsPage() {
                         </div>
                       ) : '-'}
                     </td>
-                    <td className="px-4 py-3 text-gray-500">{a.assignedTruckPlate || '-'}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3 text-gray-500">{a.assignedTruckPlate || '-'}</td>
+                    <td className="px-3 py-3">
                       <StatusPill status={getStatusLabel(a, nowMs)} color={statusColor[a.status]} />
                       {a.status === 'loaded' && a.loadedAt && (
                         <div className="mt-1 text-xs text-gray-500">{formatCountdown(a.loadedAt, nowMs)}</div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-3 py-3 text-right">
                       {(a.status === 'pending' && !a.assignedTruck) && (
                         <button onClick={() => setAssignModal(a)} className="text-sm text-blue-600 hover:text-blue-800 mr-3">
                           Assign Truck
