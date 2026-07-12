@@ -12,7 +12,7 @@ const ATCSchema = new mongoose.Schema({
   bagsRemaining: { type: Number, required: true },
   status: {
     type: String,
-    enum: ['pending', 'assigned', 'collecting', 'arrived', 'closed'],
+    enum: ['pending', 'assigned', 'loaded', 'collecting', 'arrived', 'delivered', 'closed'],
     default: 'pending',
   },
   assignedTruck: { type: mongoose.Schema.Types.ObjectId, ref: 'Truck' },

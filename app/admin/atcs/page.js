@@ -122,14 +122,6 @@ export default function ATCsPage() {
     else toast.error(d.error);
   };
 
-  const markArrived = async (atc) => {
-    if (!confirm(`Mark ATC ${formatAtcNumber(atc, brands)} as arrived?`)) return;
-    const r = await fetch(`/api/atcs/${atc._id}/arrive`, { method: 'POST' });
-    const d = await r.json();
-    if (d.success) { toast.success('Marked arrived'); load(); }
-    else toast.error(d.error);
-  };
-
   const handleLoading = async (e) => {
     e.preventDefault();
     if (!loadingModal) return;
@@ -310,7 +302,7 @@ export default function ATCsPage() {
               <select value={selectedTruck} onChange={e => setSelectedTruck(e.target.value)} className={inputCls} required>
                 <option value="">— Select truck —</option>
                 {trucks.map(t => {
-                  const busyOn = atcs.find(a => a._id !== assignModal._id && a.assignedTruck === t._id && a.status === 'assigned');
+                  const busyOn = atcs.find(a => a._id !== assignModal._id && a.assignedTruck === t._id && ['assigned', 'loaded', 'collecting'].includes(a.status));
                   return (
                     <option key={t._id} value={t._id} disabled={!!busyOn}>
                       {t.plateNumber} — {t.driverName}{busyOn ? ` (busy on ${formatAtcNumber(busyOn, brands)})` : ''}
