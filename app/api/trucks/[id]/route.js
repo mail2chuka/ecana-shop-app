@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Truck from '@/models/Truck';
 import { logAudit } from '@/lib/audit';
+import { requireObjectId } from '@/lib/validate';
 
 export async function PUT(request, { params }) {
   try {
@@ -11,14 +12,23 @@ export async function PUT(request, { params }) {
     if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { id } = await params;
+    requireObjectId(id, 'truck id');
     const body = await request.json();
     const before = await Truck.findById(id);
     if (!before) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    const updated = await Truck.findByIdAndUpdate(id, body, { new: true });
+    const update = {
+      name: body.name,
+      plateNumber: body.plateNumber,
+      driverName: body.driverName,
+      phone: body.phone,
+      isActive: typeof body.isActive === 'boolean' ? body.isActive : undefined,
+    };
+    Object.keys(update).forEach((key) => update[key] === undefined && delete update[key]);
+    const updated = await Truck.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     await logAudit({ userId: session.user.id, userName: session.user.name, action: 'updated', entity: 'Truck', entityId: id, before, after: updated });
     return NextResponse.json({ success: true, data: updated });
   } catch (e) {
-    return NextResponse.json({ error: e.message }, { status: 400 });
+    return NextResponse.json({ error: e.message || 'Bad request' }, { status: e.status || 400 });
   }
 }
 
@@ -28,11 +38,12 @@ export async function DELETE(request, { params }) {
     if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { id } = await params;
-    const updated = await Truck.findByIdAndUpdate(id, { isActive: false }, { new: true });
+    requireObjectId(id, 'truck id');
+    const updated = await Truck.findByIdAndUpdate(id, { isActive: false }, { new: true, runValidators: true });
     if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     await logAudit({ userId: session.user.id, userName: session.user.name, action: 'deactivated', entity: 'Truck', entityId: id });
     return NextResponse.json({ success: true, data: updated });
   } catch (e) {
-    return NextResponse.json({ error: e.message }, { status: 400 });
+    return NextResponse.json({ error: e.message || 'Bad request' }, { status: e.status || 400 });
   }
 }

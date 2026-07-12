@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Customer from '@/models/Customer';
 import { logAudit } from '@/lib/audit';
+import { requireObjectId } from '@/lib/validate';
 
 export async function GET(request, { params }) {
   try {
@@ -11,11 +12,12 @@ export async function GET(request, { params }) {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { id } = await params;
+    requireObjectId(id, 'customer id');
     const customer = await Customer.findById(id);
     if (!customer) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ success: true, data: customer });
   } catch (e) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    return NextResponse.json({ error: e.message || 'Internal server error' }, { status: e.status || 500 });
   }
 }
 
@@ -25,15 +27,24 @@ export async function PUT(request, { params }) {
     if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { id } = await params;
+    requireObjectId(id, 'customer id');
     const body = await request.json();
-    delete body.balance; // Cannot edit balance directly
+    const update = {
+      name: body.name,
+      phone: body.phone,
+      address: body.address,
+      businessName: body.businessName,
+      creditLimit: body.creditLimit !== undefined ? Number(body.creditLimit) : undefined,
+      isActive: typeof body.isActive === 'boolean' ? body.isActive : undefined,
+    };
+    Object.keys(update).forEach((key) => update[key] === undefined && delete update[key]);
     const before = await Customer.findById(id);
     if (!before) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    const updated = await Customer.findByIdAndUpdate(id, body, { new: true });
+    const updated = await Customer.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     await logAudit({ userId: session.user.id, userName: session.user.name, action: 'updated', entity: 'Customer', entityId: id, before, after: updated });
     return NextResponse.json({ success: true, data: updated });
   } catch (e) {
-    return NextResponse.json({ error: e.message }, { status: 400 });
+    return NextResponse.json({ error: e.message || 'Bad request' }, { status: e.status || 400 });
   }
 }
 
@@ -43,11 +54,12 @@ export async function DELETE(request, { params }) {
     if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { id } = await params;
+    requireObjectId(id, 'customer id');
     const updated = await Customer.findByIdAndUpdate(id, { isActive: false }, { new: true });
     if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     await logAudit({ userId: session.user.id, userName: session.user.name, action: 'deactivated', entity: 'Customer', entityId: id });
     return NextResponse.json({ success: true, data: updated });
   } catch (e) {
-    return NextResponse.json({ error: e.message }, { status: 400 });
+    return NextResponse.json({ error: e.message || 'Bad request' }, { status: e.status || 400 });
   }
 }

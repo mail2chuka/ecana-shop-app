@@ -1,9 +1,13 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) { console.error('MONGODB_URI not set in .env'); process.exit(1); }
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@ecana.com';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || crypto.randomBytes(16).toString('hex');
 
 const UserSchema = new mongoose.Schema({
   name: String,
@@ -21,22 +25,21 @@ async function seed() {
 
     const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
-    const exists = await User.findOne({ email: 'admin@ecana.com' });
+    const exists = await User.findOne({ email: ADMIN_EMAIL });
     if (exists) {
       console.log('Admin already exists.');
-      console.log('Email:    admin@ecana.com');
-      console.log('Password: admin123');
+      console.log(`Email:    ${ADMIN_EMAIL}`);
       process.exit(0);
     }
 
-    const password = await bcrypt.hash('admin123', 10);
-    await User.create({ name: 'Admin', email: 'admin@ecana.com', password, role: 'admin' });
+    const password = await bcrypt.hash(ADMIN_PASSWORD, 10);
+    await User.create({ name: 'Admin', email: ADMIN_EMAIL, password, role: 'admin' });
 
     console.log('====================================');
     console.log('Admin user created successfully!');
     console.log('====================================');
-    console.log('Email:    admin@ecana.com');
-    console.log('Password: admin123');
+    console.log(`Email:    ${ADMIN_EMAIL}`);
+    console.log(`Password: ${ADMIN_PASSWORD}`);
     console.log('====================================');
     console.log('\nNext steps:');
     console.log('1. Login at http://localhost:3000');
