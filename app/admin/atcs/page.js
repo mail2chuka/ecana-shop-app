@@ -19,6 +19,8 @@ const formatAtcNumber = (atc, brands) => {
   return `${abbr}-${atc.atcNumber}`;
 };
 
+const formatQtyRatio = (remaining, total) => `${remaining}/${total}`;
+
 const blankForm = { atcNumber: '', cementBrand: '', atcDate: new Date().toISOString().split('T')[0], bagsPaidFor: '', notes: '' };
 
 export default function ATCsPage() {
@@ -116,38 +118,71 @@ export default function ATCsPage() {
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[700px]">
+          <table className="w-full text-sm min-w-[1200px]">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">ATC #</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Assigned Date</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Delivery Date</th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500">Remaining</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Qty Supplied</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Ref</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Truck</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {atcs.length === 0 && <EmptyRow colSpan={6} text="No ATCs" />}
-              {atcs.map(a => (
-                <tr key={a._id}>
-                  <td className="px-4 py-3 font-medium">{formatAtcNumber(a, brands)}</td>
-                  <td className="px-4 py-3">{formatDate(a.atcDate)}</td>
-                  <td className="px-4 py-3 text-right font-medium">{formatNumber(a.bagsRemaining)}</td>
-                  <td className="px-4 py-3 text-gray-500">{a.assignedTruckPlate || '-'}</td>
-                  <td className="px-4 py-3"><StatusPill status={a.status} color={statusColor[a.status]} /></td>
-                  <td className="px-4 py-3 text-right">
-                    {!['arrived', 'closed'].includes(a.status) && (
-                      <button onClick={() => setAssignModal(a)} className="text-sm text-blue-600 hover:text-blue-800 mr-3">
-                        {a.assignedTruck ? 'Reassign' : 'Assign Truck'}
-                      </button>
-                    )}
-                    {a.status === 'assigned' && (
-                      <button onClick={() => markArrived(a)} className="text-sm text-green-600 hover:text-green-800">Arrived</button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {atcs.length === 0 && <EmptyRow colSpan={10} text="No ATCs" />}
+              {atcs.map(a => {
+                const supplies = a.supplies || [];
+                const deliveryDate = a.deliveryDate || a.arrivalDate;
+
+                return (
+                  <tr key={a._id}>
+                    <td className="px-4 py-3 font-medium">{formatAtcNumber(a, brands)}</td>
+                    <td className="px-4 py-3">{formatDate(a.atcDate)}</td>
+                    <td className="px-4 py-3">{a.assignedDate ? formatDate(a.assignedDate) : '-'}</td>
+                    <td className="px-4 py-3">{deliveryDate ? formatDate(deliveryDate) : '-'}</td>
+                    <td className="px-4 py-3 text-right font-medium">{formatQtyRatio(formatNumber(a.bagsRemaining), formatNumber(a.bagsPaidFor))}</td>
+                    <td className="px-4 py-3 align-top">
+                      {supplies.length > 0 ? (
+                        <div className="space-y-1">
+                          {supplies.map((s, idx) => (
+                            <div key={`${a._id}-qty-${idx}`} className="whitespace-nowrap">
+                              {formatNumber(s.qtySupplied)}
+                            </div>
+                          ))}
+                        </div>
+                      ) : '-'}
+                    </td>
+                    <td className="px-4 py-3 align-top">
+                      {supplies.length > 0 ? (
+                        <div className="space-y-1">
+                          {supplies.map((s, idx) => (
+                            <div key={`${a._id}-ref-${idx}`} className="whitespace-nowrap font-medium text-gray-700">
+                              {s.reference}
+                            </div>
+                          ))}
+                        </div>
+                      ) : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500">{a.assignedTruckPlate || '-'}</td>
+                    <td className="px-4 py-3"><StatusPill status={a.status} color={statusColor[a.status]} /></td>
+                    <td className="px-4 py-3 text-right">
+                      {!['arrived', 'closed'].includes(a.status) && (
+                        <button onClick={() => setAssignModal(a)} className="text-sm text-blue-600 hover:text-blue-800 mr-3">
+                          {a.assignedTruck ? 'Reassign' : 'Assign Truck'}
+                        </button>
+                      )}
+                      {a.status === 'assigned' && (
+                        <button onClick={() => markArrived(a)} className="text-sm text-green-600 hover:text-green-800">Arrived</button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

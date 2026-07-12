@@ -30,6 +30,7 @@ export async function POST(request, { params }) {
     atc.assignedTruck = truck._id;
     atc.assignedTruckPlate = truck.plateNumber;
     atc.assignedDriverName = truck.driverName;
+    if (!atc.assignedDate) atc.assignedDate = new Date();
     if (atc.status === 'pending') atc.status = 'assigned';
     await atc.save();
 

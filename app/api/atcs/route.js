@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import ATC from '@/models/ATC';
+import Sale from '@/models/Sale';
 import CementBrand from '@/models/CementBrand';
 import Supplier from '@/models/Supplier';
 import { logAudit } from '@/lib/audit';
@@ -27,7 +28,35 @@ export async function GET(request) {
     }
     
     const atcs = await ATC.find(query).sort({ atcDate: -1 }).limit(200);
-    return NextResponse.json({ success: true, data: atcs });
+    const atcIds = atcs.map((atc) => atc._id);
+    const sales = atcIds.length
+      ? await Sale.find({ 'items.atc': { $in: atcIds } }, { saleNumber: 1, date: 1, items: 1 }).sort({ date: 1 }).lean()
+      : [];
+
+    const suppliesByAtc = new Map();
+    for (const sale of sales) {
+      const perAtc = new Map();
+      for (const item of sale.items || []) {
+        if (item.itemType !== 'cement' || !item.atc) continue;
+        const atcId = String(item.atc);
+        perAtc.set(atcId, (perAtc.get(atcId) || 0) + (Number(item.actualQuantity) || 0));
+      }
+
+      for (const [atcId, qtySupplied] of perAtc.entries()) {
+        if (!suppliesByAtc.has(atcId)) suppliesByAtc.set(atcId, []);
+        suppliesByAtc.get(atcId).push({
+          qtySupplied,
+          reference: sale.saleNumber,
+          saleDate: sale.date,
+        });
+      }
+    }
+
+    const data = atcs.map((atc) => ({
+      ...atc.toObject(),
+      supplies: suppliesByAtc.get(String(atc._id)) || [],
+    }));
+    return NextResponse.json({ success: true, data });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

@@ -16,6 +16,7 @@ export async function POST(request, { params }) {
     if (!atc.assignedTruck) return NextResponse.json({ error: 'Assign a truck first' }, { status: 400 });
     atc.status = 'arrived';
     atc.arrivalDate = new Date();
+    atc.deliveryDate = atc.deliveryDate || atc.arrivalDate;
     await atc.save();
     await logAudit({ userId: session.user.id, userName: session.user.name, action: 'marked_arrived', entity: 'ATC', entityId: id });
     return NextResponse.json({ success: true, data: atc });
