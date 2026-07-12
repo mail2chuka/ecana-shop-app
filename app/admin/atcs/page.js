@@ -6,13 +6,13 @@ import { formatNumber, formatDate } from '@/lib/format';
 import toast from 'react-hot-toast';
 
 const statusColor = {
-  pending: 'gray',
-  assigned: 'blue',
+  pending: 'blue',
+  assigned: 'yellow',
   loaded: 'green',
   collecting: 'yellow',
   arrived: 'green',
   delivered: 'green',
-  closed: 'red',
+  closed: 'gray',
 };
 
 const formatAtcNumber = (atc, brands) => {
