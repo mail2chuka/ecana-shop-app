@@ -19,6 +19,7 @@ const ATCSchema = new mongoose.Schema({
   assignedTruckPlate: String,
   assignedDriverName: String,
   assignedDate: Date,
+  loadedAt: Date,
   arrivalDate: Date,
   deliveryDate: Date,
   notes: String,

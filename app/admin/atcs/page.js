@@ -8,8 +8,10 @@ import toast from 'react-hot-toast';
 const statusColor = {
   pending: 'gray',
   assigned: 'blue',
+  loaded: 'green',
   collecting: 'yellow',
   arrived: 'green',
+  delivered: 'green',
   closed: 'red',
 };
 
@@ -20,6 +22,34 @@ const formatAtcNumber = (atc, brands) => {
 };
 
 const formatQtyRatio = (remaining, total) => `${remaining}/${total}`;
+
+const loadingOptions = [
+  { value: 'just_loaded', label: 'Just Loaded' },
+  { value: 'one_hour_ago', label: 'One Hour ago' },
+  { value: 'two_hours_ago', label: 'Two Hours ago' },
+  { value: 'three_hours_ago', label: 'Three Hours ago' },
+  { value: 'four_hours_ago', label: 'Four Hours ago' },
+  { value: 'five_hours_ago', label: 'Five Hours ago' },
+  { value: 'delivered', label: 'Delivered' },
+];
+
+const LOADING_WINDOW_MS = 6 * 60 * 60 * 1000;
+
+const getStatusLabel = (atc) => {
+  if (atc.status === 'loaded') return 'Just Loaded';
+  if (atc.status === 'delivered') return 'Delivered';
+  return atc.status;
+};
+
+const formatCountdown = (loadedAt, nowMs) => {
+  if (!loadedAt) return '';
+  const remaining = new Date(loadedAt).getTime() + LOADING_WINDOW_MS - nowMs;
+  if (remaining <= 0) return 'Delivered';
+  const totalMinutes = Math.ceil(remaining / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours}h ${String(minutes).padStart(2, '0')}m left`;
+};
 
 const blankForm = { atcNumber: '', cementBrand: '', atcDate: new Date().toISOString().split('T')[0], bagsPaidFor: '', notes: '' };
 
@@ -36,9 +66,12 @@ export default function ATCsPage() {
 
   const [assignModal, setAssignModal] = useState(null);
   const [selectedTruck, setSelectedTruck] = useState('');
+  const [loadingModal, setLoadingModal] = useState(null);
+  const [loadingChoice, setLoadingChoice] = useState('just_loaded');
+  const [nowMs, setNowMs] = useState(Date.now());
 
-  const load = async () => {
-    setLoading(true);
+  const load = async (silent = false) => {
+    if (!silent) setLoading(true);
     const url = statusFilter ? `/api/atcs?status=${statusFilter}` : '/api/atcs';
     const [a, b, t] = await Promise.all([
       fetch(url).then(r => r.json()),
@@ -48,10 +81,17 @@ export default function ATCsPage() {
     if (a.success) setATCs(a.data);
     if (b.success) setBrands(b.data);
     if (t.success) setTrucks(t.data);
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
-  useEffect(() => { load(); }, [statusFilter]);
+  useEffect(() => {
+    load();
+    const timer = setInterval(() => {
+      setNowMs(Date.now());
+      load(true);
+    }, 60000);
+    return () => clearInterval(timer);
+  }, [statusFilter]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -90,6 +130,25 @@ export default function ATCsPage() {
     else toast.error(d.error);
   };
 
+  const handleLoading = async (e) => {
+    e.preventDefault();
+    if (!loadingModal) return;
+    const r = await fetch(`/api/atcs/${loadingModal._id}/loading`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: loadingChoice }),
+    });
+    const d = await r.json();
+    if (d.success) {
+      toast.success('Loading updated');
+      setLoadingModal(null);
+      setLoadingChoice('just_loaded');
+      load();
+    } else {
+      toast.error(d.error);
+    }
+  };
+
   if (loading) return <Loader />;
 
   return (
@@ -105,7 +164,7 @@ export default function ATCsPage() {
       />
 
       <div className="mb-4 flex gap-2 flex-wrap">
-        {['', 'pending', 'assigned', 'arrived', 'closed'].map(s => (
+        {['', 'pending', 'assigned', 'loaded', 'delivered', 'arrived', 'closed'].map(s => (
           <button
             key={s || 'all'}
             onClick={() => setStatusFilter(s)}
@@ -169,15 +228,32 @@ export default function ATCsPage() {
                       ) : '-'}
                     </td>
                     <td className="px-4 py-3 text-gray-500">{a.assignedTruckPlate || '-'}</td>
-                    <td className="px-4 py-3"><StatusPill status={a.status} color={statusColor[a.status]} /></td>
+                    <td className="px-4 py-3">
+                      <StatusPill status={getStatusLabel(a)} color={statusColor[a.status]} />
+                      {a.status === 'loaded' && a.loadedAt && (
+                        <div className="mt-1 text-xs text-gray-500">{formatCountdown(a.loadedAt, nowMs)}</div>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-right">
-                      {!['arrived', 'closed'].includes(a.status) && (
+                      {(a.status === 'pending' && !a.assignedTruck) && (
                         <button onClick={() => setAssignModal(a)} className="text-sm text-blue-600 hover:text-blue-800 mr-3">
-                          {a.assignedTruck ? 'Reassign' : 'Assign Truck'}
+                          Assign Truck
                         </button>
                       )}
-                      {a.status === 'assigned' && (
-                        <button onClick={() => markArrived(a)} className="text-sm text-green-600 hover:text-green-800">Arrived</button>
+                      {a.assignedTruck && !['delivered', 'closed'].includes(a.status) && (
+                        <>
+                          <button onClick={() => setAssignModal(a)} className="text-sm text-blue-600 hover:text-blue-800 mr-3">
+                            Reassign
+                          </button>
+                          <button onClick={() => { setLoadingModal(a); setLoadingChoice('just_loaded'); }} className="text-sm text-green-600 hover:text-green-800 mr-3">
+                            Loading
+                          </button>
+                        </>
+                      )}
+                      {!a.assignedTruck && a.status !== 'pending' && !['delivered', 'closed'].includes(a.status) && (
+                        <button onClick={() => setAssignModal(a)} className="text-sm text-blue-600 hover:text-blue-800 mr-3">
+                          Assign Truck
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -244,6 +320,26 @@ export default function ATCsPage() {
               </select>
             </Field>
             <FormButtons onCancel={() => setAssignModal(null)} submitLabel="Assign" />
+          </form>
+        )}
+      </Modal>
+
+      <Modal open={!!loadingModal} onClose={() => setLoadingModal(null)} title="Loading" size="lg">
+        {loadingModal && (
+          <form onSubmit={handleLoading} className="space-y-4">
+            <div className="bg-gray-50 p-3 rounded text-sm space-y-1">
+              <p><span className="text-gray-500">ATC:</span> <span className="font-medium">{formatAtcNumber(loadingModal, brands)}</span></p>
+              <p><span className="text-gray-500">Truck:</span> <span className="font-medium">{loadingModal.assignedTruckPlate || '-'}</span></p>
+              <p><span className="text-gray-500">Remaining:</span> <span className="font-medium">{formatQtyRatio(formatNumber(loadingModal.bagsRemaining), formatNumber(loadingModal.bagsPaidFor))}</span></p>
+            </div>
+            <Field label="Loading Status" required>
+              <select value={loadingChoice} onChange={e => setLoadingChoice(e.target.value)} className={inputCls} required>
+                {loadingOptions.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </Field>
+            <FormButtons onCancel={() => setLoadingModal(null)} submitLabel="Save Loading" />
           </form>
         )}
       </Modal>

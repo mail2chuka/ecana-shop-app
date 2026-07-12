@@ -6,6 +6,7 @@ import Sale from '@/models/Sale';
 import Customer from '@/models/Customer';
 import ATC from '@/models/ATC';
 import CementBrand from '@/models/CementBrand';
+import { autoDeliverDueAtcs } from '@/lib/atcLifecycle';
 
 export async function GET() {
   try {
@@ -16,6 +17,8 @@ export async function GET() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    await autoDeliverDueAtcs();
 
     const [
       todaySalesAgg,
@@ -35,9 +38,9 @@ export async function GET() {
         { $group: { _id: null, total: { $sum: '$grandTotal' }, count: { $sum: 1 } } },
       ]),
       Customer.countDocuments({ isActive: true }),
-      ATC.countDocuments({ status: { $in: ['pending', 'assigned', 'collecting', 'arrived'] }, bagsRemaining: { $gt: 0 } }),
+      ATC.countDocuments({ status: { $in: ['pending', 'assigned', 'loaded', 'collecting', 'arrived'] }, bagsRemaining: { $gt: 0 } }),
       ATC.aggregate([
-        { $match: { status: { $in: ['assigned', 'collecting', 'arrived'] }, bagsRemaining: { $gt: 0 } } },
+        { $match: { status: { $in: ['assigned', 'loaded', 'collecting', 'arrived'] }, bagsRemaining: { $gt: 0 } } },
         { $group: { _id: null, bags: { $sum: '$bagsRemaining' } } },
       ]),
       CementBrand.countDocuments({ isActive: true }),

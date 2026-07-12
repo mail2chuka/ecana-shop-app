@@ -17,12 +17,12 @@ export async function POST(request, { params }) {
 
     const atc = await ATC.findById(id);
     if (!atc) return NextResponse.json({ error: 'ATC not found' }, { status: 404 });
-    if (atc.status === 'closed') return NextResponse.json({ error: 'ATC is closed' }, { status: 400 });
+    if (atc.status === 'closed' || atc.status === 'delivered') return NextResponse.json({ error: 'ATC is already finalized' }, { status: 400 });
 
     const truck = await Truck.findById(truckId);
     if (!truck) return NextResponse.json({ error: 'Truck not found' }, { status: 404 });
 
-    const busyOn = await ATC.findOne({ _id: { $ne: id }, assignedTruck: truck._id, status: 'assigned' });
+    const busyOn = await ATC.findOne({ _id: { $ne: id }, assignedTruck: truck._id, status: { $in: ['assigned', 'loaded', 'collecting'] } });
     if (busyOn) {
       return NextResponse.json({ error: `Truck ${truck.plateNumber} is still out on ATC ${busyOn.atcNumber} — it'll be free once that one arrives or closes` }, { status: 400 });
     }
