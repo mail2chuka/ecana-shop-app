@@ -219,10 +219,10 @@ export default function NewCementSalePage() {
           </div>
 
           {selectedAtc && (
-            <div className="bg-blue-50 border border-blue-300 rounded p-3 space-y-1 text-sm">
+            <div className="bg-green-50 border border-green-300 rounded p-3 space-y-1 text-sm">
               <p><span className="font-medium">Brand:</span> {selectedAtc.cementBrandName}</p>
               <p><span className="font-medium">Total Bags in ATC:</span> {selectedAtc.bagsPaidFor}</p>
-              <p className={`font-medium ${bagsRemaining <= 0 ? 'text-red-600' : 'text-green-600'}`}>Remaining: {bagsRemaining} bags</p>
+              <p className={`font-medium ${bagsRemaining <= 0 ? 'text-amber-700' : 'text-green-600'}`}>Remaining: {bagsRemaining} bags</p>
             </div>
           )}
         </div>
@@ -322,7 +322,7 @@ export default function NewCementSalePage() {
             <button
               type="button"
               onClick={addCustomerToDistribution}
-              className="w-full py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 font-medium"
+              className="w-full py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900 font-medium"
             >
               Add Sales
             </button>
@@ -347,7 +347,7 @@ export default function NewCementSalePage() {
                       <button
                         type="button"
                         onClick={() => removeDistribution(d.id)}
-                        className="text-red-600 text-xs hover:underline mt-1"
+                        className="text-amber-700 text-xs hover:underline mt-1"
                       >
                         Remove
                       </button>
