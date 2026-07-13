@@ -28,6 +28,16 @@ body { background-color: #f5f5f5; }
   cursor: not-allowed;
 }
 
+/* Buttons inside tables never get the unified button background/border - text-only, like other table actions */
+.admin-main table button,
+.admin-main table button:hover,
+.admin-main table button:active {
+  background-color: transparent;
+  border: none;
+  color: inherit;
+  transform: none;
+}
+
 /* Disable scroll wheel on number inputs */
 input[type="number"] {
   -moz-appearance: textfield;
