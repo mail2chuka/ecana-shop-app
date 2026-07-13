@@ -93,8 +93,8 @@ export default function TrucksPage() {
                 <td className="px-4 py-3 text-right">{t.capacityTonnes ? `${t.capacityTonnes}t` : '-'}</td>
                 <td className="px-4 py-3"><StatusPill status={t.ownership === 'own' ? 'Own' : 'Supplier'} color={t.ownership === 'own' ? 'green' : 'blue'} /></td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => openEdit(t)} className="text-sm text-gray-600 hover:text-gray-900 mr-3">Edit</button>
-                  <button onClick={() => handleDelete(t)} className="text-sm text-red-600 hover:text-red-800">Deactivate</button>
+                  <button onClick={() => openEdit(t)} className="text-sm text-green-800 hover:text-green-900 mr-3">Edit</button>
+                  <button onClick={() => handleDelete(t)} className="text-sm text-amber-700 hover:text-amber-800">Deactivate</button>
                 </td>
               </tr>
             ))}
