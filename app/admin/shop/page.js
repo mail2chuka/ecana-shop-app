@@ -357,7 +357,7 @@ export default function ShopPage() {
           <button
             onClick={submitSale}
             disabled={submitting || cart.length === 0}
-            className="w-full py-3 bg-gray-900 text-white rounded text-sm font-bold hover:bg-gray-800 disabled:opacity-50"
+            className="w-full py-3 bg-green-800 text-neutral-100 rounded text-sm font-bold hover:bg-green-900 disabled:opacity-50"
           >
             {submitting ? 'Recording...' : 'Record Sale'}
           </button>
@@ -396,9 +396,9 @@ export default function ShopPage() {
                     <td className="px-4 py-3 text-right font-medium">{formatNaira(s.grandTotal)}</td>
                     <td className="px-4 py-3"><StatusPill status={s.status} color={s.status === 'active' ? 'green' : 'red'} /></td>
                     <td className="px-4 py-3 text-right">
-                      <Link href={`/admin/sales/${s._id}/invoice`} className="text-sm text-blue-600 hover:text-blue-800 mr-3">Invoice</Link>
+                      <Link href={`/admin/sales/${s._id}/invoice`} className="text-sm text-green-800 hover:text-green-900 mr-3">Invoice</Link>
                       {s.status === 'active' && (
-                        <button onClick={() => deleteSale(s)} className="text-sm text-red-600 hover:text-red-800">Delete</button>
+                        <button onClick={() => deleteSale(s)} className="text-sm text-amber-700 hover:text-amber-800">Delete</button>
                       )}
                     </td>
                   </tr>
