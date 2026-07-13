@@ -4,6 +4,30 @@
 
 body { background-color: #f5f5f5; }
 
+/* Unified in-page admin button theme */
+.admin-main button {
+  background-color: #14532d;
+  border: 1px solid #c08585;
+  color: #f8fafc;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 120ms ease;
+}
+
+.admin-main button:hover {
+  background-color: #166534;
+  border-color: #cf9696;
+}
+
+.admin-main button:active {
+  background-color: #0f3f23;
+  border-color: #b77575;
+  transform: translateY(1px);
+}
+
+.admin-main button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Disable scroll wheel on number inputs */
 input[type="number"] {
   -moz-appearance: textfield;

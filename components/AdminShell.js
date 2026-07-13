@@ -178,7 +178,7 @@ export default function AdminShell({ children }) {
           </div>
           <button
             onClick={() => signOut({ callbackUrl: '/' })}
-            className="flex items-center w-full px-3 py-2 text-sm text-rose-100 bg-rose-900/55 border border-rose-700/65 hover:bg-rose-800/70 rounded-md"
+            className="flex items-center w-full px-3 py-2 text-sm text-white bg-green-800 border border-green-950 hover:bg-green-900 rounded-md"
           >
             <FiLogOut className="mr-2 shrink-0" /> Sign Out
           </button>
@@ -234,7 +234,7 @@ export default function AdminShell({ children }) {
             )}
           </div>
         </div>
-        <main className="flex-1 p-4 lg:p-6 overflow-auto">{children}</main>
+        <main className="admin-main flex-1 p-4 lg:p-6 overflow-auto">{children}</main>
       </div>
     </div>
   );
