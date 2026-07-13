@@ -435,8 +435,8 @@ export default function ShopPage() {
                     <td className="px-4 py-3 text-right">{formatNaira(p.price)}</td>
                     <td className="px-4 py-3 text-right">{p.stockQuantity}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => openEditProduct(p)} className="text-sm text-gray-600 hover:text-gray-900 mr-3">Edit</button>
-                      <button onClick={() => handleDeactivateProduct(p)} className="text-sm text-red-600 hover:text-red-800">Deactivate</button>
+                      <button onClick={() => openEditProduct(p)} className="text-sm text-green-800 hover:text-green-900 mr-3">Edit</button>
+                      <button onClick={() => handleDeactivateProduct(p)} className="text-sm text-amber-700 hover:text-amber-800">Deactivate</button>
                     </td>
                   </tr>
                 ))}
