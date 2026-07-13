@@ -72,7 +72,7 @@ export default function CustomerReportPage() {
                 <td className="px-4 py-2 text-right font-medium">{formatNaira(r.total)}</td>
                 <td className={`px-4 py-2 text-right ${r.balance < 0 ? 'text-red-600' : 'text-green-600'}`}>{formatNaira(r.balance)}</td>
                 <td className="px-4 py-2 text-right">
-                  <Link href={`/admin/customers/${r.customerId}`} className="text-blue-600 text-xs hover:underline">Statement</Link>
+                  <Link href={`/admin/customers/${r.customerId}`} className="text-green-800 text-xs hover:underline">Statement</Link>
                 </td>
               </tr>
             ))}

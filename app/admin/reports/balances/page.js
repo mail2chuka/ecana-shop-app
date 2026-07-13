@@ -38,7 +38,7 @@ export default function BalancesReportPage() {
         <div className="px-4 py-3 border-b flex gap-2">
           {['all', 'negative', 'positive'].map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`px-3 py-1 rounded text-sm ${filter === f ? 'bg-gray-900 text-white' : 'border hover:bg-gray-50'}`}>
+              className={`px-3 py-1 rounded text-sm ${filter === f ? 'bg-green-800 text-neutral-100' : 'border hover:bg-gray-50'}`}>
               {f === 'all' ? 'All' : f === 'negative' ? 'Owing' : 'In Credit'}
             </button>
           ))}
@@ -71,7 +71,7 @@ export default function BalancesReportPage() {
                     {c.creditLimit ? formatNaira(c.creditLimit) : 'No limit'}
                   </td>
                   <td className="px-4 py-2 text-right">
-                    <Link href={`/admin/customers/${c._id}`} className="text-blue-600 text-xs hover:underline">Statement</Link>
+                    <Link href={`/admin/customers/${c._id}`} className="text-green-800 text-xs hover:underline">Statement</Link>
                   </td>
                 </tr>
               ))}
