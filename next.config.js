@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const isDev = process.env.NODE_ENV !== 'production';
+
 const securityHeaders = [
 	{ key: 'X-Frame-Options', value: 'DENY' },
 	{ key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -11,7 +13,7 @@ const securityHeaders = [
 		"form-action 'self'",
 		"img-src 'self' data: https:",
 		"style-src 'self' 'unsafe-inline'",
-		"script-src 'self' 'unsafe-inline'",
+		`script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
 		"connect-src 'self'",
 		"font-src 'self' data:",
 	].join('; ') },
