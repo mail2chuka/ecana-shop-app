@@ -282,7 +282,7 @@ export default function ShopPage() {
                   <p className="font-medium text-sm">{formatCustomerLabel(selectedCustomer)}</p>
                   {selectedCustomer.phone && <p className="text-xs text-gray-500">{selectedCustomer.phone}</p>}
                 </div>
-                <button onClick={() => { setSelectedCustomer(null); setCustomerSearch(''); }} className="text-xs text-red-500">Change</button>
+                <button onClick={() => { setSelectedCustomer(null); setCustomerSearch(''); }} className="text-xs text-amber-700">Change</button>
               </div>
             ) : (
               <div className="relative">
@@ -333,7 +333,7 @@ export default function ShopPage() {
               <input type="number" min="0.01" step="0.01" placeholder="Qty" value={cartQty} onChange={e => setCartQty(e.target.value)} className={inputCls} />
               <CurrencyInput value={cartPrice} onChange={setCartPrice} placeholder="Price" className={inputCls} />
             </div>
-            <button type="button" onClick={addToCart} className="w-full py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 font-medium">
+            <button type="button" onClick={addToCart} className="w-full py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900 font-medium">
               Add to Sale
             </button>
           </Card>
