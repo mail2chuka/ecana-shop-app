@@ -85,13 +85,13 @@ export default function QuarryDetailPage() {
   return (
     <div>
       <div className="mb-6">
-        <Link href="/admin/suppliers" className="text-sm text-blue-600 hover:underline">← Back to Quarries</Link>
+        <Link href="/admin/suppliers" className="text-sm text-green-800 hover:underline">← Back to Quarries</Link>
         <div className="flex flex-wrap justify-between items-center gap-3 mt-2">
           <div>
             <h1 className="text-xl font-bold text-gray-900">{quarry.name}</h1>
             <p className="text-sm text-gray-500 mt-1">{quarry.phone || 'No phone'} {quarry.address ? `· ${quarry.address}` : ''}</p>
           </div>
-          <button onClick={openCreate} className="px-4 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">Add Product</button>
+          <button onClick={openCreate} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Add Product</button>
         </div>
       </div>
 
@@ -111,9 +111,9 @@ export default function QuarryDetailPage() {
                 <td className="px-4 py-3 font-medium">{p.size}</td>
                 <td className="px-4 py-3 text-right font-medium">{formatNaira(p.currentPricePerTonne)}</td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => { setPriceModal(p); setNewPrice(p.currentPricePerTonne); }} className="text-sm text-blue-600 hover:text-blue-800 mr-3">Price</button>
-                  <button onClick={() => openEdit(p)} className="text-sm text-gray-600 hover:text-gray-900 mr-3">Edit</button>
-                  <button onClick={() => handleDelete(p)} className="text-sm text-red-600 hover:text-red-800">Deactivate</button>
+                  <button onClick={() => { setPriceModal(p); setNewPrice(p.currentPricePerTonne); }} className="text-sm text-green-800 hover:text-green-900 mr-3">Price</button>
+                  <button onClick={() => openEdit(p)} className="text-sm text-green-800 hover:text-green-900 mr-3">Edit</button>
+                  <button onClick={() => handleDelete(p)} className="text-sm text-amber-700 hover:text-amber-800">Deactivate</button>
                 </td>
               </tr>
             ))}

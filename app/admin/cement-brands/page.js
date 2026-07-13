@@ -96,7 +96,7 @@ export default function CementBrandsPage() {
       <PageHeader
         title="Cement Brands"
         subtitle="Brands you sell with their current per-bag price"
-        action={<button onClick={openCreate} className="px-4 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">Add Brand</button>}
+        action={<button onClick={openCreate} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Add Brand</button>}
       />
 
       <Card className="overflow-hidden">
@@ -123,9 +123,9 @@ export default function CementBrandsPage() {
                 <td className="px-4 py-3 text-right">{b.bagSize}kg</td>
                 <td className="px-4 py-3 text-right font-medium">{formatNaira(b.currentPricePerBag)}</td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => { setPriceModal(b); setNewPrice(b.currentPricePerBag); }} className="text-sm text-blue-600 hover:text-blue-800 mr-3">Price</button>
-                  <button onClick={() => openEdit(b)} className="text-sm text-gray-600 hover:text-gray-900 mr-3">Edit</button>
-                  <button onClick={() => handleDelete(b)} className="text-sm text-red-600 hover:text-red-800">Deactivate</button>
+                  <button onClick={() => { setPriceModal(b); setNewPrice(b.currentPricePerBag); }} className="text-sm text-green-800 hover:text-green-900 mr-3">Price</button>
+                  <button onClick={() => openEdit(b)} className="text-sm text-green-800 hover:text-green-900 mr-3">Edit</button>
+                  <button onClick={() => handleDelete(b)} className="text-sm text-amber-700 hover:text-amber-800">Deactivate</button>
                 </td>
               </tr>
             ))}
