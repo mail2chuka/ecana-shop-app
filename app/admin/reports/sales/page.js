@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatNaira, formatDate } from '@/lib/format';
+import { btnPrimaryCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
 
 function periodToDateRange(period, groupBy) {
   if (groupBy === 'year') return { start: `${period}-01-01`, end: `${period}-12-31` };
@@ -101,7 +102,7 @@ export default function SalesReportPage() {
           </div>
         </div>
         <div className="mt-4">
-          <button onClick={fetchReport} disabled={loading} className="px-6 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900 disabled:opacity-50">
+          <button onClick={fetchReport} disabled={loading} className={btnPrimaryCls}>
             {loading ? 'Loading...' : 'Run Report'}
           </button>
         </div>
@@ -129,20 +130,21 @@ export default function SalesReportPage() {
           </div>
 
           <div className="bg-white border rounded-lg overflow-hidden">
+            <div className={tableScrollCls}>
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
+              <thead className={theadCls}>
                 <tr>
                   <th className="px-4 py-2 text-left">
                     <button
                       onClick={toggleSort}
-                      className="flex items-center gap-1 font-medium hover:text-gray-900"
+                      className="flex items-center gap-1 font-medium"
                     >
                       Period {sortDir === 'desc' ? '↓' : '↑'}
                     </button>
                   </th>
-                  <th className="px-4 py-2 text-left">Type</th>
-                  <th className="px-4 py-2 text-right">Transactions</th>
-                  <th className="px-4 py-2 text-right">Total</th>
+                  <th className="px-4 py-2 text-left font-medium">Type</th>
+                  <th className="px-4 py-2 text-right font-medium">Transactions</th>
+                  <th className="px-4 py-2 text-right font-medium">Total</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -152,11 +154,11 @@ export default function SalesReportPage() {
                   return (
                     <tr key={i} className="hover:bg-gray-50">
                       <td className="px-4 py-2">
-                        <Link href={href} className="text-green-800 hover:underline">{row._id.period}</Link>
+                        <Link href={href} className={`${tableActionCls} hover:underline`}>{row._id.period}</Link>
                       </td>
                       <td className="px-4 py-2 capitalize">{row._id.saleType}</td>
                       <td className="px-4 py-2 text-right">
-                        <Link href={href} className="text-green-800 hover:underline">{row.count}</Link>
+                        <Link href={href} className={`${tableActionCls} hover:underline`}>{row.count}</Link>
                       </td>
                       <td className="px-4 py-2 text-right font-medium">{formatNaira(row.total)}</td>
                     </tr>
@@ -164,6 +166,7 @@ export default function SalesReportPage() {
                 })}
               </tbody>
             </table>
+            </div>
             {data.grouped.length === 0 && <p className="text-center py-8 text-gray-500">No sales in this period</p>}
           </div>
         </>

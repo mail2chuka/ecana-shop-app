@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, StatusPill } from '@/components/ui';
+import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, StatusPill, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatDate, formatCustomerLabel } from '@/lib/format';
 import toast from 'react-hot-toast';
 
@@ -243,14 +243,15 @@ export default function ShopPage() {
       {/* INVENTORY TAB */}
       {tab === 'inventory' && (
         <Card className="overflow-hidden">
+          <div className={tableScrollCls}>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className={theadCls}>
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Product</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Unit</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">Price</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">In Stock</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
+                <th className="px-4 py-3 text-left font-medium">Product</th>
+                <th className="px-4 py-3 text-left font-medium">Unit</th>
+                <th className="px-4 py-3 text-right font-medium">Price</th>
+                <th className="px-4 py-3 text-right font-medium">In Stock</th>
+                <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -262,12 +263,13 @@ export default function ShopPage() {
                   <td className="px-4 py-3 text-right">{formatNaira(p.price)}</td>
                   <td className={`px-4 py-3 text-right font-bold ${p.stockQuantity === 0 ? 'text-amber-700' : 'text-green-600'}`}>{p.stockQuantity}</td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => openRestock(p)} className="text-sm text-green-800 hover:text-green-900">Receive Stock</button>
+                    <button onClick={() => openRestock(p)} className={tableActionCls}>Receive Stock</button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         </Card>
       )}
 
@@ -333,7 +335,7 @@ export default function ShopPage() {
               <input type="number" min="0.01" step="0.01" placeholder="Qty" value={cartQty} onChange={e => setCartQty(e.target.value)} className={inputCls} />
               <CurrencyInput value={cartPrice} onChange={setCartPrice} placeholder="Price" className={inputCls} />
             </div>
-            <button type="button" onClick={addToCart} className="w-full py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900 font-medium">
+            <button type="button" onClick={addToCart} className={`w-full ${btnPrimaryCls}`}>
               Add to Sale
             </button>
           </Card>
@@ -357,7 +359,7 @@ export default function ShopPage() {
           <button
             onClick={submitSale}
             disabled={submitting || cart.length === 0}
-            className="w-full py-3 bg-green-800 text-neutral-100 rounded text-sm font-bold hover:bg-green-900 disabled:opacity-50"
+            className={`w-full py-3 font-bold ${btnPrimaryCls}`}
           >
             {submitting ? 'Recording...' : 'Record Sale'}
           </button>
@@ -367,16 +369,16 @@ export default function ShopPage() {
       {/* SALES HISTORY TAB */}
       {tab === 'history' && (
         <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className={`${tableScrollCls} min-w-[700px]`}>
             <table className="w-full text-sm min-w-[700px]">
-              <thead className="bg-gray-50 border-b">
+              <thead className={theadCls}>
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Sale #</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Customer</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Total</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
+                  <th className="px-4 py-3 text-left font-medium">Sale #</th>
+                  <th className="px-4 py-3 text-left font-medium">Date</th>
+                  <th className="px-4 py-3 text-left font-medium">Customer</th>
+                  <th className="px-4 py-3 text-right font-medium">Total</th>
+                  <th className="px-4 py-3 text-left font-medium">Status</th>
+                  <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -396,9 +398,9 @@ export default function ShopPage() {
                     <td className="px-4 py-3 text-right font-medium">{formatNaira(s.grandTotal)}</td>
                     <td className="px-4 py-3"><StatusPill status={s.status} color={s.status === 'active' ? 'green' : 'red'} /></td>
                     <td className="px-4 py-3 text-right">
-                      <Link href={`/admin/sales/${s._id}/invoice`} className="text-sm text-green-800 hover:text-green-900 mr-3">Invoice</Link>
+                      <Link href={`/admin/sales/${s._id}/invoice`} className={`${tableActionCls} mr-3`}>Invoice</Link>
                       {s.status === 'active' && (
-                        <button onClick={() => deleteSale(s)} className="text-sm text-amber-700 hover:text-amber-800">Delete</button>
+                        <button onClick={() => deleteSale(s)} className={tableDangerActionCls}>Delete</button>
                       )}
                     </td>
                   </tr>
@@ -413,17 +415,18 @@ export default function ShopPage() {
       {tab === 'manage' && (
         <div>
           <div className="flex justify-end mb-4">
-            <button onClick={openCreateProduct} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Add Product</button>
+            <button onClick={openCreateProduct} className={btnPrimaryCls}>Add Product</button>
           </div>
           <Card className="overflow-hidden">
+            <div className={tableScrollCls}>
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
+              <thead className={theadCls}>
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Name</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Unit</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Price</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Stock</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
+                  <th className="px-4 py-3 text-left font-medium">Name</th>
+                  <th className="px-4 py-3 text-left font-medium">Unit</th>
+                  <th className="px-4 py-3 text-right font-medium">Price</th>
+                  <th className="px-4 py-3 text-right font-medium">Stock</th>
+                  <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -435,13 +438,14 @@ export default function ShopPage() {
                     <td className="px-4 py-3 text-right">{formatNaira(p.price)}</td>
                     <td className="px-4 py-3 text-right">{p.stockQuantity}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => openEditProduct(p)} className="text-sm text-green-800 hover:text-green-900 mr-3">Edit</button>
-                      <button onClick={() => handleDeactivateProduct(p)} className="text-sm text-amber-700 hover:text-amber-800">Deactivate</button>
+                      <button onClick={() => openEditProduct(p)} className={`${tableActionCls} mr-3`}>Edit</button>
+                      <button onClick={() => handleDeactivateProduct(p)} className={tableDangerActionCls}>Deactivate</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
           </Card>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { formatNaira } from '@/lib/format';
+import { btnPrimaryCls, theadCls, tableScrollCls } from '@/components/ui';
 
 export default function TruckReportPage() {
   const [rows, setRows] = useState([]);
@@ -35,7 +36,7 @@ export default function TruckReportPage() {
             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
           </div>
           <div className="flex items-end">
-            <button onClick={fetchData} disabled={loading} className="w-full py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900 disabled:opacity-50">
+            <button onClick={fetchData} disabled={loading} className={`w-full ${btnPrimaryCls}`}>
               {loading ? 'Loading...' : 'Run'}
             </button>
           </div>
@@ -43,14 +44,15 @@ export default function TruckReportPage() {
       </div>
 
       <div className="bg-white border rounded-lg overflow-hidden">
+        <div className={tableScrollCls}>
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+          <thead className={theadCls}>
             <tr>
-              <th className="px-4 py-2 text-left">Truck</th>
-              <th className="px-4 py-2 text-left">Driver</th>
-              <th className="px-4 py-2 text-right">Trips</th>
-              <th className="px-4 py-2 text-right">Total Revenue</th>
-              <th className="px-4 py-2 text-right">Transport Fees</th>
+              <th className="px-4 py-2 text-left font-medium">Truck</th>
+              <th className="px-4 py-2 text-left font-medium">Driver</th>
+              <th className="px-4 py-2 text-right font-medium">Trips</th>
+              <th className="px-4 py-2 text-right font-medium">Total Revenue</th>
+              <th className="px-4 py-2 text-right font-medium">Transport Fees</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -65,6 +67,7 @@ export default function TruckReportPage() {
             ))}
           </tbody>
         </table>
+        </div>
         {!loading && rows.length === 0 && <p className="text-center py-8 text-gray-500">No truck data for this period</p>}
       </div>
     </div>

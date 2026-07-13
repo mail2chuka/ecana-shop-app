@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Loader, PageHeader, Card, EmptyRow, StatusPill, inputCls } from '@/components/ui';
+import { Loader, PageHeader, Card, EmptyRow, StatusPill, inputCls, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatDate } from '@/lib/format';
 import toast from 'react-hot-toast';
 
@@ -53,8 +53,8 @@ export default function SalesPage() {
         subtitle="All sales transactions"
         action={
           <div className="flex gap-2">
-            <Link href="/admin/sales/new/cement" className="px-3 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">New Cement Sale</Link>
-            <Link href="/admin/sales/new/stonedust" className="px-3 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">New Aggregate Sale</Link>
+            <Link href="/admin/sales/new/cement" className={btnPrimaryCls}>New Cement Sale</Link>
+            <Link href="/admin/sales/new/stonedust" className={btnPrimaryCls}>New Aggregate Sale</Link>
           </div>
         }
       />
@@ -92,18 +92,18 @@ export default function SalesPage() {
 
       {loading ? <Loader /> : (
         <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className={tableScrollCls}>
             <table className="w-full text-sm min-w-[900px]">
-              <thead className="bg-gray-50 border-b">
+              <thead className={theadCls}>
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Sale #</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Customer</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Type</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Truck</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Total</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
+                  <th className="px-4 py-3 text-left font-medium">Sale #</th>
+                  <th className="px-4 py-3 text-left font-medium">Date</th>
+                  <th className="px-4 py-3 text-left font-medium">Customer</th>
+                  <th className="px-4 py-3 text-left font-medium">Type</th>
+                  <th className="px-4 py-3 text-left font-medium">Truck</th>
+                  <th className="px-4 py-3 text-right font-medium">Total</th>
+                  <th className="px-4 py-3 text-left font-medium">Status</th>
+                  <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -111,7 +111,7 @@ export default function SalesPage() {
                 {sales.map(s => (
                   <tr key={s._id}>
                     <td className="px-4 py-3 font-medium">
-                      <Link href={`/admin/sales/${s._id}`} className="text-green-800 hover:underline">{s.saleNumber}</Link>
+                      <Link href={`/admin/sales/${s._id}`} className={`${tableActionCls} hover:underline`}>{s.saleNumber}</Link>
                       {s.editedAt && (
                         <p className="text-xs text-amber-600 font-normal" title={formatDate(s.editedAt)}>Edited by {s.editedByName}</p>
                       )}
@@ -127,9 +127,9 @@ export default function SalesPage() {
                       <StatusPill status={s.status} color={s.status === 'active' ? 'green' : 'red'} />
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Link href={`/admin/sales/${s._id}/invoice`} className="text-sm text-green-800 hover:text-green-900 mr-3">Invoice</Link>
+                      <Link href={`/admin/sales/${s._id}/invoice`} className={`${tableActionCls} mr-3`}>Invoice</Link>
                       {s.status === 'active' && (
-                        <button onClick={() => deleteSale(s)} className="text-sm text-amber-700 hover:text-amber-800">Delete</button>
+                        <button onClick={() => deleteSale(s)} className={tableDangerActionCls}>Delete</button>
                       )}
                     </td>
                   </tr>

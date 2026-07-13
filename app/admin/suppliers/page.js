@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Loader, PageHeader, Card, StatusPill, EmptyRow, Modal, FormButtons, Field, inputCls } from '@/components/ui';
+import { Loader, PageHeader, Card, StatusPill, EmptyRow, Modal, FormButtons, Field, inputCls, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import toast from 'react-hot-toast';
 
 const blankForm = { name: '', type: 'quarry', address: '', phone: '' };
@@ -73,17 +73,18 @@ export default function SuppliersPage() {
       <PageHeader
         title="Quarry"
         subtitle="Quarries you buy aggregate products from"
-        action={<button onClick={openCreate} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Add Quarry</button>}
+        action={<button onClick={openCreate} className={btnPrimaryCls}>Add Quarry</button>}
       />
 
       <Card className="overflow-hidden">
+        <div className={tableScrollCls}>
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+          <thead className={theadCls}>
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Name</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Phone</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Address</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
+              <th className="px-4 py-3 text-left font-medium">Name</th>
+              <th className="px-4 py-3 text-left font-medium">Phone</th>
+              <th className="px-4 py-3 text-left font-medium">Address</th>
+              <th className="px-4 py-3 text-right font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -96,13 +97,14 @@ export default function SuppliersPage() {
                 <td className="px-4 py-3 text-gray-500">{s.phone || '-'}</td>
                 <td className="px-4 py-3 text-gray-500">{s.address || '-'}</td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => openEdit(s)} className="text-sm text-green-800 hover:text-green-900 mr-3">Edit</button>
-                  <button onClick={() => handleDelete(s)} className="text-sm text-amber-700 hover:text-amber-800">Deactivate</button>
+                  <button onClick={() => openEdit(s)} className={`${tableActionCls} mr-3`}>Edit</button>
+                  <button onClick={() => handleDelete(s)} className={tableDangerActionCls}>Deactivate</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
       </Card>
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Quarry' : 'Add Quarry'}>

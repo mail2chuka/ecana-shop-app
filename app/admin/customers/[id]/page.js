@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { formatNaira, formatDate, formatCustomerLabel } from '@/lib/format';
-import { Modal, Field, FormButtons, inputCls, CurrencyInput } from '@/components/ui';
+import { Modal, Field, FormButtons, inputCls, CurrencyInput, btnPrimaryCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import toast from 'react-hot-toast';
 
 const blankPaymentForm = {
@@ -80,7 +80,7 @@ export default function CustomerDetailPage() {
           <p className="text-sm text-gray-500">{customer.phone}</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={openPaymentModal} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Record Payment</button>
+          <button onClick={openPaymentModal} className={btnPrimaryCls}>Record Payment</button>
           <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Statement</button>
         </div>
       </div>
@@ -103,9 +103,9 @@ export default function CustomerDetailPage() {
           <h3 className="font-semibold text-sm">Account Statement</h3>
           <span className="text-xs text-gray-500">{ledger.length} entries</span>
         </div>
-        <div className="overflow-x-auto">
+        <div className={tableScrollCls}>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className={theadCls}>
               <tr>
                 <th className="px-4 py-2 text-left">Date</th>
                 <th className="px-4 py-2 text-left">Ref</th>
@@ -121,8 +121,8 @@ export default function CustomerDetailPage() {
                   <td className="px-4 py-2 whitespace-nowrap">{formatDate(entry.date)}</td>
                   <td className="px-4 py-2">
                     {entry.type === 'sale'
-                      ? <Link href={`/admin/sales/${entry.id}`} className="text-green-800 hover:underline">{entry.ref}</Link>
-                      : <button onClick={() => setSelectedPayment(entry)} className="text-green-800 hover:underline text-left">{entry.ref}</button>}
+                      ? <Link href={`/admin/sales/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
+                      : <button onClick={() => setSelectedPayment(entry)} className={`${tableActionCls} hover:underline text-left`}>{entry.ref}</button>}
                   </td>
                   <td className="px-4 py-2 text-gray-600 max-w-xs truncate">{entry.description}</td>
                   <td className="px-4 py-2 text-right text-red-600">{entry.debit > 0 ? formatNaira(entry.debit) : '-'}</td>

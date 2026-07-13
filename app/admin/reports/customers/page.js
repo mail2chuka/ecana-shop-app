@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatNaira, formatDate } from '@/lib/format';
+import { btnPrimaryCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
 
 export default function CustomerReportPage() {
   const [rows, setRows] = useState([]);
@@ -43,7 +44,7 @@ export default function CustomerReportPage() {
             <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Name, business, or phone..." className="w-full px-3 py-2 border rounded text-sm" />
           </div>
           <div className="flex items-end">
-            <button onClick={fetchData} disabled={loading} className="w-full py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900 disabled:opacity-50">
+            <button onClick={fetchData} disabled={loading} className={`w-full ${btnPrimaryCls}`}>
               {loading ? 'Loading...' : 'Run'}
             </button>
           </div>
@@ -51,13 +52,14 @@ export default function CustomerReportPage() {
       </div>
 
       <div className="bg-white border rounded-lg overflow-hidden">
+        <div className={tableScrollCls}>
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+          <thead className={theadCls}>
             <tr>
-              <th className="px-4 py-2 text-left">Customer</th>
-              <th className="px-4 py-2 text-right">Orders</th>
-              <th className="px-4 py-2 text-right">Total Sales</th>
-              <th className="px-4 py-2 text-right">Current Balance</th>
+              <th className="px-4 py-2 text-left font-medium">Customer</th>
+              <th className="px-4 py-2 text-right font-medium">Orders</th>
+              <th className="px-4 py-2 text-right font-medium">Total Sales</th>
+              <th className="px-4 py-2 text-right font-medium">Current Balance</th>
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
@@ -72,12 +74,13 @@ export default function CustomerReportPage() {
                 <td className="px-4 py-2 text-right font-medium">{formatNaira(r.total)}</td>
                 <td className={`px-4 py-2 text-right ${r.balance < 0 ? 'text-red-600' : 'text-green-600'}`}>{formatNaira(r.balance)}</td>
                 <td className="px-4 py-2 text-right">
-                  <Link href={`/admin/customers/${r.customerId}`} className="text-green-800 text-xs hover:underline">Statement</Link>
+                  <Link href={`/admin/customers/${r.customerId}`} className={`${tableActionCls} text-xs hover:underline`}>Statement</Link>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
         {!loading && rows.length === 0 && <p className="text-center py-8 text-gray-500">No data</p>}
       </div>
     </div>

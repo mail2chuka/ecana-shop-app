@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, StatusPill } from '@/components/ui';
+import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, StatusPill, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import toast from 'react-hot-toast';
 
 const blankForm = { plateNumber: '', driverName: '', driverPhone: '', type: 'cement', capacityTonnes: '', ownership: 'own' };
@@ -66,20 +66,21 @@ export default function TrucksPage() {
       <PageHeader
         title="Trucks"
         subtitle="Trucks used for deliveries and ATC pickups"
-        action={<button onClick={openCreate} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Add Truck</button>}
+        action={<button onClick={openCreate} className={btnPrimaryCls}>Add Truck</button>}
       />
 
       <Card className="overflow-hidden">
+        <div className={tableScrollCls}>
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+          <thead className={theadCls}>
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Plate</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Driver</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Phone</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Type</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-500">Capacity</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Ownership</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
+              <th className="px-4 py-3 text-left font-medium">Plate</th>
+              <th className="px-4 py-3 text-left font-medium">Driver</th>
+              <th className="px-4 py-3 text-left font-medium">Phone</th>
+              <th className="px-4 py-3 text-left font-medium">Type</th>
+              <th className="px-4 py-3 text-right font-medium">Capacity</th>
+              <th className="px-4 py-3 text-left font-medium">Ownership</th>
+              <th className="px-4 py-3 text-right font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -93,13 +94,14 @@ export default function TrucksPage() {
                 <td className="px-4 py-3 text-right">{t.capacityTonnes ? `${t.capacityTonnes}t` : '-'}</td>
                 <td className="px-4 py-3"><StatusPill status={t.ownership === 'own' ? 'Own' : 'Supplier'} color={t.ownership === 'own' ? 'green' : 'blue'} /></td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => openEdit(t)} className="text-sm text-green-800 hover:text-green-900 mr-3">Edit</button>
-                  <button onClick={() => handleDelete(t)} className="text-sm text-amber-700 hover:text-amber-800">Deactivate</button>
+                  <button onClick={() => openEdit(t)} className={`${tableActionCls} mr-3`}>Edit</button>
+                  <button onClick={() => handleDelete(t)} className={tableDangerActionCls}>Deactivate</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
       </Card>
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Truck' : 'Add Truck'}>

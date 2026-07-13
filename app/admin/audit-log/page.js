@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { formatDateTime } from '@/lib/format';
+import { theadCls, tableScrollCls } from '@/components/ui';
 
 export default function AuditLogPage() {
   const [logs, setLogs] = useState([]);
@@ -35,13 +36,14 @@ export default function AuditLogPage() {
         {loading ? (
           <div className="flex justify-center py-8"><div className="animate-spin h-6 w-6 border-4 border-gray-800 border-t-transparent rounded-full" /></div>
         ) : (
+          <div className={tableScrollCls}>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className={theadCls}>
               <tr>
-                <th className="px-4 py-2 text-left">Time</th>
-                <th className="px-4 py-2 text-left">User</th>
-                <th className="px-4 py-2 text-left">Action</th>
-                <th className="px-4 py-2 text-left">Entity</th>
+                <th className="px-4 py-2 text-left font-medium">Time</th>
+                <th className="px-4 py-2 text-left font-medium">User</th>
+                <th className="px-4 py-2 text-left font-medium">Action</th>
+                <th className="px-4 py-2 text-left font-medium">Entity</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -63,6 +65,7 @@ export default function AuditLogPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
         {!loading && logs.length === 0 && <p className="text-center py-8 text-gray-500">No logs found</p>}
       </div>

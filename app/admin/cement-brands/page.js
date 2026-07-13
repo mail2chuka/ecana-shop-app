@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput } from '@/components/ui';
+import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira } from '@/lib/format';
 import toast from 'react-hot-toast';
 
@@ -96,20 +96,21 @@ export default function CementBrandsPage() {
       <PageHeader
         title="Cement Brands"
         subtitle="Brands you sell with their current per-bag price"
-        action={<button onClick={openCreate} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Add Brand</button>}
+        action={<button onClick={openCreate} className={btnPrimaryCls}>Add Brand</button>}
       />
 
       <Card className="overflow-hidden">
+        <div className={tableScrollCls}>
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+          <thead className={theadCls}>
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Brand</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Abbr</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Grade</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Depot</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-500">Bag Size</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-500">Current Price</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
+              <th className="px-4 py-3 text-left font-medium">Brand</th>
+              <th className="px-4 py-3 text-left font-medium">Abbr</th>
+              <th className="px-4 py-3 text-left font-medium">Grade</th>
+              <th className="px-4 py-3 text-left font-medium">Depot</th>
+              <th className="px-4 py-3 text-right font-medium">Bag Size</th>
+              <th className="px-4 py-3 text-right font-medium">Current Price</th>
+              <th className="px-4 py-3 text-right font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -123,14 +124,15 @@ export default function CementBrandsPage() {
                 <td className="px-4 py-3 text-right">{b.bagSize}kg</td>
                 <td className="px-4 py-3 text-right font-medium">{formatNaira(b.currentPricePerBag)}</td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => { setPriceModal(b); setNewPrice(b.currentPricePerBag); }} className="text-sm text-green-800 hover:text-green-900 mr-3">Price</button>
-                  <button onClick={() => openEdit(b)} className="text-sm text-green-800 hover:text-green-900 mr-3">Edit</button>
-                  <button onClick={() => handleDelete(b)} className="text-sm text-amber-700 hover:text-amber-800">Deactivate</button>
+                  <button onClick={() => { setPriceModal(b); setNewPrice(b.currentPricePerBag); }} className={`${tableActionCls} mr-3`}>Price</button>
+                  <button onClick={() => openEdit(b)} className={`${tableActionCls} mr-3`}>Edit</button>
+                  <button onClick={() => handleDelete(b)} className={tableDangerActionCls}>Deactivate</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
       </Card>
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Brand' : 'Add Brand'}>

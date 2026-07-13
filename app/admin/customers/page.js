@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput } from '@/components/ui';
+import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatCustomerLabel } from '@/lib/format';
 import toast from 'react-hot-toast';
 
@@ -81,7 +81,7 @@ export default function CustomersPage() {
       <PageHeader
         title="Customers"
         subtitle="Customer profiles and balances"
-        action={<button onClick={openCreate} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Add Customer</button>}
+        action={<button onClick={openCreate} className={btnPrimaryCls}>Add Customer</button>}
       />
 
       <div className="mb-4">
@@ -96,14 +96,15 @@ export default function CustomersPage() {
 
       {loading ? <Loader /> : (
         <Card className="overflow-hidden">
+          <div className={tableScrollCls}>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className={theadCls}>
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Name</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Phone</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Business</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">Balance</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
+                <th className="px-4 py-3 text-left font-medium">Name</th>
+                <th className="px-4 py-3 text-left font-medium">Phone</th>
+                <th className="px-4 py-3 text-left font-medium">Business</th>
+                <th className="px-4 py-3 text-right font-medium">Balance</th>
+                <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -119,14 +120,15 @@ export default function CustomersPage() {
                     {formatNaira(c.balance)}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Link href={`/admin/customers/${c._id}`} className="text-sm text-green-800 hover:text-green-900 mr-3">View</Link>
-                    <button onClick={() => openEdit(c)} className="text-sm text-green-800 hover:text-green-900 mr-3">Edit</button>
-                    <button onClick={() => handleDelete(c)} className="text-sm text-amber-700 hover:text-amber-800">Delete</button>
+                    <Link href={`/admin/customers/${c._id}`} className={`${tableActionCls} mr-3`}>View</Link>
+                    <button onClick={() => openEdit(c)} className={`${tableActionCls} mr-3`}>Edit</button>
+                    <button onClick={() => handleDelete(c)} className={tableDangerActionCls}>Delete</button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         </Card>
       )}
 

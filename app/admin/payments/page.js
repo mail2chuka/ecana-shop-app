@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput } from '@/components/ui';
+import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatDate, formatCustomerLabel } from '@/lib/format';
 import toast from 'react-hot-toast';
 
@@ -117,19 +117,20 @@ export default function PaymentsPage() {
       <PageHeader
         title="Customer Payments"
         subtitle="Payments received from customers"
-        action={<button onClick={openModal} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">New Payment</button>}
+        action={<button onClick={openModal} className={btnPrimaryCls}>New Payment</button>}
       />
 
       <Card className="overflow-hidden">
+        <div className={tableScrollCls}>
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+          <thead className={theadCls}>
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Customer</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Method</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Depositor</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-500">Amount</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-500">New Balance</th>
+              <th className="px-4 py-3 text-left font-medium">Date</th>
+              <th className="px-4 py-3 text-left font-medium">Customer</th>
+              <th className="px-4 py-3 text-left font-medium">Method</th>
+              <th className="px-4 py-3 text-left font-medium">Depositor</th>
+              <th className="px-4 py-3 text-right font-medium">Amount</th>
+              <th className="px-4 py-3 text-right font-medium">New Balance</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -148,6 +149,7 @@ export default function PaymentsPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </Card>
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title="Record Payment">

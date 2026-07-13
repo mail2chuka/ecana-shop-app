@@ -1,5 +1,33 @@
 'use client';
 
+export function Logo({ className = 'h-8 w-8' }) {
+  return (
+    <svg className={className} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="48" fill="none" stroke="#ffffff" strokeWidth="3"/>
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#b3e5fc" strokeWidth="6"/>
+      <circle cx="50" cy="50" r="28" fill="none" stroke="#ffffff" strokeWidth="3"/>
+      <circle cx="50" cy="50" r="12" fill="#90ee90"/>
+      <line x1="50" y1="10" x2="50" y2="30" stroke="#ffffff" strokeWidth="3"/>
+      <line x1="50" y1="70" x2="50" y2="90" stroke="#ffffff" strokeWidth="3"/>
+      <line x1="10" y1="50" x2="30" y2="50" stroke="#ffffff" strokeWidth="3"/>
+      <line x1="70" y1="50" x2="90" y2="50" stroke="#ffffff" strokeWidth="3"/>
+    </svg>
+  );
+}
+
+// Buttons OUTSIDE tables: solid deep green (primary) or solid gold (destructive), light neutral text.
+export const btnPrimaryCls = 'px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm font-medium hover:bg-green-900 disabled:opacity-50';
+export const btnDangerCls = 'px-4 py-2 bg-amber-700 text-neutral-100 rounded text-sm font-medium hover:bg-amber-800 disabled:opacity-50';
+
+// Buttons/links INSIDE table rows: no background of their own, just colored text on the table's own background.
+export const tableActionCls = 'text-sm font-medium text-green-800 hover:text-green-900';
+export const tableDangerActionCls = 'text-sm font-medium text-amber-700 hover:text-amber-800';
+
+// Table head: deep green, sticky so it acts as a frozen pane while the body scrolls.
+export const theadCls = 'bg-green-800 text-neutral-100 sticky top-0 z-10';
+// Wrap the <table> in a div with this class to make the sticky thead actually freeze on scroll.
+export const tableScrollCls = 'overflow-auto max-h-[70vh]';
+
 export function Loader() {
   return (
     <div className="flex justify-center py-12">

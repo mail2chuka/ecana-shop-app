@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { Logo } from '@/components/ui';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -38,18 +39,9 @@ export default function LandingPage() {
           {/* Logo & Branding */}
           <div className="text-center mb-8">
             <div className="inline-block mb-4">
-              <svg className="h-20 w-20" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="50" r="48" fill="none" stroke="#ffffff" strokeWidth="3"/>
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#b3e5fc" strokeWidth="6"/>
-                <circle cx="50" cy="50" r="28" fill="none" stroke="#ffffff" strokeWidth="3"/>
-                <circle cx="50" cy="50" r="12" fill="#90ee90"/>
-                <line x1="50" y1="10" x2="50" y2="30" stroke="#ffffff" strokeWidth="3"/>
-                <line x1="50" y1="70" x2="50" y2="90" stroke="#ffffff" strokeWidth="3"/>
-                <line x1="10" y1="50" x2="30" y2="50" stroke="#ffffff" strokeWidth="3"/>
-                <line x1="70" y1="50" x2="90" y2="50" stroke="#ffffff" strokeWidth="3"/>
-              </svg>
+              <Logo className="h-20 w-20" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-1">GSM</h1>
+            <h1 className="text-3xl font-bold text-white mb-1">GS&amp;M</h1>
             <p className="text-sm text-gray-300">Goods Sales and Management</p>
           </div>
 

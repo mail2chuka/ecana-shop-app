@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatNaira } from '@/lib/format';
+import { tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
 
 export default function BalancesReportPage() {
   const [data, setData] = useState(null);
@@ -46,13 +47,14 @@ export default function BalancesReportPage() {
         {loading ? (
           <div className="flex justify-center py-8"><div className="animate-spin h-6 w-6 border-4 border-gray-800 border-t-transparent rounded-full" /></div>
         ) : (
+          <div className={tableScrollCls}>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className={theadCls}>
               <tr>
-                <th className="px-4 py-2 text-left">Customer</th>
-                <th className="px-4 py-2 text-left">Phone</th>
-                <th className="px-4 py-2 text-right">Balance</th>
-                <th className="px-4 py-2 text-right">Credit Limit</th>
+                <th className="px-4 py-2 text-left font-medium">Customer</th>
+                <th className="px-4 py-2 text-left font-medium">Phone</th>
+                <th className="px-4 py-2 text-right font-medium">Balance</th>
+                <th className="px-4 py-2 text-right font-medium">Credit Limit</th>
                 <th className="px-4 py-2"></th>
               </tr>
             </thead>
@@ -71,12 +73,13 @@ export default function BalancesReportPage() {
                     {c.creditLimit ? formatNaira(c.creditLimit) : 'No limit'}
                   </td>
                   <td className="px-4 py-2 text-right">
-                    <Link href={`/admin/customers/${c._id}`} className="text-green-800 text-xs hover:underline">Statement</Link>
+                    <Link href={`/admin/customers/${c._id}`} className={`${tableActionCls} text-xs hover:underline`}>Statement</Link>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         )}
         {!loading && data?.customers?.length === 0 && <p className="text-center py-8 text-gray-500">No customers found</p>}
       </div>

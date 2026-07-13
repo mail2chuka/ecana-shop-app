@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { formatNaira } from '@/lib/format';
+import { btnPrimaryCls, theadCls, tableScrollCls } from '@/components/ui';
 
 export default function ProductReportPage() {
   const [rows, setRows] = useState([]);
@@ -69,7 +70,7 @@ export default function ProductReportPage() {
             </select>
           </div>
           <div className="flex items-end">
-            <button onClick={fetchData} disabled={loading} className="w-full py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900 disabled:opacity-50">
+            <button onClick={fetchData} disabled={loading} className={`w-full ${btnPrimaryCls}`}>
               {loading ? 'Loading...' : 'Run'}
             </button>
           </div>
@@ -79,13 +80,14 @@ export default function ProductReportPage() {
       {cement.length > 0 && (
         <div className="bg-white border rounded-lg overflow-hidden mb-6">
           <div className="px-4 py-3 border-b"><h3 className="font-semibold text-sm">Cement Brands</h3></div>
+          <div className={tableScrollCls}>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className={theadCls}>
               <tr>
-                <th className="px-4 py-2 text-left">Brand</th>
-                <th className="px-4 py-2 text-right">Bags Sold (Bill)</th>
-                <th className="px-4 py-2 text-right">Bags Loaded (Actual)</th>
-                <th className="px-4 py-2 text-right">Revenue</th>
+                <th className="px-4 py-2 text-left font-medium">Brand</th>
+                <th className="px-4 py-2 text-right font-medium">Bags Sold (Bill)</th>
+                <th className="px-4 py-2 text-right font-medium">Bags Loaded (Actual)</th>
+                <th className="px-4 py-2 text-right font-medium">Revenue</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -99,20 +101,22 @@ export default function ProductReportPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
       {stone.length > 0 && (
         <div className="bg-white border rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b"><h3 className="font-semibold text-sm">Aggregate / Quarry Products</h3></div>
+          <div className={tableScrollCls}>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className={theadCls}>
               <tr>
-                <th className="px-4 py-2 text-left">Quarry</th>
-                <th className="px-4 py-2 text-left">Size</th>
-                <th className="px-4 py-2 text-right">Tonnes Sold (Bill)</th>
-                <th className="px-4 py-2 text-right">Tonnes Loaded (Actual)</th>
-                <th className="px-4 py-2 text-right">Revenue</th>
+                <th className="px-4 py-2 text-left font-medium">Quarry</th>
+                <th className="px-4 py-2 text-left font-medium">Size</th>
+                <th className="px-4 py-2 text-right font-medium">Tonnes Sold (Bill)</th>
+                <th className="px-4 py-2 text-right font-medium">Tonnes Loaded (Actual)</th>
+                <th className="px-4 py-2 text-right font-medium">Revenue</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -127,6 +131,7 @@ export default function ProductReportPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

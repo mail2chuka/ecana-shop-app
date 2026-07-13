@@ -5,6 +5,11 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { FiMenu, FiX, FiLogOut, FiArrowLeft, FiSearch } from 'react-icons/fi';
+import { Logo } from '@/components/ui';
+
+// Sidebar nav links get their own dedicated class set — distinct from table-action and page-button classes.
+const navLinkCls = 'block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors bg-rose-950/45 text-rose-100 border-rose-900/70 hover:bg-rose-900/70 hover:text-white';
+const navLinkActiveCls = 'block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors bg-rose-800/90 text-white border-rose-500/70 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]';
 
 const menu = [
   { label: 'Dashboard', href: '/admin' },
@@ -106,11 +111,7 @@ export default function AdminShell({ children }) {
       key={item.href}
       href={item.href}
       onClick={() => setOpen(false)}
-      className={`block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors ${
-        pathname === item.href
-          ? 'bg-rose-800/90 text-white border-rose-500/70 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]'
-          : 'bg-rose-950/45 text-rose-100 border-rose-900/70 hover:bg-rose-900/70 hover:text-white'
-      }`}
+      className={pathname === item.href ? navLinkActiveCls : navLinkCls}
     >
       {item.label}
     </Link>
@@ -151,7 +152,10 @@ export default function AdminShell({ children }) {
         }`}
       >
         <div className="flex items-center justify-between min-h-14 px-4 border-b border-emerald-800/60 bg-black/10 shrink-0">
-          <span className="font-bold tracking-wide text-emerald-100">GSM</span>
+          <span className="flex items-center gap-2 font-bold tracking-wide text-emerald-100">
+            <Logo className="h-7 w-7" />
+            GS&amp;M
+          </span>
           <button className="lg:hidden text-emerald-200/80 hover:text-white" onClick={() => setOpen(false)}>
             <FiX size={20} />
           </button>
@@ -191,8 +195,8 @@ export default function AdminShell({ children }) {
             <FiMenu size={20} />
           </button>
           <span className="ml-2 font-semibold text-sm truncate">
-            <span className="sm:hidden">GSM</span>
-            <span className="hidden sm:inline">GSM - Goods Sales and Management</span>
+            <span className="sm:hidden">GS&amp;M</span>
+            <span className="hidden sm:inline">GS&amp;M - Goods Sales and Management</span>
           </span>
         </header>
         <div className="h-12 bg-white border-b flex items-center px-4 lg:px-6 gap-3 no-print">

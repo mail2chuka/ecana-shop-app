@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, StatusPill } from '@/components/ui';
+import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, StatusPill, btnPrimaryCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNumber, formatDate } from '@/lib/format';
 import toast from 'react-hot-toast';
 
@@ -158,7 +158,7 @@ export default function ATCsPage() {
         action={
           brands.length === 0
             ? <span className="text-sm text-gray-500">Add a cement brand first</span>
-            : <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Record ATC</button>
+            : <button onClick={() => setShowCreate(true)} className={btnPrimaryCls}>Record ATC</button>
         }
       />
 
@@ -175,20 +175,20 @@ export default function ATCsPage() {
       </div>
 
       <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className={tableScrollCls}>
           <table className="w-full text-sm min-w-[980px]">
-            <thead className="bg-gray-50 border-b">
+            <thead className={theadCls}>
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">ATC #</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
-                <th className="px-3 py-3 text-left font-medium text-gray-500">Assigned Date</th>
-                <th className="px-3 py-3 text-left font-medium text-gray-500">Delivery Date</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">Remaining</th>
-                <th className="px-3 py-3 text-left font-medium text-gray-500">Qty Supplied</th>
-                <th className="px-3 py-3 text-left font-medium text-gray-500">Ref</th>
-                <th className="px-3 py-3 text-left font-medium text-gray-500">Truck</th>
-                <th className="px-3 py-3 text-left font-medium text-gray-500">Status</th>
-                <th className="px-3 py-3 text-right font-medium text-gray-500">Actions</th>
+                <th className="px-4 py-3 text-left font-medium">ATC #</th>
+                <th className="px-4 py-3 text-left font-medium">Date</th>
+                <th className="px-3 py-3 text-left font-medium">Assigned Date</th>
+                <th className="px-3 py-3 text-left font-medium">Delivery Date</th>
+                <th className="px-4 py-3 text-right font-medium">Remaining</th>
+                <th className="px-3 py-3 text-left font-medium">Qty Supplied</th>
+                <th className="px-3 py-3 text-left font-medium">Ref</th>
+                <th className="px-3 py-3 text-left font-medium">Truck</th>
+                <th className="px-3 py-3 text-left font-medium">Status</th>
+                <th className="px-3 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -235,16 +235,16 @@ export default function ATCsPage() {
                     </td>
                     <td className="px-3 py-3 text-right">
                       {(a.status === 'pending' && !a.assignedTruck) && (
-                        <button onClick={() => setAssignModal(a)} className="text-sm text-green-800 hover:text-green-900 mr-3">
+                        <button onClick={() => setAssignModal(a)} className={`${tableActionCls} mr-3`}>
                           Assign Truck
                         </button>
                       )}
                       {a.status === 'assigned' && a.assignedTruck && (
                         <>
-                          <button onClick={() => setAssignModal(a)} className="text-sm text-green-800 hover:text-green-900 mr-3">
+                          <button onClick={() => setAssignModal(a)} className={`${tableActionCls} mr-3`}>
                             Reassign
                           </button>
-                          <button onClick={() => { setLoadingModal(a); setLoadingChoice('just_loaded'); }} className="text-sm text-green-800 hover:text-green-900 mr-3">
+                          <button onClick={() => { setLoadingModal(a); setLoadingChoice('just_loaded'); }} className={`${tableActionCls} mr-3`}>
                             Loading
                           </button>
                         </>
