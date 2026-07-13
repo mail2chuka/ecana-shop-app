@@ -168,7 +168,7 @@ export default function NewAggregateSalePage() {
                 <p className="font-medium text-sm">{formatCustomerLabel(selectedCustomer)}</p>
                 <p className="text-xs text-gray-500">{selectedCustomer.phone} · Balance: <span className={selectedCustomer.balance < 0 ? 'text-red-600' : 'text-green-600'}>{formatNaira(selectedCustomer.balance)}</span></p>
               </div>
-              <button type="button" onClick={() => { setSelectedCustomer(null); setCustomerSearch(''); }} className="text-xs text-red-500">Change</button>
+              <button type="button" onClick={() => { setSelectedCustomer(null); setCustomerSearch(''); }} className="text-xs text-amber-700">Change</button>
             </div>
           ) : (
             <div className="relative">
