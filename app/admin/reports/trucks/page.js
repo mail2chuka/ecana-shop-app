@@ -35,7 +35,7 @@ export default function TruckReportPage() {
             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
           </div>
           <div className="flex items-end">
-            <button onClick={fetchData} disabled={loading} className="w-full py-2 bg-gray-900 text-white rounded text-sm disabled:opacity-50">
+            <button onClick={fetchData} disabled={loading} className="w-full py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900 disabled:opacity-50">
               {loading ? 'Loading...' : 'Run'}
             </button>
           </div>
