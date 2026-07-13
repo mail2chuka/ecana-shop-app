@@ -347,7 +347,7 @@ export default function ShopPage() {
                     <p className="font-medium">{c.name}</p>
                     <p className="text-xs text-gray-500">{c.qty} {c.unit} × {formatNaira(c.price)} = {formatNaira(c.total)}</p>
                   </div>
-                  <button onClick={() => removeFromCart(c.id)} className="text-red-600 text-xs hover:underline">Remove</button>
+                  <button onClick={() => removeFromCart(c.id)} className="text-amber-700 text-xs hover:underline">Remove</button>
                 </div>
               ))}
               <div className="border-t pt-2 text-right font-bold">Total: {formatNaira(cartTotal)}</div>
