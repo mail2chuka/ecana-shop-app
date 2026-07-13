@@ -24,10 +24,10 @@ export default function AuditLogPage() {
       <div className="bg-white border rounded-lg p-4 mb-6">
         <div className="flex gap-2 flex-wrap">
           <button onClick={() => setEntity('')}
-            className={`px-3 py-1 rounded text-sm ${!entity ? 'bg-gray-900 text-white' : 'border hover:bg-gray-50'}`}>All</button>
+            className={`px-3 py-1 rounded text-sm ${!entity ? 'bg-green-800 text-neutral-100' : 'border hover:bg-gray-50'}`}>All</button>
           {entities.map(e => (
             <button key={e} onClick={() => setEntity(e)}
-              className={`px-3 py-1 rounded text-sm ${entity === e ? 'bg-gray-900 text-white' : 'border hover:bg-gray-50'}`}>{e}</button>
+              className={`px-3 py-1 rounded text-sm ${entity === e ? 'bg-green-800 text-neutral-100' : 'border hover:bg-gray-50'}`}>{e}</button>
           ))}
         </div>
       </div>
@@ -53,7 +53,7 @@ export default function AuditLogPage() {
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                       log.action === 'created' ? 'bg-green-100 text-green-700' :
                       log.action === 'updated' || log.action === 'price_change' ? 'bg-blue-100 text-blue-700' :
-                      log.action === 'cancelled' || log.action === 'deactivated' ? 'bg-red-100 text-red-700' :
+                      log.action === 'cancelled' || log.action === 'deactivated' ? 'bg-amber-100 text-amber-800' :
                       'bg-gray-100 text-gray-700'}`}>
                       {log.action}
                     </span>
