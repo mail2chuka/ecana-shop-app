@@ -86,7 +86,7 @@ export default function AggregatePage() {
         action={
           quarries.length === 0
             ? <span className="text-sm text-gray-500">Add a quarry supplier first</span>
-            : <button onClick={openCreate} className="px-4 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">Add Product</button>
+            : <button onClick={openCreate} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Add Product</button>
         }
       />
 
@@ -108,9 +108,9 @@ export default function AggregatePage() {
                 <td className="px-4 py-3">{p.size}</td>
                 <td className="px-4 py-3 text-right font-medium">{formatNaira(p.currentPricePerTonne)}</td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => { setPriceModal(p); setNewPrice(p.currentPricePerTonne); }} className="text-sm text-blue-600 hover:text-blue-800 mr-3">Price</button>
-                  <button onClick={() => openEdit(p)} className="text-sm text-gray-600 hover:text-gray-900 mr-3">Edit</button>
-                  <button onClick={() => handleDelete(p)} className="text-sm text-red-600 hover:text-red-800">Deactivate</button>
+                  <button onClick={() => { setPriceModal(p); setNewPrice(p.currentPricePerTonne); }} className="text-sm text-green-800 hover:text-green-900 mr-3">Price</button>
+                  <button onClick={() => openEdit(p)} className="text-sm text-green-800 hover:text-green-900 mr-3">Edit</button>
+                  <button onClick={() => handleDelete(p)} className="text-sm text-amber-700 hover:text-amber-800">Deactivate</button>
                 </td>
               </tr>
             ))}
