@@ -232,7 +232,7 @@ export default function ShopPage() {
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
-              tab === t.id ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700'
+              tab === t.id ? 'border-green-800 text-green-800' : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
             {t.label}
@@ -256,13 +256,13 @@ export default function ShopPage() {
             <tbody className="divide-y">
               {products.length === 0 && <EmptyRow colSpan={5} text="No shop products yet — add one under Manage Products" />}
               {products.map(p => (
-                <tr key={p._id} className={p.stockQuantity === 0 ? 'bg-red-50' : ''}>
+                <tr key={p._id} className={p.stockQuantity === 0 ? 'bg-amber-50' : ''}>
                   <td className="px-4 py-3 font-medium">{p.name}</td>
                   <td className="px-4 py-3 text-gray-500">{p.unit}</td>
                   <td className="px-4 py-3 text-right">{formatNaira(p.price)}</td>
-                  <td className={`px-4 py-3 text-right font-bold ${p.stockQuantity === 0 ? 'text-red-600' : 'text-green-600'}`}>{p.stockQuantity}</td>
+                  <td className={`px-4 py-3 text-right font-bold ${p.stockQuantity === 0 ? 'text-amber-700' : 'text-green-600'}`}>{p.stockQuantity}</td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => openRestock(p)} className="text-sm text-blue-600 hover:text-blue-800">Receive Stock</button>
+                    <button onClick={() => openRestock(p)} className="text-sm text-green-800 hover:text-green-900">Receive Stock</button>
                   </td>
                 </tr>
               ))}
