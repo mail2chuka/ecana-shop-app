@@ -420,7 +420,7 @@ export default function NewCementSalePage() {
                 type="button"
                 onClick={proceedWithSubmit}
                 disabled={submitting}
-                className="w-full px-4 py-2 bg-amber-600 text-white rounded text-sm hover:bg-amber-700 font-medium disabled:opacity-50"
+                className="w-full px-4 py-2 bg-amber-700 text-neutral-100 rounded text-sm hover:bg-amber-800 font-medium disabled:opacity-50"
               >
                 {submitting ? 'Submitting...' : 'Continue Without Fee'}
               </button>
