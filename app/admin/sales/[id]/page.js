@@ -155,18 +155,18 @@ export default function SaleDetailPage() {
           <p className="text-sm text-gray-500">{formatDateTime(sale.date)} · {sale.saleType}</p>
         </div>
         <div className="flex gap-2">
-          <Link href={`/admin/sales/${id}/invoice`} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">View Invoice</Link>
-          <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Invoice</button>
+          <Link href={`/admin/sales/${id}/invoice`} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">View Invoice</Link>
+          <button onClick={() => window.print()} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Print Invoice</button>
           {sale.status === 'active' && (
-            <button onClick={openEdit} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Edit Sale</button>
+            <button onClick={openEdit} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Edit Sale</button>
           )}
         </div>
       </div>
 
       {sale.status === 'cancelled' && (
-        <div className="bg-red-50 border border-red-200 rounded p-3 mb-4 no-print">
-          <p className="text-red-700 font-medium text-sm">This sale was cancelled</p>
-          {sale.cancellationReason && <p className="text-red-600 text-xs mt-1">Reason: {sale.cancellationReason}</p>}
+        <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-4 no-print">
+          <p className="text-amber-800 font-medium text-sm">This sale was cancelled</p>
+          {sale.cancellationReason && <p className="text-amber-700 text-xs mt-1">Reason: {sale.cancellationReason}</p>}
         </div>
       )}
 
@@ -189,7 +189,7 @@ export default function SaleDetailPage() {
               <p className="font-bold text-lg">{sale.saleNumber}</p>
               <p className="text-gray-500">{formatDate(sale.date)}</p>
               {sale.status === 'cancelled' && (
-                <p className="font-medium mt-1 text-red-600">CANCELLED</p>
+                <p className="font-medium mt-1 text-amber-700">CANCELLED</p>
               )}
             </div>
           </div>
@@ -295,7 +295,7 @@ export default function SaleDetailPage() {
             <div className="flex gap-3">
               <button onClick={() => setShowDelete(false)} className="flex-1 px-4 py-2 border rounded text-sm">Go Back</button>
               <button onClick={handleDelete} disabled={deleting}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded text-sm disabled:opacity-50">
+                className="flex-1 px-4 py-2 bg-amber-700 text-neutral-100 rounded text-sm hover:bg-amber-800 disabled:opacity-50">
                 {deleting ? 'Deleting...' : 'Confirm Delete'}
               </button>
             </div>
@@ -312,7 +312,7 @@ export default function SaleDetailPage() {
               <button
                 type="button"
                 onClick={() => { setShowEdit(false); setShowDelete(true); }}
-                className="px-3 py-1.5 border border-red-300 text-red-600 rounded text-xs font-medium hover:bg-red-50"
+                className="px-3 py-1.5 border border-amber-600 text-amber-700 rounded text-xs font-medium hover:bg-amber-50"
               >
                 Delete Sale
               </button>
@@ -324,7 +324,7 @@ export default function SaleDetailPage() {
                   <button
                     type="button"
                     onClick={() => removeEditItem(i)}
-                    className="px-2 py-1 border border-red-300 text-red-600 rounded text-xs font-medium hover:bg-red-50"
+                    className="px-2 py-1 border border-amber-600 text-amber-700 rounded text-xs font-medium hover:bg-amber-50"
                   >
                     Remove Sales Item
                   </button>

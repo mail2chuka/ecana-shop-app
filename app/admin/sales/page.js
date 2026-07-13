@@ -53,8 +53,8 @@ export default function SalesPage() {
         subtitle="All sales transactions"
         action={
           <div className="flex gap-2">
-            <Link href="/admin/sales/new/cement" className="px-3 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">New Cement Sale</Link>
-            <Link href="/admin/sales/new/stonedust" className="px-3 py-2 bg-gray-700 text-white rounded text-sm hover:bg-gray-800">New Aggregate Sale</Link>
+            <Link href="/admin/sales/new/cement" className="px-3 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">New Cement Sale</Link>
+            <Link href="/admin/sales/new/stonedust" className="px-3 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">New Aggregate Sale</Link>
           </div>
         }
       />
@@ -111,7 +111,7 @@ export default function SalesPage() {
                 {sales.map(s => (
                   <tr key={s._id}>
                     <td className="px-4 py-3 font-medium">
-                      <Link href={`/admin/sales/${s._id}`} className="text-blue-600 hover:underline">{s.saleNumber}</Link>
+                      <Link href={`/admin/sales/${s._id}`} className="text-green-800 hover:underline">{s.saleNumber}</Link>
                       {s.editedAt && (
                         <p className="text-xs text-amber-600 font-normal" title={formatDate(s.editedAt)}>Edited by {s.editedByName}</p>
                       )}
@@ -127,9 +127,9 @@ export default function SalesPage() {
                       <StatusPill status={s.status} color={s.status === 'active' ? 'green' : 'red'} />
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Link href={`/admin/sales/${s._id}/invoice`} className="text-sm text-blue-600 hover:text-blue-800 mr-3">Invoice</Link>
+                      <Link href={`/admin/sales/${s._id}/invoice`} className="text-sm text-green-800 hover:text-green-900 mr-3">Invoice</Link>
                       {s.status === 'active' && (
-                        <button onClick={() => deleteSale(s)} className="text-sm text-red-600 hover:text-red-800">Delete</button>
+                        <button onClick={() => deleteSale(s)} className="text-sm text-amber-700 hover:text-amber-800">Delete</button>
                       )}
                     </td>
                   </tr>

@@ -80,7 +80,7 @@ export default function CustomerDetailPage() {
           <p className="text-sm text-gray-500">{customer.phone}</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={openPaymentModal} className="px-4 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">Record Payment</button>
+          <button onClick={openPaymentModal} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Record Payment</button>
           <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Statement</button>
         </div>
       </div>
@@ -121,8 +121,8 @@ export default function CustomerDetailPage() {
                   <td className="px-4 py-2 whitespace-nowrap">{formatDate(entry.date)}</td>
                   <td className="px-4 py-2">
                     {entry.type === 'sale'
-                      ? <Link href={`/admin/sales/${entry.id}`} className="text-blue-600 hover:underline">{entry.ref}</Link>
-                      : <button onClick={() => setSelectedPayment(entry)} className="text-blue-600 hover:underline text-left">{entry.ref}</button>}
+                      ? <Link href={`/admin/sales/${entry.id}`} className="text-green-800 hover:underline">{entry.ref}</Link>
+                      : <button onClick={() => setSelectedPayment(entry)} className="text-green-800 hover:underline text-left">{entry.ref}</button>}
                   </td>
                   <td className="px-4 py-2 text-gray-600 max-w-xs truncate">{entry.description}</td>
                   <td className="px-4 py-2 text-right text-red-600">{entry.debit > 0 ? formatNaira(entry.debit) : '-'}</td>

@@ -27,7 +27,7 @@ export function Card({ children, className = '' }) {
 export function StatusPill({ status, color }) {
   const colors = {
     green: 'bg-green-100 text-green-700',
-    red: 'bg-red-100 text-red-700',
+    red: 'bg-amber-100 text-amber-800',
     yellow: 'bg-yellow-100 text-yellow-700',
     blue: 'bg-blue-100 text-blue-700',
     gray: 'bg-gray-100 text-gray-700',
@@ -68,7 +68,7 @@ export function FormButtons({ onCancel, submitLabel = 'Save', submitting }) {
       <button type="button" onClick={onCancel} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">
         Cancel
       </button>
-      <button type="submit" disabled={submitting} className="flex-1 px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800 disabled:opacity-50">
+      <button type="submit" disabled={submitting} className="flex-1 px-4 py-2 bg-green-800 text-neutral-100 rounded hover:bg-green-900 disabled:opacity-50">
         {submitting ? 'Saving...' : submitLabel}
       </button>
     </div>

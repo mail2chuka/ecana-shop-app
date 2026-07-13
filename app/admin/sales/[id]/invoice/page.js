@@ -38,7 +38,7 @@ export default function SaleInvoicePage() {
               <p className="font-bold text-xl">{sale.saleNumber}</p>
               <p className="text-gray-600">{formatDate(sale.date)}</p>
               {sale.status === 'cancelled' && (
-                <p className="font-bold mt-2 text-red-600">CANCELLED</p>
+                <p className="font-bold mt-2 text-amber-700">CANCELLED</p>
               )}
             </div>
           </div>
@@ -127,7 +127,7 @@ export default function SaleInvoicePage() {
           {sale.notes && <p><span className="font-medium">Notes:</span> {sale.notes}</p>}
           <p className="pt-2"><span className="font-medium">Recorded by:</span> {sale.createdByName}</p>
           {sale.status === 'cancelled' && (
-            <p className="text-red-600 font-medium pt-2">
+            <p className="text-amber-700 font-medium pt-2">
               ⚠ This invoice has been cancelled{sale.cancellationReason && ` - ${sale.cancellationReason}`}
             </p>
           )}
@@ -140,7 +140,7 @@ export default function SaleInvoicePage() {
 
       {/* Print Button */}
       <div className="mt-6 flex justify-center gap-3 no-print">
-        <button onClick={handlePrint} className="px-6 py-2 bg-gray-900 text-white rounded hover:bg-gray-800">
+        <button onClick={handlePrint} className="px-6 py-2 bg-green-800 text-neutral-100 rounded hover:bg-green-900">
           Print Invoice
         </button>
         <button onClick={() => window.history.back()} className="px-6 py-2 border rounded hover:bg-gray-50">

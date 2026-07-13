@@ -117,7 +117,7 @@ export default function PaymentsPage() {
       <PageHeader
         title="Customer Payments"
         subtitle="Payments received from customers"
-        action={<button onClick={openModal} className="px-4 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">New Payment</button>}
+        action={<button onClick={openModal} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">New Payment</button>}
       />
 
       <Card className="overflow-hidden">
@@ -212,7 +212,7 @@ export default function PaymentsPage() {
                       key={c._id}
                       type="button"
                       onClick={() => selectCustomer(c)}
-                      className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b transition"
+                      className="w-full text-left px-4 py-3 hover:bg-green-50 border-b transition"
                     >
                       <p className="font-medium text-sm">{formatCustomerLabel(c)}</p>
                       <p className="text-xs text-gray-500">{c.phone} · {c.businessName ? c.businessName : 'Individual'} · Balance: {formatNaira(c.balance)}</p>
@@ -222,9 +222,9 @@ export default function PaymentsPage() {
               )}
 
               {selectedCustomer && (
-                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                  <p className="font-medium text-blue-900">{formatCustomerLabel(selectedCustomer)}</p>
-                  <p className="text-xs text-blue-700">{selectedCustomer.phone} · Current Balance: {formatNaira(selectedCustomer.balance)}</p>
+                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm">
+                  <p className="font-medium text-green-900">{formatCustomerLabel(selectedCustomer)}</p>
+                  <p className="text-xs text-green-700">{selectedCustomer.phone} · Current Balance: {formatNaira(selectedCustomer.balance)}</p>
                 </div>
               )}
             </div>

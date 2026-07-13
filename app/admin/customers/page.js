@@ -81,7 +81,7 @@ export default function CustomersPage() {
       <PageHeader
         title="Customers"
         subtitle="Customer profiles and balances"
-        action={<button onClick={openCreate} className="px-4 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">Add Customer</button>}
+        action={<button onClick={openCreate} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Add Customer</button>}
       />
 
       <div className="mb-4">
@@ -119,9 +119,9 @@ export default function CustomersPage() {
                     {formatNaira(c.balance)}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Link href={`/admin/customers/${c._id}`} className="text-sm text-blue-600 hover:text-blue-800 mr-3">View</Link>
-                    <button onClick={() => openEdit(c)} className="text-sm text-gray-600 hover:text-gray-900 mr-3">Edit</button>
-                    <button onClick={() => handleDelete(c)} className="text-sm text-red-600 hover:text-red-800">Delete</button>
+                    <Link href={`/admin/customers/${c._id}`} className="text-sm text-green-800 hover:text-green-900 mr-3">View</Link>
+                    <button onClick={() => openEdit(c)} className="text-sm text-green-800 hover:text-green-900 mr-3">Edit</button>
+                    <button onClick={() => handleDelete(c)} className="text-sm text-amber-700 hover:text-amber-800">Delete</button>
                   </td>
                 </tr>
               ))}

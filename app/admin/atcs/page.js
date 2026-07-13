@@ -158,7 +158,7 @@ export default function ATCsPage() {
         action={
           brands.length === 0
             ? <span className="text-sm text-gray-500">Add a cement brand first</span>
-            : <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">Record ATC</button>
+            : <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Record ATC</button>
         }
       />
 
@@ -167,7 +167,7 @@ export default function ATCsPage() {
           <button
             key={s || 'all'}
             onClick={() => setStatusFilter(s)}
-            className={`px-3 py-1 text-sm rounded border ${statusFilter === s ? 'bg-gray-900 text-white border-gray-900' : 'bg-white hover:bg-gray-50'}`}
+            className={`px-3 py-1 text-sm rounded border ${statusFilter === s ? 'bg-green-800 text-neutral-100 border-green-800' : 'bg-white hover:bg-gray-50'}`}
           >
             {s ? s[0].toUpperCase() + s.slice(1) : 'All'}
           </button>
@@ -235,16 +235,16 @@ export default function ATCsPage() {
                     </td>
                     <td className="px-3 py-3 text-right">
                       {(a.status === 'pending' && !a.assignedTruck) && (
-                        <button onClick={() => setAssignModal(a)} className="text-sm text-blue-600 hover:text-blue-800 mr-3">
+                        <button onClick={() => setAssignModal(a)} className="text-sm text-green-800 hover:text-green-900 mr-3">
                           Assign Truck
                         </button>
                       )}
                       {a.status === 'assigned' && a.assignedTruck && (
                         <>
-                          <button onClick={() => setAssignModal(a)} className="text-sm text-blue-600 hover:text-blue-800 mr-3">
+                          <button onClick={() => setAssignModal(a)} className="text-sm text-green-800 hover:text-green-900 mr-3">
                             Reassign
                           </button>
-                          <button onClick={() => { setLoadingModal(a); setLoadingChoice('just_loaded'); }} className="text-sm text-green-600 hover:text-green-800 mr-3">
+                          <button onClick={() => { setLoadingModal(a); setLoadingChoice('just_loaded'); }} className="text-sm text-green-800 hover:text-green-900 mr-3">
                             Loading
                           </button>
                         </>
