@@ -101,7 +101,7 @@ export default function SalesReportPage() {
           </div>
         </div>
         <div className="mt-4">
-          <button onClick={fetchReport} disabled={loading} className="px-6 py-2 bg-gray-900 text-white rounded text-sm disabled:opacity-50">
+          <button onClick={fetchReport} disabled={loading} className="px-6 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900 disabled:opacity-50">
             {loading ? 'Loading...' : 'Run Report'}
           </button>
         </div>
@@ -152,11 +152,11 @@ export default function SalesReportPage() {
                   return (
                     <tr key={i} className="hover:bg-gray-50">
                       <td className="px-4 py-2">
-                        <Link href={href} className="text-blue-600 hover:underline">{row._id.period}</Link>
+                        <Link href={href} className="text-green-800 hover:underline">{row._id.period}</Link>
                       </td>
                       <td className="px-4 py-2 capitalize">{row._id.saleType}</td>
                       <td className="px-4 py-2 text-right">
-                        <Link href={href} className="text-blue-600 hover:underline">{row.count}</Link>
+                        <Link href={href} className="text-green-800 hover:underline">{row.count}</Link>
                       </td>
                       <td className="px-4 py-2 text-right font-medium">{formatNaira(row.total)}</td>
                     </tr>
