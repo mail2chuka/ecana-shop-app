@@ -413,7 +413,7 @@ export default function ShopPage() {
       {tab === 'manage' && (
         <div>
           <div className="flex justify-end mb-4">
-            <button onClick={openCreateProduct} className="px-4 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">Add Product</button>
+            <button onClick={openCreateProduct} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Add Product</button>
           </div>
           <Card className="overflow-hidden">
             <table className="w-full text-sm">
