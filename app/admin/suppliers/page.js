@@ -73,7 +73,7 @@ export default function SuppliersPage() {
       <PageHeader
         title="Quarry"
         subtitle="Quarries you buy aggregate products from"
-        action={<button onClick={openCreate} className="px-4 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">Add Quarry</button>}
+        action={<button onClick={openCreate} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Add Quarry</button>}
       />
 
       <Card className="overflow-hidden">
@@ -96,8 +96,8 @@ export default function SuppliersPage() {
                 <td className="px-4 py-3 text-gray-500">{s.phone || '-'}</td>
                 <td className="px-4 py-3 text-gray-500">{s.address || '-'}</td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => openEdit(s)} className="text-sm text-gray-600 hover:text-gray-900 mr-3">Edit</button>
-                  <button onClick={() => handleDelete(s)} className="text-sm text-red-600 hover:text-red-800">Deactivate</button>
+                  <button onClick={() => openEdit(s)} className="text-sm text-green-800 hover:text-green-900 mr-3">Edit</button>
+                  <button onClick={() => handleDelete(s)} className="text-sm text-amber-700 hover:text-amber-800">Deactivate</button>
                 </td>
               </tr>
             ))}
