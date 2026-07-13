@@ -360,7 +360,7 @@ export default function NewCementSalePage() {
               <p><span className="font-medium">Total bags distributed:</span> {totalBagsDistributed} / {selectedAtc?.bagsPaidFor}</p>
               <p><span className="font-medium">Total amount:</span> {formatNaira(distributions.reduce((s, d) => s + d.total, 0))}</p>
               {bagsRemaining > 0 && (
-                <p className="text-blue-600"><span className="font-medium">Remaining:</span> {bagsRemaining} bags (add more customers)</p>
+                <p className="text-green-800"><span className="font-medium">Remaining:</span> {bagsRemaining} bags (add more customers)</p>
               )}
               {bagsRemaining === 0 && (
                 <p className="text-green-600 font-medium">✓ All bags distributed</p>
@@ -389,7 +389,7 @@ export default function NewCementSalePage() {
           <button
             type="submit"
             disabled={submitting || !selectedAtc || distributions.length === 0}
-            className="flex-1 py-3 bg-gray-900 text-white rounded text-sm font-bold hover:bg-gray-800 disabled:opacity-50"
+            className="flex-1 py-3 bg-green-800 text-neutral-100 rounded text-sm font-bold hover:bg-green-900 disabled:opacity-50"
           >
             {submitting ? 'SUBMITTING...' : 'SUBMIT'}
           </button>
