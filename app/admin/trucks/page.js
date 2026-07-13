@@ -66,7 +66,7 @@ export default function TrucksPage() {
       <PageHeader
         title="Trucks"
         subtitle="Trucks used for deliveries and ATC pickups"
-        action={<button onClick={openCreate} className="px-4 py-2 bg-gray-900 text-white rounded text-sm hover:bg-gray-800">Add Truck</button>}
+        action={<button onClick={openCreate} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Add Truck</button>}
       />
 
       <Card className="overflow-hidden">
