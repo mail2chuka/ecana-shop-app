@@ -6,6 +6,7 @@ import QuarryPurchase from '@/models/QuarryPurchase';
 import Supplier from '@/models/Supplier';
 import StoneDustProduct from '@/models/StoneDustProduct';
 import Truck from '@/models/Truck';
+import ATC from '@/models/ATC';
 import { logAudit } from '@/lib/audit';
 
 async function generateReferenceNumber() {
@@ -69,10 +70,18 @@ export async function POST(request) {
     }
     const truckDoc = await Truck.findById(truck);
     if (!truckDoc) return NextResponse.json({ error: 'Invalid truck' }, { status: 400 });
+    if (truckDoc.type !== 'stonedust') {
+      return NextResponse.json({ error: `${truckDoc.plateNumber} is registered for cement, not aggregates — assign an aggregate truck instead` }, { status: 400 });
+    }
 
     const busyOn = await QuarryPurchase.findOne({ truck: truckDoc._id, tonnesRemaining: { $gt: 0 } });
     if (busyOn) {
       return NextResponse.json({ error: `Truck ${truckDoc.plateNumber} is still carrying reference ${busyOn.referenceNumber} (${busyOn.tonnesRemaining}t remaining) — it must be fully supplied before assigning a new reference` }, { status: 400 });
+    }
+
+    const busyOnAtc = await ATC.findOne({ assignedTruck: truckDoc._id, status: { $in: ['assigned', 'loaded', 'collecting'] } });
+    if (busyOnAtc) {
+      return NextResponse.json({ error: `Truck ${truckDoc.plateNumber} is still out on ATC ${busyOnAtc.atcNumber} — it'll be free once that one arrives or closes` }, { status: 400 });
     }
 
     const costPricePerTonne = product.currentPricePerTonne || 0;

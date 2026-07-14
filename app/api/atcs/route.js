@@ -26,7 +26,8 @@ export async function GET(request) {
     if (status) query.status = status;
     if (brand) query.cementBrand = brand;
     if (availableForSale === 'true') {
-      query.status = { $in: ['assigned', 'loaded', 'collecting', 'arrived'] };
+      // 'assigned' means a truck has been sent to collect but hasn't loaded yet — not sellable until 'loaded'.
+      query.status = { $in: ['loaded', 'collecting', 'arrived'] };
       query.bagsRemaining = { $gt: 0 };
     }
     

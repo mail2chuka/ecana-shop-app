@@ -9,7 +9,6 @@ import { CurrencyInput } from '@/components/ui';
 export default function NewAggregateSalePage() {
   const router = useRouter();
   const [products, setProducts] = useState([]);
-  const [trucks, setTrucks] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -17,7 +16,6 @@ export default function NewAggregateSalePage() {
   const [pendingSubmit, setPendingSubmit] = useState(false);
 
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [truckId, setTruckId] = useState('');
   const [discount, setDiscount] = useState('');
   const [transportFee, setTransportFee] = useState('');
   const [notes, setNotes] = useState('');
@@ -36,11 +34,9 @@ export default function NewAggregateSalePage() {
   useEffect(() => {
     Promise.all([
       fetch('/api/stonedust').then(r => r.json()),
-      fetch('/api/trucks').then(r => r.json()),
       fetch('/api/customers').then(r => r.json()),
-    ]).then(([p, t, c]) => {
+    ]).then(([p, c]) => {
       if (p.success) setProducts(p.data);
-      if (t.success) setTrucks(t.data);
       if (c.success) setCustomers(c.data);
     }).finally(() => setLoading(false));
   }, []);
@@ -133,7 +129,7 @@ export default function NewAggregateSalePage() {
         body: JSON.stringify({
           saleType: 'stonedust',
           customer: selectedCustomer._id,
-          truck: truckId || undefined,
+          truck: selectedPurchase?.truck || undefined,
           date, items: [item],
           discount: parseFloat(discount) || 0,
           transportFee: parseFloat(transportFee) || 0,
@@ -170,11 +166,10 @@ export default function NewAggregateSalePage() {
             <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" required />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Truck (optional)</label>
-            <select value={truckId} onChange={e => setTruckId(e.target.value)} className="w-full px-3 py-2 border rounded text-sm">
-              <option value="">No truck selected</option>
-              {trucks.map(t => <option key={t._id} value={t._id}>{t.plateNumber} — {t.driverName}</option>)}
-            </select>
+            <label className="block text-sm font-medium mb-1">Truck</label>
+            <div className="w-full px-3 py-2 border rounded text-sm bg-gray-50 text-gray-700">
+              {selectedPurchase ? `${selectedPurchase.truckPlate} — ${selectedPurchase.driverName || 'Unknown driver'}` : 'Select a purchase reference below'}
+            </div>
           </div>
         </div>
 

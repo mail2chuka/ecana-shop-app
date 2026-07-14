@@ -303,11 +303,12 @@ export default function ATCsPage() {
             <Field label="Truck" required>
               <select value={selectedTruck} onChange={e => setSelectedTruck(e.target.value)} className={inputCls} required>
                 <option value="">— Select truck —</option>
-                {trucks.map(t => {
+                {trucks.filter(t => t.type === 'cement').map(t => {
                   const busyOn = atcs.find(a => a._id !== assignModal._id && a.assignedTruck === t._id && ['assigned', 'loaded', 'collecting'].includes(a.status));
+                  const busy = busyOn || t.busy;
                   return (
-                    <option key={t._id} value={t._id} disabled={!!busyOn}>
-                      {t.plateNumber} — {t.driverName}{busyOn ? ` (busy on ${formatAtcNumber(busyOn, brands)})` : ''}
+                    <option key={t._id} value={t._id} disabled={!!busy}>
+                      {t.plateNumber} — {t.driverName}{busyOn ? ` (busy on ${formatAtcNumber(busyOn, brands)})` : t.busy ? ` (${t.busyReason})` : ''}
                     </option>
                   );
                 })}

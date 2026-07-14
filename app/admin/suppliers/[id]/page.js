@@ -232,7 +232,11 @@ export default function QuarryDetailPage() {
           <Field label="Truck" required>
             <select value={purchaseForm.truck} onChange={e => setPurchaseForm({ ...purchaseForm, truck: e.target.value })} className={inputCls} required>
               <option value="">Choose truck...</option>
-              {trucks.map(t => <option key={t._id} value={t._id}>{t.plateNumber} — {t.driverName}</option>)}
+              {trucks.map(t => (
+                <option key={t._id} value={t._id} disabled={t.busy}>
+                  {t.plateNumber} — {t.driverName}{t.busy ? ` (${t.busyReason})` : ''}
+                </option>
+              ))}
             </select>
           </Field>
           <div className="grid grid-cols-2 gap-3">
