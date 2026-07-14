@@ -12,7 +12,6 @@ const blankPaymentForm = {
   method: 'transfer',
   depositorName: '',
   bankName: '',
-  reference: '',
   notes: '',
   date: new Date().toISOString().split('T')[0],
 };
@@ -300,26 +299,15 @@ export default function CustomerDetailPage() {
               required
             />
           </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Reference">
-              <input
-                type="text"
-                value={paymentForm.reference}
-                onChange={e => setPaymentForm({ ...paymentForm, reference: e.target.value })}
-                placeholder="Transfer ref, cheque #..."
-                className={inputCls}
-              />
-            </Field>
-            <Field label="Remark">
-              <input
-                type="text"
-                value={paymentForm.notes}
-                onChange={e => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                placeholder="Additional notes..."
-                className={inputCls}
-              />
-            </Field>
-          </div>
+          <Field label="Remark">
+            <input
+              type="text"
+              value={paymentForm.notes}
+              onChange={e => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+              placeholder="Additional notes..."
+              className={inputCls}
+            />
+          </Field>
           <FormButtons onCancel={() => setShowPaymentModal(false)} submitting={submitting} submitLabel="Record Payment" />
         </form>
       </Modal>

@@ -38,7 +38,7 @@ export async function GET(request, { params }) {
       createdAt: p.createdAt,
       type: 'payment',
       ref: p.transactionNumber,
-      description: `Payment via ${p.method}`,
+      description: p.notes || `Payment via ${p.method}`,
       debit: 0,
       credit: p.amount,
       balance: p.balanceAfter,
