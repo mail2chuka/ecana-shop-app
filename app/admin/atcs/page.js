@@ -30,18 +30,12 @@ const loadingOptions = [
   { value: 'five_hours_ago', label: 'Five Hours ago' },
 ];
 
-const getStatusLabel = (atc, nowMs) => {
-  if (atc.status === 'loaded' && atc.loadedAt) {
-    const elapsedMs = nowMs - new Date(atc.loadedAt).getTime();
-    if (elapsedMs < 60 * 60 * 1000) return 'Just Loaded';
-    const hours = Math.floor(elapsedMs / (60 * 60 * 1000));
-    return `Loaded ${hours} hour${hours === 1 ? '' : 's'} ago`;
-  }
-  if (atc.status === 'arrived' && atc.arrivalDate) {
-    const hours = Math.floor((nowMs - new Date(atc.arrivalDate).getTime()) / (60 * 60 * 1000));
-    return `Arrived ${hours <= 0 ? '<1' : hours} hour${hours === 1 ? '' : 's'} ago`;
-  }
-  return atc.status;
+const getStatusLabel = (atc) => atc.status[0].toUpperCase() + atc.status.slice(1);
+
+const formatHoursAgo = (since, nowMs) => {
+  if (!since) return null;
+  const hours = Math.floor((nowMs - new Date(since).getTime()) / (60 * 60 * 1000));
+  return `${hours <= 0 ? '<1' : hours} hour${hours === 1 ? '' : 's'} ago`;
 };
 
 const blankForm = { atcNumber: '', cementBrand: '', atcDate: new Date().toISOString().split('T')[0], bagsPaidFor: '', notes: '' };
