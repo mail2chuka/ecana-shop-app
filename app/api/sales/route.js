@@ -114,7 +114,7 @@ export async function POST(request) {
           }
 
           atc.bagsRemaining -= actualQty;
-          if (atc.bagsRemaining === 0 && !['loaded', 'delivered'].includes(atc.status)) atc.status = 'closed';
+          if (atc.bagsRemaining === 0) atc.status = 'closed';
           await atc.save({ session: mongoSession });
 
           processedItems.push({

@@ -9,9 +9,7 @@ const statusColor = {
   pending: 'blue',
   assigned: 'yellow',
   loaded: 'green',
-  collecting: 'yellow',
   arrived: 'green',
-  delivered: 'green',
   closed: 'gray',
 };
 
@@ -30,32 +28,20 @@ const loadingOptions = [
   { value: 'three_hours_ago', label: 'Three Hours ago' },
   { value: 'four_hours_ago', label: 'Four Hours ago' },
   { value: 'five_hours_ago', label: 'Five Hours ago' },
-  { value: 'delivered', label: 'Delivered' },
 ];
 
-const LOADING_WINDOW_MS = 6 * 60 * 60 * 1000;
-
 const getStatusLabel = (atc, nowMs) => {
-  if (atc.status === 'loaded') {
-    if (!atc.loadedAt) return 'Just Loaded';
+  if (atc.status === 'loaded' && atc.loadedAt) {
     const elapsedMs = nowMs - new Date(atc.loadedAt).getTime();
-    if (elapsedMs >= LOADING_WINDOW_MS) return 'Delivered';
     if (elapsedMs < 60 * 60 * 1000) return 'Just Loaded';
     const hours = Math.floor(elapsedMs / (60 * 60 * 1000));
     return `Loaded ${hours} hour${hours === 1 ? '' : 's'} ago`;
   }
-  if (atc.status === 'delivered') return 'Delivered';
+  if (atc.status === 'arrived' && atc.arrivalDate) {
+    const hours = Math.floor((nowMs - new Date(atc.arrivalDate).getTime()) / (60 * 60 * 1000));
+    return `Arrived ${hours <= 0 ? '<1' : hours} hour${hours === 1 ? '' : 's'} ago`;
+  }
   return atc.status;
-};
-
-const formatCountdown = (loadedAt, nowMs) => {
-  if (!loadedAt) return '';
-  const remaining = new Date(loadedAt).getTime() + LOADING_WINDOW_MS - nowMs;
-  if (remaining <= 0) return 'Delivered';
-  const totalMinutes = Math.ceil(remaining / 60000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return `${hours}h ${String(minutes).padStart(2, '0')}m left`;
 };
 
 const blankForm = { atcNumber: '', cementBrand: '', atcDate: new Date().toISOString().split('T')[0], bagsPaidFor: '', notes: '' };
@@ -152,6 +138,13 @@ export default function ATCsPage() {
     }
   };
 
+  const handleArrive = async (atc) => {
+    const r = await fetch(`/api/atcs/${atc._id}/arrive`, { method: 'POST' });
+    const d = await r.json();
+    if (d.success) { toast.success('Marked arrived'); load(); }
+    else toast.error(d.error);
+  };
+
   if (loading) return <Loader />;
 
   return (
@@ -174,7 +167,7 @@ export default function ATCsPage() {
       </div>
 
       <div className="mb-4 flex gap-2 flex-wrap">
-        {['', 'pending', 'assigned', 'loaded', 'delivered', 'arrived', 'closed'].map(s => {
+        {['', 'pending', 'assigned', 'loaded', 'arrived', 'closed'].map(s => {
           const count = s ? (statusCounts[s] || 0) : allAtcs.length;
           return (
             <button
@@ -243,9 +236,6 @@ export default function ATCsPage() {
                     <td className="px-3 py-3 text-gray-500">{a.assignedTruckPlate || '-'}</td>
                     <td className="px-3 py-3">
                       <StatusPill status={getStatusLabel(a, nowMs)} color={statusColor[a.status]} />
-                      {a.status === 'loaded' && a.loadedAt && (
-                        <div className="mt-1 text-xs text-gray-500">{formatCountdown(a.loadedAt, nowMs)}</div>
-                      )}
                     </td>
                     <td className="px-3 py-3 text-right">
                       {(a.status === 'pending' && !a.assignedTruck) && (
@@ -262,6 +252,11 @@ export default function ATCsPage() {
                             Loading
                           </button>
                         </>
+                      )}
+                      {a.status === 'loaded' && (
+                        <button onClick={() => handleArrive(a)} className={`${tableActionCls} mr-3`}>
+                          Mark Arrived
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -318,7 +313,7 @@ export default function ATCsPage() {
               <select value={selectedTruck} onChange={e => setSelectedTruck(e.target.value)} className={inputCls} required>
                 <option value="">— Select truck —</option>
                 {trucks.filter(t => t.type === 'cement').map(t => {
-                  const busyOn = allAtcs.find(a => a._id !== assignModal._id && a.assignedTruck === t._id && ['assigned', 'loaded', 'collecting'].includes(a.status));
+                  const busyOn = allAtcs.find(a => a._id !== assignModal._id && a.assignedTruck === t._id && a.status !== 'closed');
                   const busy = busyOn || t.busy;
                   return (
                     <option key={t._id} value={t._id} disabled={!!busy}>

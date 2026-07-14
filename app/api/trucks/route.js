@@ -16,7 +16,7 @@ export async function GET() {
     const truckIds = trucks.map(t => t._id);
 
     const [busyAtcs, busyPurchases] = await Promise.all([
-      ATC.find({ assignedTruck: { $in: truckIds }, status: { $in: ['assigned', 'loaded', 'collecting'] } }),
+      ATC.find({ assignedTruck: { $in: truckIds }, status: { $ne: 'closed' } }),
       QuarryPurchase.find({ truck: { $in: truckIds }, tonnesRemaining: { $gt: 0 } }),
     ]);
 
@@ -24,7 +24,7 @@ export async function GET() {
       const atc = busyAtcs.find(a => String(a.assignedTruck) === String(t._id));
       const purchase = busyPurchases.find(p => String(p.truck) === String(t._id));
       let busyReason = null;
-      if (atc) busyReason = `On ATC ${atc.atcNumber}`;
+      if (atc) busyReason = `On ATC ${atc.atcNumber} (${atc.bagsRemaining} bags remaining)`;
       else if (purchase) busyReason = `Carrying ref ${purchase.referenceNumber} (${purchase.tonnesRemaining}t left)`;
       return { ...t.toObject(), busy: !!busyReason, busyReason };
     });

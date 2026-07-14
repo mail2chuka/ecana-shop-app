@@ -8,7 +8,6 @@ import CementBrand from '@/models/CementBrand';
 import Supplier from '@/models/Supplier';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
-import { autoDeliverDueAtcs } from '@/lib/atcLifecycle';
 
 export async function GET(request) {
   try {
@@ -20,17 +19,15 @@ export async function GET(request) {
     const brand = searchParams.get('brand');
     const availableForSale = searchParams.get('availableForSale');
 
-    await autoDeliverDueAtcs();
-    
     const query = {};
     if (status) query.status = status;
     if (brand) query.cementBrand = brand;
     if (availableForSale === 'true') {
       // 'assigned' means a truck has been sent to collect but hasn't loaded yet — not sellable until 'loaded'.
-      query.status = { $in: ['loaded', 'collecting', 'arrived'] };
+      query.status = { $in: ['loaded', 'arrived'] };
       query.bagsRemaining = { $gt: 0 };
     }
-    
+
     const atcs = await ATC.find(query).sort({ atcDate: -1 }).limit(200);
     const atcIds = atcs.map((atc) => atc._id);
     const sales = atcIds.length

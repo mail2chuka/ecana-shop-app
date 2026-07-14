@@ -9,8 +9,8 @@ import { logAudit } from '@/lib/audit';
 import { requireObjectId } from '@/lib/validate';
 
 async function findBusyReason(truckId) {
-  const busyAtc = await ATC.findOne({ assignedTruck: truckId, status: { $in: ['assigned', 'loaded', 'collecting'] } });
-  if (busyAtc) return `it's still out on ATC ${busyAtc.atcNumber} — it'll be free once that one arrives or closes`;
+  const busyAtc = await ATC.findOne({ assignedTruck: truckId, status: { $ne: 'closed' } });
+  if (busyAtc) return `it's still tied to ATC ${busyAtc.atcNumber} (${busyAtc.bagsRemaining} bags remaining) — it'll be free once that closes`;
   const busyPurchase = await QuarryPurchase.findOne({ truck: truckId, tonnesRemaining: { $gt: 0 } });
   if (busyPurchase) return `it's still carrying quarry reference ${busyPurchase.referenceNumber} (${busyPurchase.tonnesRemaining}t remaining) — it'll be free once that's fully supplied`;
   return null;

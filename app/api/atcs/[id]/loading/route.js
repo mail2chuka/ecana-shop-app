@@ -13,7 +13,6 @@ const loadingChoices = new Set([
   'three_hours_ago',
   'four_hours_ago',
   'five_hours_ago',
-  'delivered',
 ]);
 
 export async function POST(request, { params }) {
@@ -33,26 +32,22 @@ export async function POST(request, { params }) {
     const atc = await ATC.findById(id);
     if (!atc) return NextResponse.json({ error: 'ATC not found' }, { status: 404 });
     if (!atc.assignedTruck) return NextResponse.json({ error: 'Assign a truck first' }, { status: 400 });
-    if (atc.status === 'delivered') return NextResponse.json({ error: 'ATC is already delivered' }, { status: 400 });
+    if (['arrived', 'closed'].includes(atc.status)) {
+      return NextResponse.json({ error: `ATC ${atc.atcNumber} has already progressed past loading` }, { status: 400 });
+    }
 
     const now = new Date();
-    if (mode === 'delivered') {
-      atc.status = 'delivered';
-      atc.deliveryDate = now;
-    } else {
-      const offsetHours = {
-        just_loaded: 0,
-        one_hour_ago: 1,
-        two_hours_ago: 2,
-        three_hours_ago: 3,
-        four_hours_ago: 4,
-        five_hours_ago: 5,
-      }[mode];
+    const offsetHours = {
+      just_loaded: 0,
+      one_hour_ago: 1,
+      two_hours_ago: 2,
+      three_hours_ago: 3,
+      four_hours_ago: 4,
+      five_hours_ago: 5,
+    }[mode];
 
-      atc.status = 'loaded';
-      atc.loadedAt = new Date(now.getTime() - offsetHours * 60 * 60 * 1000);
-      atc.deliveryDate = null;
-    }
+    atc.status = 'loaded';
+    atc.loadedAt = new Date(now.getTime() - offsetHours * 60 * 60 * 1000);
 
     await atc.save();
     await logAudit({

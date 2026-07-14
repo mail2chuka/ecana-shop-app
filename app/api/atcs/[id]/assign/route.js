@@ -18,8 +18,8 @@ export async function POST(request, { params }) {
 
     const atc = await ATC.findById(id);
     if (!atc) return NextResponse.json({ error: 'ATC not found' }, { status: 404 });
-    if (atc.status === 'closed' || atc.status === 'delivered') return NextResponse.json({ error: 'ATC is already finalized' }, { status: 400 });
-    if (['loaded', 'collecting', 'arrived'].includes(atc.status)) {
+    if (atc.status === 'closed') return NextResponse.json({ error: 'ATC is already closed' }, { status: 400 });
+    if (['loaded', 'arrived'].includes(atc.status)) {
       return NextResponse.json({ error: `ATC ${atc.atcNumber} already has cement loaded — it can't be reassigned to a different truck` }, { status: 400 });
     }
 
@@ -29,9 +29,9 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: `${truck.plateNumber} is registered for aggregates, not cement — assign a cement truck instead` }, { status: 400 });
     }
 
-    const busyOn = await ATC.findOne({ _id: { $ne: id }, assignedTruck: truck._id, status: { $in: ['assigned', 'loaded', 'collecting'] } });
+    const busyOn = await ATC.findOne({ _id: { $ne: id }, assignedTruck: truck._id, status: { $ne: 'closed' } });
     if (busyOn) {
-      return NextResponse.json({ error: `Truck ${truck.plateNumber} is still out on ATC ${busyOn.atcNumber} — it'll be free once that one arrives or closes` }, { status: 400 });
+      return NextResponse.json({ error: `Truck ${truck.plateNumber} is still tied to ATC ${busyOn.atcNumber} (${busyOn.bagsRemaining} bags remaining) — it'll be free once that one closes` }, { status: 400 });
     }
 
     const busyOnPurchase = await QuarryPurchase.findOne({ truck: truck._id, tonnesRemaining: { $gt: 0 } });

@@ -79,9 +79,9 @@ export async function POST(request) {
       return NextResponse.json({ error: `Truck ${truckDoc.plateNumber} is still carrying reference ${busyOn.referenceNumber} (${busyOn.tonnesRemaining}t remaining) — it must be fully supplied before assigning a new reference` }, { status: 400 });
     }
 
-    const busyOnAtc = await ATC.findOne({ assignedTruck: truckDoc._id, status: { $in: ['assigned', 'loaded', 'collecting'] } });
+    const busyOnAtc = await ATC.findOne({ assignedTruck: truckDoc._id, status: { $ne: 'closed' } });
     if (busyOnAtc) {
-      return NextResponse.json({ error: `Truck ${truckDoc.plateNumber} is still out on ATC ${busyOnAtc.atcNumber} — it'll be free once that one arrives or closes` }, { status: 400 });
+      return NextResponse.json({ error: `Truck ${truckDoc.plateNumber} is still tied to ATC ${busyOnAtc.atcNumber} (${busyOnAtc.bagsRemaining} bags remaining) — it'll be free once that closes` }, { status: 400 });
     }
 
     const costPricePerTonne = product.currentPricePerTonne || 0;
