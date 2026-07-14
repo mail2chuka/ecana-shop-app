@@ -288,7 +288,7 @@ export default function NewCementSalePage() {
                         setCustomerSearch(formatCustomerLabel(c));
                         setShowCustomerDrop(false);
                       }}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-b"
+                      className="dropdown-item-button w-full text-left px-3 py-2 text-sm border-b"
                     >
                       <p className="font-medium">{formatCustomerLabel(c)}</p>
                       <p className="text-xs text-gray-500">{c.phone}</p>
