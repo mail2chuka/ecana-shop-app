@@ -61,11 +61,12 @@ const formatCountdown = (loadedAt, nowMs) => {
 const blankForm = { atcNumber: '', cementBrand: '', atcDate: new Date().toISOString().split('T')[0], bagsPaidFor: '', notes: '' };
 
 export default function ATCsPage() {
-  const [atcs, setATCs] = useState([]);
+  const [allAtcs, setAllAtcs] = useState([]);
   const [brands, setBrands] = useState([]);
   const [trucks, setTrucks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
+  const [brandFilter, setBrandFilter] = useState('');
 
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState(blankForm);
@@ -79,13 +80,13 @@ export default function ATCsPage() {
 
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
-    const url = statusFilter ? `/api/atcs?status=${statusFilter}` : '/api/atcs';
+    const url = brandFilter ? `/api/atcs?brand=${brandFilter}` : '/api/atcs';
     const [a, b, t] = await Promise.all([
       fetch(url).then(r => r.json()),
       fetch('/api/cement-brands').then(r => r.json()),
       fetch('/api/trucks').then(r => r.json()),
     ]);
-    if (a.success) setATCs(a.data);
+    if (a.success) setAllAtcs(a.data);
     if (b.success) setBrands(b.data);
     if (t.success) setTrucks(t.data);
     if (!silent) setLoading(false);
@@ -98,7 +99,10 @@ export default function ATCsPage() {
       load(true);
     }, 60000);
     return () => clearInterval(timer);
-  }, [statusFilter]);
+  }, [brandFilter]);
+
+  const atcs = statusFilter ? allAtcs.filter(a => a.status === statusFilter) : allAtcs;
+  const statusCounts = allAtcs.reduce((acc, a) => { acc[a.status] = (acc[a.status] || 0) + 1; return acc; }, {});
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -162,16 +166,26 @@ export default function ATCsPage() {
         }
       />
 
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <select value={brandFilter} onChange={e => setBrandFilter(e.target.value)} className="px-3 py-1.5 border rounded text-sm">
+          <option value="">All Brands</option>
+          {brands.map(b => <option key={b._id} value={b._id}>{b.name}{b.grade ? ` (${b.grade})` : ''}</option>)}
+        </select>
+      </div>
+
       <div className="mb-4 flex gap-2 flex-wrap">
-        {['', 'pending', 'assigned', 'loaded', 'delivered', 'arrived', 'closed'].map(s => (
-          <button
-            key={s || 'all'}
-            onClick={() => setStatusFilter(s)}
-            className={`px-3 py-1 text-sm rounded border ${statusFilter === s ? 'bg-green-800 text-neutral-100 border-green-800' : 'bg-white hover:bg-gray-50'}`}
-          >
-            {s ? s[0].toUpperCase() + s.slice(1) : 'All'}
-          </button>
-        ))}
+        {['', 'pending', 'assigned', 'loaded', 'delivered', 'arrived', 'closed'].map(s => {
+          const count = s ? (statusCounts[s] || 0) : allAtcs.length;
+          return (
+            <button
+              key={s || 'all'}
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1 text-sm rounded border ${statusFilter === s ? 'bg-green-800 text-neutral-100 border-green-800' : 'bg-white hover:bg-gray-50'}`}
+            >
+              {s ? s[0].toUpperCase() + s.slice(1) : 'All'} ({count})
+            </button>
+          );
+        })}
       </div>
 
       <Card className="overflow-hidden">
@@ -304,7 +318,7 @@ export default function ATCsPage() {
               <select value={selectedTruck} onChange={e => setSelectedTruck(e.target.value)} className={inputCls} required>
                 <option value="">— Select truck —</option>
                 {trucks.filter(t => t.type === 'cement').map(t => {
-                  const busyOn = atcs.find(a => a._id !== assignModal._id && a.assignedTruck === t._id && ['assigned', 'loaded', 'collecting'].includes(a.status));
+                  const busyOn = allAtcs.find(a => a._id !== assignModal._id && a.assignedTruck === t._id && ['assigned', 'loaded', 'collecting'].includes(a.status));
                   const busy = busyOn || t.busy;
                   return (
                     <option key={t._id} value={t._id} disabled={!!busy}>
