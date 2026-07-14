@@ -4,60 +4,9 @@
 
 body { background-color: #f5f5f5; }
 
-/* Unified in-page admin button theme */
-.admin-main button {
-  background-color: #14532d;
-  border: 1px solid #c08585;
-  color: #f8fafc;
-  transition: background-color 160ms ease, border-color 160ms ease, transform 120ms ease;
-}
-
-.admin-main button:hover {
-  background-color: #166534;
-  border-color: #cf9696;
-}
-
-.admin-main button:active {
-  background-color: #0f3f23;
-  border-color: #b77575;
-  transform: translateY(1px);
-}
-
 .admin-main button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-/* Buttons inside tables never get the unified button background/border - text-only, like other table actions */
-.admin-main table button,
-.admin-main table button:hover,
-.admin-main table button:active {
-  background-color: transparent;
-  border: none;
-  color: inherit;
-  transform: none;
-}
-
-/* A button styled to look like a plain input/select (e.g. a custom dropdown trigger) - not the unified button theme */
-.admin-main .plain-input-button,
-.admin-main .plain-input-button:hover,
-.admin-main .plain-input-button:active {
-  background-color: #fff;
-  border: 1px solid #d1d5db;
-  color: #111827;
-  transform: none;
-}
-
-/* A row inside a custom dropdown list - text-only with a light hover, not the unified button theme */
-.admin-main .dropdown-item-button,
-.admin-main .dropdown-item-button:active {
-  background-color: transparent;
-  border: none;
-  color: inherit;
-  transform: none;
-}
-.admin-main .dropdown-item-button:hover {
-  background-color: #f3f4f6;
 }
 
 /* Disable scroll wheel on number inputs */

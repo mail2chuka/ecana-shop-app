@@ -297,7 +297,7 @@ export default function ShopPage() {
                     {filteredCustomers.map(c => (
                       <button key={c._id} type="button"
                         onClick={() => { setSelectedCustomer(c); setShowCustomerDrop(false); setCustomerSearch(''); }}
-                        className="dropdown-item-button w-full text-left px-3 py-2 text-sm border-b last:border-0">
+                        className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm border-b last:border-0">
                         <p className="font-medium">{formatCustomerLabel(c)}</p>
                         <p className="text-xs text-gray-500">{c.phone}</p>
                       </button>

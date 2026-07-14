@@ -219,7 +219,7 @@ export default function NewCementSalePage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="relative">
               <label className="block text-sm font-medium mb-2">ATC Number</label>
-              <button type="button" onClick={() => setShowAtcDrop(v => !v)} className="plain-input-button w-full px-3 py-2 border rounded text-sm text-left">
+              <button type="button" onClick={() => setShowAtcDrop(v => !v)} className="w-full px-3 py-2 border rounded text-sm text-left bg-white">
                 {selectedAtc ? `${formatAtcNumber(selectedAtc)} (${selectedAtc.bagsRemaining} bags)` : 'Choose ATC...'}
               </button>
               {showAtcDrop && (
@@ -230,7 +230,7 @@ export default function NewCementSalePage() {
                       key={a._id}
                       type="button"
                       onClick={() => { setSelectedAtcId(a._id); setShowAtcDrop(false); }}
-                      className="dropdown-item-button w-full text-left px-3 py-2 text-sm border-b last:border-0"
+                      className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-b last:border-0"
                     >
                       <p>{formatAtcNumber(a)} ({a.bagsRemaining} bags)</p>
                       <p className="text-xs text-gray-500">
@@ -288,7 +288,7 @@ export default function NewCementSalePage() {
                         setCustomerSearch(formatCustomerLabel(c));
                         setShowCustomerDrop(false);
                       }}
-                      className="dropdown-item-button w-full text-left px-3 py-2 text-sm border-b"
+                      className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-b"
                     >
                       <p className="font-medium">{formatCustomerLabel(c)}</p>
                       <p className="text-xs text-gray-500">{c.phone}</p>
