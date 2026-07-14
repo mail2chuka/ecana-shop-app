@@ -6,6 +6,7 @@ import Sale from '@/models/Sale';
 import Customer from '@/models/Customer';
 import ATC from '@/models/ATC';
 import CementBrand from '@/models/CementBrand';
+import { autoArriveDueAtcs } from '@/lib/atcLifecycle';
 
 export async function GET() {
   try {
@@ -16,6 +17,8 @@ export async function GET() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    await autoArriveDueAtcs();
 
     const [
       todaySalesAgg,
