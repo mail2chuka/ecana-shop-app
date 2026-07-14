@@ -71,6 +71,7 @@ export default function SaleDetailPage() {
       itemType: item.itemType,
       atc: item.atc,
       stoneDustProduct: item.stoneDustProduct,
+      quarryPurchase: item.quarryPurchase,
       shopProduct: item.shopProduct,
       label: item.itemType === 'cement'
         ? `${item.cementBrandName} Cement (ATC ${formatAtcNumber(item)})`
@@ -110,6 +111,7 @@ export default function SaleDetailPage() {
         itemType: it.itemType,
         atc: it.atc,
         stoneDustProduct: it.stoneDustProduct,
+        quarryPurchase: it.quarryPurchase,
         shopProduct: it.shopProduct,
         billQuantity: parseFloat(it.billQuantity),
         actualQuantity: parseFloat(it.actualQuantity || it.billQuantity),
@@ -234,7 +236,9 @@ export default function SaleDetailPage() {
                   ) : (
                     <>
                       <p className="font-medium">{item.quarryName} — {item.size}</p>
-                      <p className="text-xs text-gray-500">Aggregate / Quarry Product</p>
+                      <p className="text-xs text-gray-500">
+                        {item.itemType === 'stonedust' && item.quarryPurchaseRef ? `Purchase Ref: ${item.quarryPurchaseRef}` : 'Aggregate / Quarry Product'}
+                      </p>
                     </>
                   )}
                 </td>

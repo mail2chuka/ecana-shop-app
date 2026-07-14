@@ -10,7 +10,6 @@ export default function NewCementSalePage() {
   const router = useRouter();
   const [atcs, setAtcs] = useState([]);
   const [brands, setBrands] = useState([]);
-  const [trucks, setTrucks] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -26,8 +25,8 @@ export default function NewCementSalePage() {
 
   // ATC Selection
   const [selectedAtcId, setSelectedAtcId] = useState('');
-  const [selectedTruckId, setSelectedTruckId] = useState('');
   const selectedAtc = atcs.find(a => a._id === selectedAtcId);
+  const selectedTruckId = selectedAtc?.assignedTruck || '';
 
   // Sales distribution items
   const [distributions, setDistributions] = useState([]);
@@ -46,21 +45,13 @@ export default function NewCementSalePage() {
     Promise.all([
       fetch('/api/atcs?availableForSale=true').then(r => r.json()),
       fetch('/api/cement-brands').then(r => r.json()),
-      fetch('/api/trucks').then(r => r.json()),
       fetch('/api/customers').then(r => r.json()),
-    ]).then(([a, b, t, c]) => {
+    ]).then(([a, b, c]) => {
       if (a.success) setAtcs(a.data);
       if (b.success) setBrands(b.data);
-      if (t.success) setTrucks(t.data);
       if (c.success) setCustomers(c.data);
     }).finally(() => setLoading(false));
   }, []);
-
-  useEffect(() => {
-    if (selectedAtc && !selectedTruckId) {
-      setSelectedTruckId(selectedAtc.assignedTruck || '');
-    }
-  }, [selectedAtcId]);
 
   useEffect(() => {
     if (customerSearch) {
@@ -211,10 +202,11 @@ export default function NewCementSalePage() {
 
             <div>
               <label className="block text-sm font-medium mb-2">Truck Number</label>
-              <select value={selectedTruckId} onChange={e => setSelectedTruckId(e.target.value)} className="w-full px-3 py-2 border rounded text-sm">
-                <option value="">— None —</option>
-                {trucks.map(t => <option key={t._id} value={t._id}>{t.plateNumber}</option>)}
-              </select>
+              <div className="w-full px-3 py-2 border rounded text-sm bg-gray-50 text-gray-700">
+                {selectedAtc
+                  ? (selectedAtc.assignedTruckPlate ? `${selectedAtc.assignedTruckPlate} — ${selectedAtc.assignedDriverName || 'Unknown driver'}` : 'No truck assigned to this ATC yet')
+                  : '—'}
+              </div>
             </div>
           </div>
 

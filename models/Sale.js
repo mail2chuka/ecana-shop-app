@@ -11,6 +11,8 @@ const SaleItemSchema = new mongoose.Schema({
   stoneDustProduct: { type: mongoose.Schema.Types.ObjectId, ref: 'StoneDustProduct' },
   quarryName: String,
   size: String,
+  quarryPurchase: { type: mongoose.Schema.Types.ObjectId, ref: 'QuarryPurchase' },
+  quarryPurchaseRef: String,
   // Shop-specific
   shopProduct: { type: mongoose.Schema.Types.ObjectId, ref: 'ShopProduct' },
   shopProductName: String,

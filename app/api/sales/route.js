@@ -8,6 +8,7 @@ import ATC from '@/models/ATC';
 import Customer from '@/models/Customer';
 import Truck from '@/models/Truck';
 import StoneDustProduct from '@/models/StoneDustProduct';
+import QuarryPurchase from '@/models/QuarryPurchase';
 import ShopProduct from '@/models/ShopProduct';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
@@ -131,11 +132,23 @@ export async function POST(request) {
           if (!item.stoneDustProduct) throw new ApiError('Aggregate item must reference a product', 400);
           const product = await StoneDustProduct.findById(item.stoneDustProduct).session(mongoSession);
           if (!product) throw new ApiError('Aggregate product not found', 404);
+
+          if (!item.quarryPurchase) throw new ApiError('Aggregate item must reference a quarry purchase', 400);
+          const purchase = await QuarryPurchase.findById(item.quarryPurchase).session(mongoSession);
+          if (!purchase) throw new ApiError('Quarry purchase reference not found', 404);
+          if (actualQty > purchase.tonnesRemaining) {
+            throw new ApiError(`Only ${purchase.tonnesRemaining} tonnes remaining on reference ${purchase.referenceNumber}`, 400);
+          }
+          purchase.tonnesRemaining -= actualQty;
+          await purchase.save({ session: mongoSession });
+
           processedItems.push({
             itemType: 'stonedust',
             stoneDustProduct: product._id,
             quarryName: product.quarryName,
             size: product.size,
+            quarryPurchase: purchase._id,
+            quarryPurchaseRef: purchase.referenceNumber,
             billQuantity: billQty,
             actualQuantity: actualQty,
             unitPrice,

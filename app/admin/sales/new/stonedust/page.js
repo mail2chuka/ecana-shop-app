@@ -26,6 +26,8 @@ export default function NewAggregateSalePage() {
   const [showCustomerDrop, setShowCustomerDrop] = useState(false);
 
   const [productId, setProductId] = useState('');
+  const [purchases, setPurchases] = useState([]);
+  const [purchaseId, setPurchaseId] = useState('');
   const [billQty, setBillQty] = useState('');
   const [actualQty, setActualQty] = useState('');
   const [unitPrice, setUnitPrice] = useState('');
@@ -42,6 +44,16 @@ export default function NewAggregateSalePage() {
       if (c.success) setCustomers(c.data);
     }).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    setPurchaseId('');
+    if (!productId) { setPurchases([]); return; }
+    fetch(`/api/quarry-purchases?product=${productId}&availableOnly=true`)
+      .then(r => r.json())
+      .then(d => { if (d.success) setPurchases(d.data); });
+  }, [productId]);
+
+  const selectedPurchase = purchases.find(p => p._id === purchaseId);
 
   const filteredCustomers = customerSearch
     ? customers.filter(c =>
@@ -84,6 +96,11 @@ export default function NewAggregateSalePage() {
     e.preventDefault();
     if (!selectedCustomer) { toast.error('Select a customer'); return; }
     if (!productId || !actualQty || !unitPrice) { toast.error('Select product, quantity and price'); return; }
+    if (!purchaseId) { toast.error('Select a purchase reference'); return; }
+    if (selectedPurchase && parseFloat(actualQty) > selectedPurchase.tonnesRemaining) {
+      toast.error(`Only ${selectedPurchase.tonnesRemaining} tonnes remaining on reference ${selectedPurchase.referenceNumber}`);
+      return;
+    }
 
     if (!transportFee || transportFee === '' || transportFee === '0') {
       setShowTransportWarning(true);
@@ -103,6 +120,7 @@ export default function NewAggregateSalePage() {
         stoneDustProduct: selectedProduct._id,
         quarryName: selectedProduct.quarryName,
         size: selectedProduct.size,
+        quarryPurchase: purchaseId,
         billQuantity: parseFloat(effectiveBillQty),
         actualQuantity: parseFloat(actualQty),
         unitPrice: parseFloat(unitPrice),
@@ -197,39 +215,52 @@ export default function NewAggregateSalePage() {
           <div>
             <label className="block text-sm font-medium mb-1">Quarry Product</label>
             <select value={productId}
-              onChange={e => {
-                setProductId(e.target.value);
-                const p = products.find(x => x._id === e.target.value);
-                if (p) handleUnitPriceChange(String(p.currentPricePerTonne));
-              }}
+              onChange={e => setProductId(e.target.value)}
               className="w-full px-3 py-2 border rounded text-sm" required>
               <option value="">Choose product...</option>
               {products.map(p => <option key={p._id} value={p._id}>{p.quarryName} — {p.size}</option>)}
             </select>
           </div>
+          {productId && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Purchase Reference</label>
+              <select value={purchaseId} onChange={e => setPurchaseId(e.target.value)}
+                className="w-full px-3 py-2 border rounded text-sm" required>
+                <option value="">Choose reference...</option>
+                {purchases.map(p => (
+                  <option key={p._id} value={p._id}>
+                    Ref {p.referenceNumber} — {p.truckPlate} — {p.tonnesRemaining}t remaining
+                  </option>
+                ))}
+              </select>
+              {purchases.length === 0 && (
+                <p className="text-xs text-amber-700 mt-1">No open purchase references for this product — record a purchase on the quarry's page first.</p>
+              )}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-1">Actual Qty (tonnes)</label>
-              <input type="number" step="0.01" min="0.01" value={actualQty} onChange={e => handleActualQtyChange(e.target.value)}
-                className="w-full px-3 py-2 border rounded text-sm" placeholder="From quarry" required />
+              <input type="number" step="0.01" min="0.01" max={selectedPurchase?.tonnesRemaining} value={actualQty} onChange={e => handleActualQtyChange(e.target.value)}
+                className="w-full px-3 py-2 border rounded text-sm disabled:bg-gray-100" placeholder="From quarry" required disabled={!purchaseId} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Bill Qty (tonnes, optional)</label>
               <input type="number" step="0.01" min="0.01" value={billQty}
                 onChange={e => handleBillQtyChange(e.target.value)}
-                className="w-full px-3 py-2 border rounded text-sm" placeholder="Defaults to Actual Qty" />
+                className="w-full px-3 py-2 border rounded text-sm disabled:bg-gray-100" placeholder="Defaults to Actual Qty" disabled={!purchaseId} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Price per Tonne (₦)</label>
+              <label className="block text-sm font-medium mb-1">Sell Price per Tonne (₦)</label>
               <CurrencyInput value={unitPrice} onChange={handleUnitPriceChange}
-                className="w-full px-3 py-2 border rounded text-sm" />
+                className="w-full px-3 py-2 border rounded text-sm disabled:bg-gray-100" disabled={!purchaseId} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Total Amount (₦)</label>
               <CurrencyInput value={total} onChange={handleTotalChange}
-                className="w-full px-3 py-2 border rounded text-sm" />
+                className="w-full px-3 py-2 border rounded text-sm disabled:bg-gray-100" disabled={!purchaseId} />
             </div>
           </div>
         </div>
@@ -258,7 +289,7 @@ export default function NewAggregateSalePage() {
 
         <div className="flex gap-3">
           <button type="button" onClick={() => router.back()} className="px-4 py-2 border rounded text-sm">Cancel</button>
-          <button type="submit" disabled={submitting} className="flex-1 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900 disabled:opacity-50">
+          <button type="submit" disabled={submitting || !purchaseId} className="flex-1 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900 disabled:opacity-50">
             {submitting ? 'Saving...' : 'Create Sale'}
           </button>
         </div>

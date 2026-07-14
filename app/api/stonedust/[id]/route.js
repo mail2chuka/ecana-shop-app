@@ -17,8 +17,7 @@ export async function PUT(request, { params }) {
     const before = await StoneDustProduct.findById(id);
     if (!before) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     const update = {
-      name: body.name,
-      unit: body.unit,
+      size: body.size,
       isActive: typeof body.isActive === 'boolean' ? body.isActive : undefined,
     };
     Object.keys(update).forEach((key) => update[key] === undefined && delete update[key]);

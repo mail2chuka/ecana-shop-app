@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Truck from '@/models/Truck';
+import ATC from '@/models/ATC';
+import QuarryPurchase from '@/models/QuarryPurchase';
 import { logAudit } from '@/lib/audit';
 
 export async function GET() {
@@ -11,7 +13,23 @@ export async function GET() {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const trucks = await Truck.find({ isActive: true }).sort({ plateNumber: 1 });
-    return NextResponse.json({ success: true, data: trucks });
+    const truckIds = trucks.map(t => t._id);
+
+    const [busyAtcs, busyPurchases] = await Promise.all([
+      ATC.find({ assignedTruck: { $in: truckIds }, status: { $in: ['assigned', 'loaded', 'collecting'] } }),
+      QuarryPurchase.find({ truck: { $in: truckIds }, tonnesRemaining: { $gt: 0 } }),
+    ]);
+
+    const data = trucks.map(t => {
+      const atc = busyAtcs.find(a => String(a.assignedTruck) === String(t._id));
+      const purchase = busyPurchases.find(p => String(p.truck) === String(t._id));
+      let busyReason = null;
+      if (atc) busyReason = `On ATC ${atc.atcNumber}`;
+      else if (purchase) busyReason = `Carrying ref ${purchase.referenceNumber} (${purchase.tonnesRemaining}t left)`;
+      return { ...t.toObject(), busy: !!busyReason, busyReason };
+    });
+
+    return NextResponse.json({ success: true, data });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

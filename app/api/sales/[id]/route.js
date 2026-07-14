@@ -8,6 +8,7 @@ import ATC from '@/models/ATC';
 import Customer from '@/models/Customer';
 import Truck from '@/models/Truck';
 import StoneDustProduct from '@/models/StoneDustProduct';
+import QuarryPurchase from '@/models/QuarryPurchase';
 import ShopProduct from '@/models/ShopProduct';
 import { logAudit } from '@/lib/audit';
 import { ApiError } from '@/lib/apiError';
@@ -60,6 +61,12 @@ export async function DELETE(request, { params }) {
             atc.bagsRemaining += item.actualQuantity;
             if (atc.status === 'closed' && atc.bagsRemaining > 0) atc.status = 'arrived';
             await atc.save({ session: mongoSession });
+          }
+        } else if (item.itemType === 'stonedust' && item.quarryPurchase) {
+          const purchase = await QuarryPurchase.findById(item.quarryPurchase).session(mongoSession);
+          if (purchase) {
+            purchase.tonnesRemaining += item.actualQuantity;
+            await purchase.save({ session: mongoSession });
           }
         } else if (item.itemType === 'shop' && item.shopProduct) {
           const product = await ShopProduct.findById(item.shopProduct).session(mongoSession);
@@ -123,6 +130,12 @@ export async function PUT(request, { params }) {
             if (atc.status === 'closed' && atc.bagsRemaining > 0) atc.status = 'arrived';
             await atc.save({ session: mongoSession });
           }
+        } else if (oldItem.itemType === 'stonedust' && oldItem.quarryPurchase) {
+          const purchase = await QuarryPurchase.findById(oldItem.quarryPurchase).session(mongoSession);
+          if (purchase) {
+            purchase.tonnesRemaining += oldItem.actualQuantity;
+            await purchase.save({ session: mongoSession });
+          }
         } else if (oldItem.itemType === 'shop' && oldItem.shopProduct) {
           const product = await ShopProduct.findById(oldItem.shopProduct).session(mongoSession);
           if (product) {
@@ -176,11 +189,23 @@ export async function PUT(request, { params }) {
           if (!item.stoneDustProduct) throw new ApiError('Aggregate item must reference a product', 400);
           const product = await StoneDustProduct.findById(item.stoneDustProduct).session(mongoSession);
           if (!product) throw new ApiError('Aggregate product not found', 404);
+
+          if (!item.quarryPurchase) throw new ApiError('Aggregate item must reference a quarry purchase', 400);
+          const purchase = await QuarryPurchase.findById(item.quarryPurchase).session(mongoSession);
+          if (!purchase) throw new ApiError('Quarry purchase reference not found', 404);
+          if (actualQty > purchase.tonnesRemaining) {
+            throw new ApiError(`Only ${purchase.tonnesRemaining} tonnes remaining on reference ${purchase.referenceNumber}`, 400);
+          }
+          purchase.tonnesRemaining -= actualQty;
+          await purchase.save({ session: mongoSession });
+
           processedItems.push({
             itemType: 'stonedust',
             stoneDustProduct: product._id,
             quarryName: product.quarryName,
             size: product.size,
+            quarryPurchase: purchase._id,
+            quarryPurchaseRef: purchase.referenceNumber,
             billQuantity: billQty,
             actualQuantity: actualQty,
             unitPrice,

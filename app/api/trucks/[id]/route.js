@@ -3,8 +3,18 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Truck from '@/models/Truck';
+import ATC from '@/models/ATC';
+import QuarryPurchase from '@/models/QuarryPurchase';
 import { logAudit } from '@/lib/audit';
 import { requireObjectId } from '@/lib/validate';
+
+async function findBusyReason(truckId) {
+  const busyAtc = await ATC.findOne({ assignedTruck: truckId, status: { $in: ['assigned', 'loaded', 'collecting'] } });
+  if (busyAtc) return `it's still out on ATC ${busyAtc.atcNumber} — it'll be free once that one arrives or closes`;
+  const busyPurchase = await QuarryPurchase.findOne({ truck: truckId, tonnesRemaining: { $gt: 0 } });
+  if (busyPurchase) return `it's still carrying quarry reference ${busyPurchase.referenceNumber} (${busyPurchase.tonnesRemaining}t remaining) — it'll be free once that's fully supplied`;
+  return null;
+}
 
 export async function PUT(request, { params }) {
   try {
@@ -16,11 +26,18 @@ export async function PUT(request, { params }) {
     const body = await request.json();
     const before = await Truck.findById(id);
     if (!before) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+    const busyReason = await findBusyReason(id);
+    if (busyReason) {
+      return NextResponse.json({ error: `Truck ${before.plateNumber} can't be edited — ${busyReason}` }, { status: 400 });
+    }
+
     const update = {
-      name: body.name,
-      plateNumber: body.plateNumber,
       driverName: body.driverName,
-      phone: body.phone,
+      driverPhone: body.driverPhone,
+      type: body.type,
+      capacityTonnes: body.capacityTonnes !== undefined ? (body.capacityTonnes === null || body.capacityTonnes === '' ? null : Number(body.capacityTonnes)) : undefined,
+      ownership: body.ownership,
       isActive: typeof body.isActive === 'boolean' ? body.isActive : undefined,
     };
     Object.keys(update).forEach((key) => update[key] === undefined && delete update[key]);

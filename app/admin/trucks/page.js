@@ -25,6 +25,7 @@ export default function TrucksPage() {
 
   const openCreate = () => { setEditing(null); setForm(blankForm); setShowModal(true); };
   const openEdit = (t) => {
+    if (t.busy) { toast.error(`Can't edit ${t.plateNumber} — ${t.busyReason}`); return; }
     setEditing(t);
     setForm({
       plateNumber: t.plateNumber, driverName: t.driverName, driverPhone: t.driverPhone || '',
@@ -35,6 +36,11 @@ export default function TrucksPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (editing && form.type !== editing.type) {
+      const from = editing.type === 'cement' ? 'cement' : 'aggregates';
+      const to = form.type === 'cement' ? 'cement' : 'aggregates';
+      if (!confirm(`${editing.plateNumber} is currently registered to carry ${from}. Switch it to carry ${to} instead?`)) return;
+    }
     setSubmitting(true);
     try {
       const url = editing ? `/api/trucks/${editing._id}` : '/api/trucks';
@@ -80,11 +86,12 @@ export default function TrucksPage() {
               <th className="px-4 py-3 text-left font-medium">Type</th>
               <th className="px-4 py-3 text-right font-medium">Capacity</th>
               <th className="px-4 py-3 text-left font-medium">Ownership</th>
+              <th className="px-4 py-3 text-left font-medium">Status</th>
               <th className="px-4 py-3 text-right font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
-            {trucks.length === 0 && <EmptyRow colSpan={7} text="No trucks yet" />}
+            {trucks.length === 0 && <EmptyRow colSpan={8} text="No trucks yet" />}
             {trucks.map(t => (
               <tr key={t._id}>
                 <td className="px-4 py-3 font-medium">{t.plateNumber}</td>
@@ -93,8 +100,11 @@ export default function TrucksPage() {
                 <td className="px-4 py-3"><StatusPill status={t.type === 'cement' ? 'Cement (Bags)' : 'Stone (Tonnes)'} color={t.type === 'cement' ? 'blue' : 'amber'} /></td>
                 <td className="px-4 py-3 text-right">{t.capacityTonnes ? `${t.capacityTonnes}t` : '-'}</td>
                 <td className="px-4 py-3"><StatusPill status={t.ownership === 'own' ? 'Own' : 'Supplier'} color={t.ownership === 'own' ? 'green' : 'blue'} /></td>
+                <td className="px-4 py-3">
+                  {t.busy ? <StatusPill status={t.busyReason} color="amber" /> : <span className="text-gray-400 text-xs">Free</span>}
+                </td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => openEdit(t)} className={`${tableActionCls} mr-3`}>Edit</button>
+                  <button onClick={() => openEdit(t)} className={`${tableActionCls} mr-3 ${t.busy ? 'opacity-40 cursor-not-allowed' : ''}`}>Edit</button>
                   <button onClick={() => handleDelete(t)} className={tableDangerActionCls}>Deactivate</button>
                 </td>
               </tr>
@@ -116,7 +126,7 @@ export default function TrucksPage() {
             <input type="text" value={form.driverPhone} onChange={e => setForm({ ...form, driverPhone: e.target.value })} className={inputCls} />
           </Field>
           <Field label="Truck type" required>
-            <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className={inputCls} required disabled={editing}>
+            <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className={inputCls} required>
               <option value="cement">Cement (Bags)</option>
               <option value="stonedust">Aggregate (Tonnes)</option>
             </select>
