@@ -229,7 +229,13 @@ export default function ATCsPage() {
                     </td>
                     <td className="px-3 py-3 text-gray-500">{a.assignedTruckPlate || '-'}</td>
                     <td className="px-3 py-3">
-                      <StatusPill status={getStatusLabel(a, nowMs)} color={statusColor[a.status]} />
+                      <StatusPill status={getStatusLabel(a)} color={statusColor[a.status]} />
+                      {a.status === 'loaded' && a.loadedAt && (
+                        <div className="mt-1 text-xs text-gray-500">{formatHoursAgo(a.loadedAt, nowMs)}</div>
+                      )}
+                      {a.status === 'arrived' && a.arrivalDate && (
+                        <div className="mt-1 text-xs text-gray-500">{formatHoursAgo(a.arrivalDate, nowMs)}</div>
+                      )}
                     </td>
                     <td className="px-3 py-3 text-right">
                       {(a.status === 'pending' && !a.assignedTruck) && (
