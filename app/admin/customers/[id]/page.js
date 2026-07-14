@@ -129,11 +129,10 @@ export default function CustomerDetailPage() {
       <div className="mb-6 flex justify-between items-start no-print">
         <div>
           <h1 className="text-xl font-bold">
-            {formatCustomerLabel(customer)}
+            {customer.name}
             {!customer.isActive && <span className="ml-2 align-middle text-xs font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Archived</span>}
           </h1>
-          {customer.businessName && <p className="text-sm text-gray-500">{customer.businessName}</p>}
-          <p className="text-sm text-gray-500">{customer.phone}</p>
+          {customer.customerId && <p className="text-sm text-gray-500">{customer.customerId}</p>}
         </div>
         <div className="flex gap-2">
           {customer.isActive && <button onClick={openPaymentModal} className={btnPrimaryCls}>Record Payment</button>}
@@ -155,6 +154,16 @@ export default function CustomerDetailPage() {
           <p className="text-sm text-gray-600">Credit Limit</p>
           <p className="text-3xl font-bold text-gray-800">{customer.creditLimit ? formatNaira(customer.creditLimit) : 'None'}</p>
           <p className="text-xs text-gray-500 mt-1">Maximum amount this customer can owe</p>
+        </div>
+      </div>
+
+      <div className="bg-white border rounded-lg p-4 mb-6">
+        <h3 className="font-semibold text-sm mb-3">Customer Details</h3>
+        <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <p><span className="text-gray-500">Customer ID:</span> <span className="font-medium">{customer.customerId || '-'}</span></p>
+          <p><span className="text-gray-500">Phone:</span> <span className="font-medium">{customer.phone}</span></p>
+          <p><span className="text-gray-500">Business Name:</span> <span className="font-medium">{customer.businessName || '-'}</span></p>
+          <p><span className="text-gray-500">Address:</span> <span className="font-medium">{customer.address || '-'}</span></p>
         </div>
       </div>
 
