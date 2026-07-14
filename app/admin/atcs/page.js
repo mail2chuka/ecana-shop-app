@@ -249,7 +249,7 @@ export default function ATCsPage() {
                             Reassign
                           </button>
                           <button onClick={() => { setLoadingModal(a); setLoadingChoice('just_loaded'); }} className={`${tableActionCls} mr-3`}>
-                            Loading
+                            Loaded
                           </button>
                         </>
                       )}
