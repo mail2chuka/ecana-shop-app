@@ -129,10 +129,9 @@ export default function CustomerDetailPage() {
       <div className="mb-6 flex justify-between items-start no-print">
         <div>
           <h1 className="text-xl font-bold">
-            {customer.name}
+            {formatCustomerLabel(customer)}
             {!customer.isActive && <span className="ml-2 align-middle text-xs font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Archived</span>}
           </h1>
-          {customer.customerId && <p className="text-sm text-gray-500">{customer.customerId}</p>}
         </div>
         <div className="flex gap-2">
           {customer.isActive && <button onClick={openPaymentModal} className={btnPrimaryCls}>Record Payment</button>}

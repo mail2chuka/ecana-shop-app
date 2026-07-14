@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, theadCls, tableScrollCls } from '@/components/ui';
-import { formatNaira } from '@/lib/format';
+import { formatNaira, formatCustomerLabel } from '@/lib/format';
 import toast from 'react-hot-toast';
 
 const blankForm = {
@@ -104,10 +104,10 @@ export default function CustomersPage() {
                 <tr key={c._id}>
                   <td className="px-4 py-3">
                     <Link href={`/admin/customers/${c._id}`} className="font-medium hover:underline">
-                      {c.name}
+                      {formatCustomerLabel(c)}
                       {!c.isActive && <span className="ml-2 text-xs text-gray-400 font-normal">(archived)</span>}
                     </Link>
-                    {c.customerId && <p className="text-xs text-gray-500">{c.customerId}</p>}
+                    <p className="text-xs text-gray-500">{c.phone}</p>
                   </td>
                   <td className={`px-4 py-3 text-right font-medium ${c.balance < 0 ? 'text-red-600' : c.balance > 0 ? 'text-green-600' : ''}`}>
                     {formatNaira(c.balance)}
