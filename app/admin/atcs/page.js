@@ -132,13 +132,6 @@ export default function ATCsPage() {
     }
   };
 
-  const handleArrive = async (atc) => {
-    const r = await fetch(`/api/atcs/${atc._id}/arrive`, { method: 'POST' });
-    const d = await r.json();
-    if (d.success) { toast.success('Marked arrived'); load(); }
-    else toast.error(d.error);
-  };
-
   if (loading) return <Loader />;
 
   return (
@@ -249,14 +242,9 @@ export default function ATCsPage() {
                             Reassign
                           </button>
                           <button onClick={() => { setLoadingModal(a); setLoadingChoice('just_loaded'); }} className={`${tableActionCls} mr-3`}>
-                            Loaded
+                            Loading
                           </button>
                         </>
-                      )}
-                      {a.status === 'loaded' && (
-                        <button onClick={() => handleArrive(a)} className={`${tableActionCls} mr-3`}>
-                          Mark Arrived
-                        </button>
                       )}
                     </td>
                   </tr>
