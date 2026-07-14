@@ -8,6 +8,7 @@ import CementBrand from '@/models/CementBrand';
 import Supplier from '@/models/Supplier';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
+import { autoArriveDueAtcs } from '@/lib/atcLifecycle';
 
 export async function GET(request) {
   try {
@@ -18,6 +19,8 @@ export async function GET(request) {
     const status = searchParams.get('status');
     const brand = searchParams.get('brand');
     const availableForSale = searchParams.get('availableForSale');
+
+    await autoArriveDueAtcs();
 
     const query = {};
     if (status) query.status = status;
