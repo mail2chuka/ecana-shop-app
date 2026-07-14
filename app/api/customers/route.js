@@ -13,7 +13,10 @@ export async function GET(request) {
     await dbConnect();
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
-    const query = { isActive: true };
+    const status = searchParams.get('status') || 'active';
+    const query = {};
+    if (status === 'active') query.isActive = true;
+    else if (status === 'archived') query.isActive = false;
     if (search) {
       const re = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       query.$or = [{ name: re }, { phone: re }, { businessName: re }, { customerId: re }];

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
+import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatCustomerLabel } from '@/lib/format';
 import toast from 'react-hot-toast';
 
@@ -14,66 +14,49 @@ const blankForm = {
 export default function CustomersPage() {
   const [customers, setCustomers] = useState([]);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('active');
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(blankForm);
   const [submitting, setSubmitting] = useState(false);
 
-  const load = async (q = '') => {
+  const load = async (q = '', status = statusFilter) => {
     setLoading(true);
-    const r = await fetch(`/api/customers${q ? `?search=${encodeURIComponent(q)}` : ''}`);
+    const params = new URLSearchParams({ status });
+    if (q) params.set('search', q);
+    const r = await fetch(`/api/customers?${params.toString()}`);
     const d = await r.json();
     if (d.success) setCustomers(d.data);
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(search, statusFilter); }, [statusFilter]);
 
   useEffect(() => {
-    const t = setTimeout(() => load(search), 300);
+    const t = setTimeout(() => load(search, statusFilter), 300);
     return () => clearTimeout(t);
   }, [search]);
 
-  const openCreate = () => { setEditing(null); setForm(blankForm); setShowModal(true); };
-  const openEdit = (c) => {
-    setEditing(c);
-    setForm({
-      name: c.name, phone: c.phone, address: c.address || '',
-      businessName: c.businessName || '', openingBalance: 0,
-      creditLimit: c.creditLimit || '',
-    });
-    setShowModal(true);
-  };
+  const openCreate = () => { setForm(blankForm); setShowModal(true); };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const url = editing ? `/api/customers/${editing._id}` : '/api/customers';
-      const method = editing ? 'PUT' : 'POST';
       const body = {
         name: form.name, phone: form.phone, address: form.address, businessName: form.businessName,
         creditLimit: form.creditLimit ? Number(form.creditLimit) : null,
+        openingBalance: Number(form.openingBalance) || 0,
       };
-      if (!editing) body.openingBalance = Number(form.openingBalance) || 0;
-      const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const r = await fetch('/api/customers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const d = await r.json();
-      if (d.success) { toast.success(editing ? 'Updated' : 'Created'); setShowModal(false); load(search); }
+      if (d.success) { toast.success('Created'); setShowModal(false); load(search, statusFilter); }
       else toast.error(d.error);
     } catch (err) {
       toast.error(err.message || 'Something went wrong, please try again');
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleDelete = async (c) => {
-    if (!confirm(`Delete customer "${c.name}"? This cannot be undone.`)) return;
-    const r = await fetch(`/api/customers/${c._id}`, { method: 'DELETE' });
-    const d = await r.json();
-    if (d.success) { toast.success('Deleted'); load(search); }
-    else toast.error(d.error);
   };
 
   return (
@@ -84,7 +67,7 @@ export default function CustomersPage() {
         action={<button onClick={openCreate} className={btnPrimaryCls}>Add Customer</button>}
       />
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap gap-3 items-center">
         <input
           type="text"
           value={search}
@@ -92,6 +75,17 @@ export default function CustomersPage() {
           placeholder="Search by name, phone, business name, or ID..."
           className={inputCls + ' max-w-md'}
         />
+        <div className="flex gap-2">
+          {['all', 'active', 'archived'].map(s => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1 text-sm rounded border ${statusFilter === s ? 'bg-green-800 text-neutral-100 border-green-800' : 'bg-white hover:bg-gray-50'}`}
+            >
+              {s[0].toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? <Loader /> : (
@@ -101,28 +95,19 @@ export default function CustomersPage() {
             <thead className={theadCls}>
               <tr>
                 <th className="px-4 py-3 text-left font-medium">Name</th>
-                <th className="px-4 py-3 text-left font-medium">Phone</th>
-                <th className="px-4 py-3 text-left font-medium">Business</th>
                 <th className="px-4 py-3 text-right font-medium">Balance</th>
-                <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {customers.length === 0 && <EmptyRow colSpan={5} text="No customers found" />}
+              {customers.length === 0 && <EmptyRow colSpan={2} text="No customers found" />}
               {customers.map(c => (
                 <tr key={c._id}>
                   <td className="px-4 py-3 font-medium">
                     <Link href={`/admin/customers/${c._id}`} className="hover:underline">{formatCustomerLabel(c)}</Link>
+                    {!c.isActive && <span className="ml-2 text-xs text-gray-400">(archived)</span>}
                   </td>
-                  <td className="px-4 py-3 text-gray-500">{c.phone}</td>
-                  <td className="px-4 py-3 text-gray-500">{c.businessName || '-'}</td>
                   <td className={`px-4 py-3 text-right font-medium ${c.balance < 0 ? 'text-red-600' : c.balance > 0 ? 'text-green-600' : ''}`}>
                     {formatNaira(c.balance)}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Link href={`/admin/customers/${c._id}`} className={`${tableActionCls} mr-3`}>View</Link>
-                    <button onClick={() => openEdit(c)} className={`${tableActionCls} mr-3`}>Edit</button>
-                    <button onClick={() => handleDelete(c)} className={tableDangerActionCls}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -132,7 +117,7 @@ export default function CustomersPage() {
         </Card>
       )}
 
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Customer' : 'Add Customer'}>
+      <Modal open={showModal} onClose={() => setShowModal(false)} title="Add Customer">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Field label="Name" required>
             <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputCls} required />
@@ -146,12 +131,10 @@ export default function CustomersPage() {
           <Field label="Address">
             <input type="text" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className={inputCls} />
           </Field>
-          {!editing && (
-            <Field label="Opening balance (₦)">
-              <CurrencyInput value={form.openingBalance} onChange={val => setForm({ ...form, openingBalance: val })} className={inputCls} allowNegative />
-              <p className="text-xs text-gray-500 mt-1">Positive = credit (we owe them). Negative = debt (they owe us).</p>
-            </Field>
-          )}
+          <Field label="Opening balance (₦)">
+            <CurrencyInput value={form.openingBalance} onChange={val => setForm({ ...form, openingBalance: val })} className={inputCls} allowNegative />
+            <p className="text-xs text-gray-500 mt-1">Positive = credit (we owe them). Negative = debt (they owe us).</p>
+          </Field>
           <Field label="Credit limit (₦)">
             <CurrencyInput value={form.creditLimit} onChange={val => setForm({ ...form, creditLimit: val })} className={inputCls} placeholder="Leave blank for no limit" />
             <p className="text-xs text-gray-500 mt-1">Maximum amount this customer can owe.</p>

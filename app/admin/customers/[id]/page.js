@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { formatNaira, formatDate, formatCustomerLabel } from '@/lib/format';
-import { Modal, Field, FormButtons, inputCls, CurrencyInput, btnPrimaryCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
+import { Modal, Field, FormButtons, inputCls, CurrencyInput, btnPrimaryCls, btnDangerCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import toast from 'react-hot-toast';
 
 const blankPaymentForm = {
@@ -17,6 +17,8 @@ const blankPaymentForm = {
   date: new Date().toISOString().split('T')[0],
 };
 
+const blankEditForm = { name: '', phone: '', address: '', businessName: '', creditLimit: '' };
+
 export default function CustomerDetailPage() {
   const { id } = useParams();
   const [data, setData] = useState(null);
@@ -25,6 +27,10 @@ export default function CustomerDetailPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentForm, setPaymentForm] = useState(blankPaymentForm);
   const [submitting, setSubmitting] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState(blankEditForm);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [togglingActive, setTogglingActive] = useState(false);
 
   const load = () => {
     fetch(`/api/customers/${id}/statement`)
@@ -38,6 +44,53 @@ export default function CustomerDetailPage() {
   const openPaymentModal = () => {
     setPaymentForm(blankPaymentForm);
     setShowPaymentModal(true);
+  };
+
+  const openEditModal = () => {
+    setEditForm({
+      name: data.customer.name, phone: data.customer.phone, address: data.customer.address || '',
+      businessName: data.customer.businessName || '', creditLimit: data.customer.creditLimit || '',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setSavingEdit(true);
+    try {
+      const body = {
+        name: editForm.name, phone: editForm.phone, address: editForm.address, businessName: editForm.businessName,
+        creditLimit: editForm.creditLimit ? Number(editForm.creditLimit) : null,
+      };
+      const r = await fetch(`/api/customers/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const d = await r.json();
+      if (d.success) { toast.success('Updated'); setShowEditModal(false); load(); }
+      else toast.error(d.error);
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong, please try again');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleToggleActive = async () => {
+    const isActive = data.customer.isActive;
+    if (!confirm(isActive ? `Archive ${data.customer.name}? They'll be hidden from active lists and can't be sold to until reactivated.` : `Reactivate ${data.customer.name}?`)) return;
+    setTogglingActive(true);
+    try {
+      const r = await fetch(`/api/customers/${id}`, {
+        method: isActive ? 'DELETE' : 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: isActive ? undefined : JSON.stringify({ isActive: true }),
+      });
+      const d = await r.json();
+      if (d.success) { toast.success(isActive ? 'Archived' : 'Reactivated'); load(); }
+      else toast.error(d.error);
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong, please try again');
+    } finally {
+      setTogglingActive(false);
+    }
   };
 
   const handlePaymentSubmit = async (e) => {
@@ -75,12 +128,19 @@ export default function CustomerDetailPage() {
     <div>
       <div className="mb-6 flex justify-between items-start no-print">
         <div>
-          <h1 className="text-xl font-bold">{formatCustomerLabel(customer)}</h1>
+          <h1 className="text-xl font-bold">
+            {formatCustomerLabel(customer)}
+            {!customer.isActive && <span className="ml-2 align-middle text-xs font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Archived</span>}
+          </h1>
           {customer.businessName && <p className="text-sm text-gray-500">{customer.businessName}</p>}
           <p className="text-sm text-gray-500">{customer.phone}</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={openPaymentModal} className={btnPrimaryCls}>Record Payment</button>
+          {customer.isActive && <button onClick={openPaymentModal} className={btnPrimaryCls}>Record Payment</button>}
+          <button onClick={openEditModal} className={btnPrimaryCls}>Edit</button>
+          <button onClick={handleToggleActive} disabled={togglingActive} className={customer.isActive ? btnDangerCls : btnPrimaryCls}>
+            {customer.isActive ? 'Deactivate' : 'Reactivate'}
+          </button>
           <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Statement</button>
         </div>
       </div>
@@ -253,6 +313,29 @@ export default function CustomerDetailPage() {
             </Field>
           </div>
           <FormButtons onCancel={() => setShowPaymentModal(false)} submitting={submitting} submitLabel="Record Payment" />
+        </form>
+      </Modal>
+
+      {/* Edit Customer Modal */}
+      <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Customer">
+        <form onSubmit={handleEditSubmit} className="space-y-4">
+          <Field label="Name" required>
+            <input type="text" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} className={inputCls} required />
+          </Field>
+          <Field label="Phone" required>
+            <input type="text" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} className={inputCls} required />
+          </Field>
+          <Field label="Business name">
+            <input type="text" value={editForm.businessName} onChange={e => setEditForm({ ...editForm, businessName: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Address">
+            <input type="text" value={editForm.address} onChange={e => setEditForm({ ...editForm, address: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Credit limit (₦)">
+            <CurrencyInput value={editForm.creditLimit} onChange={val => setEditForm({ ...editForm, creditLimit: val })} className={inputCls} placeholder="Leave blank for no limit" />
+            <p className="text-xs text-gray-500 mt-1">Maximum amount this customer can owe.</p>
+          </Field>
+          <FormButtons onCancel={() => setShowEditModal(false)} submitting={savingEdit} />
         </form>
       </Modal>
     </div>
