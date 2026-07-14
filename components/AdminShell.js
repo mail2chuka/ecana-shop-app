@@ -8,8 +8,8 @@ import { FiMenu, FiX, FiLogOut, FiArrowLeft, FiSearch } from 'react-icons/fi';
 import { Logo } from '@/components/ui';
 
 // Sidebar nav links get their own dedicated class set — distinct from table-action and page-button classes.
-const navLinkCls = 'block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors bg-rose-950/45 text-rose-100 border-rose-900/70 hover:bg-rose-900/70 hover:text-white';
-const navLinkActiveCls = 'block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors bg-rose-800/90 text-white border-rose-500/70 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]';
+const navLinkCls = 'block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors bg-amber-700 text-neutral-100 border-amber-800 hover:bg-amber-600 hover:text-white';
+const navLinkActiveCls = 'block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors bg-amber-900 text-white border-amber-950 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]';
 
 const menu = [
   { label: 'Dashboard', href: '/admin' },
@@ -39,6 +39,7 @@ const menu = [
     items: [
       { label: 'Sales Report', href: '/admin/reports/sales' },
       { label: 'Customer Balances', href: '/admin/reports/balances' },
+      { label: 'Quarry Purchases', href: '/admin/reports/quarry-purchases' },
       { label: 'Per Customer', href: '/admin/reports/customers' },
       { label: 'Per Product', href: '/admin/reports/products' },
       { label: 'Truck Utilization', href: '/admin/reports/trucks' },
@@ -147,7 +148,7 @@ export default function AdminShell({ children }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-gradient-to-b from-emerald-950 via-emerald-900 to-rose-950 transform transition-transform lg:translate-x-0 lg:static flex flex-col ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-emerald-950 transform transition-transform lg:translate-x-0 lg:static flex flex-col ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
