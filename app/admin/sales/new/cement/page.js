@@ -23,10 +23,31 @@ export default function NewCementSalePage() {
     return `${abbr}-${atc.atcNumber}`;
   };
 
+  const formatArrivedAgo = (arrivalDate) => {
+    if (!arrivalDate) return null;
+    const hours = Math.floor((Date.now() - new Date(arrivalDate).getTime()) / (60 * 60 * 1000));
+    return `arrived ${hours <= 0 ? '<1' : hours}hr${hours === 1 ? '' : 's'} ago`;
+  };
+
   // ATC Selection
   const [selectedAtcId, setSelectedAtcId] = useState('');
+  const [brandFilter, setBrandFilter] = useState('');
+  const [showAtcDrop, setShowAtcDrop] = useState(false);
   const selectedAtc = atcs.find(a => a._id === selectedAtcId);
   const selectedTruckId = selectedAtc?.assignedTruck || '';
+
+  const atcStatusPriority = { arrived: 0, loaded: 1, collecting: 2 };
+  const sortedAtcs = atcs
+    .filter(a => !brandFilter || a.cementBrand === brandFilter)
+    .slice()
+    .sort((x, y) => {
+      const px = atcStatusPriority[x.status] ?? 3;
+      const py = atcStatusPriority[y.status] ?? 3;
+      if (px !== py) return px - py;
+      const dx = new Date(x.arrivalDate || x.loadedAt || x.atcDate).getTime();
+      const dy = new Date(y.arrivalDate || y.loadedAt || y.atcDate).getTime();
+      return dx - dy;
+    });
 
   // Sales distribution items
   const [distributions, setDistributions] = useState([]);
@@ -187,17 +208,38 @@ export default function NewCementSalePage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* ATC Selection */}
         <div className="bg-white border rounded-lg p-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Filter by Brand (optional)</label>
+            <select value={brandFilter} onChange={e => { setBrandFilter(e.target.value); setSelectedAtcId(''); }} className="w-full px-3 py-2 border rounded text-sm">
+              <option value="">All Brands</option>
+              {brands.map(b => <option key={b._id} value={b._id}>{b.name}{b.grade ? ` (${b.grade})` : ''}</option>)}
+            </select>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium mb-2">ATC Number</label>
-              <select value={selectedAtcId} onChange={e => setSelectedAtcId(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" required>
-                <option value="">Choose ATC...</option>
-                {atcs.map(a => (
-                  <option key={a._id} value={a._id}>
-                    {formatAtcNumber(a)} ({a.bagsRemaining} bags)
-                  </option>
-                ))}
-              </select>
+              <button type="button" onClick={() => setShowAtcDrop(v => !v)} className="w-full px-3 py-2 border rounded text-sm text-left bg-white">
+                {selectedAtc ? `${formatAtcNumber(selectedAtc)} (${selectedAtc.bagsRemaining} bags)` : 'Choose ATC...'}
+              </button>
+              {showAtcDrop && (
+                <div className="absolute z-10 w-full bg-white border rounded shadow-lg mt-1 max-h-64 overflow-y-auto">
+                  {sortedAtcs.length === 0 && <p className="px-3 py-3 text-sm text-gray-500">No ATCs available</p>}
+                  {sortedAtcs.map(a => (
+                    <button
+                      key={a._id}
+                      type="button"
+                      onClick={() => { setSelectedAtcId(a._id); setShowAtcDrop(false); }}
+                      className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-b last:border-0"
+                    >
+                      <p>{formatAtcNumber(a)} ({a.bagsRemaining} bags)</p>
+                      <p className="text-xs text-gray-500">
+                        {a.assignedTruckPlate || 'No truck assigned'}{a.arrivalDate ? ` (${formatArrivedAgo(a.arrivalDate)})` : ''}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
