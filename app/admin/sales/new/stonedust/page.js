@@ -9,6 +9,7 @@ import { CurrencyInput } from '@/components/ui';
 export default function NewAggregateSalePage() {
   const router = useRouter();
   const [products, setProducts] = useState([]);
+  const [trucks, setTrucks] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -16,6 +17,7 @@ export default function NewAggregateSalePage() {
   const [pendingSubmit, setPendingSubmit] = useState(false);
 
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [truckId, setTruckId] = useState('');
   const [discount, setDiscount] = useState('');
   const [transportFee, setTransportFee] = useState('');
   const [notes, setNotes] = useState('');
@@ -24,8 +26,6 @@ export default function NewAggregateSalePage() {
   const [showCustomerDrop, setShowCustomerDrop] = useState(false);
 
   const [productId, setProductId] = useState('');
-  const [purchases, setPurchases] = useState([]);
-  const [purchaseId, setPurchaseId] = useState('');
   const [billQty, setBillQty] = useState('');
   const [actualQty, setActualQty] = useState('');
   const [unitPrice, setUnitPrice] = useState('');
@@ -34,22 +34,14 @@ export default function NewAggregateSalePage() {
   useEffect(() => {
     Promise.all([
       fetch('/api/stonedust').then(r => r.json()),
+      fetch('/api/trucks').then(r => r.json()),
       fetch('/api/customers').then(r => r.json()),
-    ]).then(([p, c]) => {
+    ]).then(([p, t, c]) => {
       if (p.success) setProducts(p.data);
+      if (t.success) setTrucks(t.data.filter(x => x.type === 'stonedust'));
       if (c.success) setCustomers(c.data);
     }).finally(() => setLoading(false));
   }, []);
-
-  useEffect(() => {
-    setPurchaseId('');
-    if (!productId) { setPurchases([]); return; }
-    fetch(`/api/quarry-purchases?product=${productId}&availableOnly=true`)
-      .then(r => r.json())
-      .then(d => { if (d.success) setPurchases(d.data); });
-  }, [productId]);
-
-  const selectedPurchase = purchases.find(p => p._id === purchaseId);
 
   const filteredCustomers = customerSearch
     ? customers.filter(c =>
@@ -92,11 +84,7 @@ export default function NewAggregateSalePage() {
     e.preventDefault();
     if (!selectedCustomer) { toast.error('Select a customer'); return; }
     if (!productId || !actualQty || !unitPrice) { toast.error('Select product, quantity and price'); return; }
-    if (!purchaseId) { toast.error('Select a purchase reference'); return; }
-    if (selectedPurchase && parseFloat(actualQty) > selectedPurchase.tonnesRemaining) {
-      toast.error(`Only ${selectedPurchase.tonnesRemaining} tonnes remaining on reference ${selectedPurchase.referenceNumber}`);
-      return;
-    }
+    if (!truckId) { toast.error('Select a truck'); return; }
 
     if (!transportFee || transportFee === '' || transportFee === '0') {
       setShowTransportWarning(true);
@@ -116,7 +104,6 @@ export default function NewAggregateSalePage() {
         stoneDustProduct: selectedProduct._id,
         quarryName: selectedProduct.quarryName,
         size: selectedProduct.size,
-        quarryPurchase: purchaseId,
         billQuantity: parseFloat(effectiveBillQty),
         actualQuantity: parseFloat(actualQty),
         unitPrice: parseFloat(unitPrice),
@@ -129,7 +116,7 @@ export default function NewAggregateSalePage() {
         body: JSON.stringify({
           saleType: 'stonedust',
           customer: selectedCustomer._id,
-          truck: selectedPurchase?.truck || undefined,
+          truck: truckId,
           date, items: [item],
           discount: parseFloat(discount) || 0,
           transportFee: parseFloat(transportFee) || 0,
@@ -167,9 +154,14 @@ export default function NewAggregateSalePage() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Truck</label>
-            <div className="w-full px-3 py-2 border rounded text-sm bg-gray-50 text-gray-700">
-              {selectedPurchase ? `${selectedPurchase.truckPlate} — ${selectedPurchase.driverName || 'Unknown driver'}` : 'Select a purchase reference below'}
-            </div>
+            <select value={truckId} onChange={e => setTruckId(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" required>
+              <option value="">Choose truck...</option>
+              {trucks.map(t => (
+                <option key={t._id} value={t._id} disabled={t.busy}>
+                  {t.plateNumber} — {t.driverName}{t.busy ? ` (${t.busyReason})` : ''}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -216,46 +208,29 @@ export default function NewAggregateSalePage() {
               {products.map(p => <option key={p._id} value={p._id}>{p.quarryName} — {p.size}</option>)}
             </select>
           </div>
-          {productId && (
-            <div>
-              <label className="block text-sm font-medium mb-1">Purchase Reference</label>
-              <select value={purchaseId} onChange={e => setPurchaseId(e.target.value)}
-                className="w-full px-3 py-2 border rounded text-sm" required>
-                <option value="">Choose reference...</option>
-                {purchases.map(p => (
-                  <option key={p._id} value={p._id}>
-                    Ref {p.referenceNumber} — {p.truckPlate} — {p.tonnesRemaining}t remaining
-                  </option>
-                ))}
-              </select>
-              {purchases.length === 0 && (
-                <p className="text-xs text-amber-700 mt-1">No open purchase references for this product — record a purchase on the quarry's page first.</p>
-              )}
-            </div>
-          )}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-1">Actual Qty (tonnes)</label>
-              <input type="number" step="0.01" min="0.01" max={selectedPurchase?.tonnesRemaining} value={actualQty} onChange={e => handleActualQtyChange(e.target.value)}
-                className="w-full px-3 py-2 border rounded text-sm disabled:bg-gray-100" placeholder="From quarry" required disabled={!purchaseId} />
+              <input type="number" step="0.01" min="0.01" value={actualQty} onChange={e => handleActualQtyChange(e.target.value)}
+                className="w-full px-3 py-2 border rounded text-sm" placeholder="From quarry" required />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Bill Qty (tonnes, optional)</label>
               <input type="number" step="0.01" min="0.01" value={billQty}
                 onChange={e => handleBillQtyChange(e.target.value)}
-                className="w-full px-3 py-2 border rounded text-sm disabled:bg-gray-100" placeholder="Defaults to Actual Qty" disabled={!purchaseId} />
+                className="w-full px-3 py-2 border rounded text-sm" placeholder="Defaults to Actual Qty" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-1">Sell Price per Tonne (₦)</label>
               <CurrencyInput value={unitPrice} onChange={handleUnitPriceChange}
-                className="w-full px-3 py-2 border rounded text-sm disabled:bg-gray-100" disabled={!purchaseId} />
+                className="w-full px-3 py-2 border rounded text-sm" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Total Amount (₦)</label>
               <CurrencyInput value={total} onChange={handleTotalChange}
-                className="w-full px-3 py-2 border rounded text-sm disabled:bg-gray-100" disabled={!purchaseId} />
+                className="w-full px-3 py-2 border rounded text-sm" />
             </div>
           </div>
         </div>
@@ -284,7 +259,7 @@ export default function NewAggregateSalePage() {
 
         <div className="flex gap-3">
           <button type="button" onClick={() => router.back()} className="px-4 py-2 border rounded text-sm">Cancel</button>
-          <button type="submit" disabled={submitting || !purchaseId} className="flex-1 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900 disabled:opacity-50">
+          <button type="submit" disabled={submitting} className="flex-1 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900 disabled:opacity-50">
             {submitting ? 'Saving...' : 'Create Sale'}
           </button>
         </div>

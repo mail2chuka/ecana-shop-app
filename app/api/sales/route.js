@@ -12,7 +12,10 @@ import QuarryPurchase from '@/models/QuarryPurchase';
 import ShopProduct from '@/models/ShopProduct';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
+import { generateQuarryReferenceNumber } from '@/lib/quarryReference';
 import { ApiError } from '@/lib/apiError';
+
+const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
 
 async function nextSaleNumber() {
   const year = new Date().getFullYear();
@@ -84,10 +87,11 @@ export async function POST(request) {
       if (!customer) throw new ApiError('Customer not found', 404);
 
       let truckData = {};
+      let truckDoc = null;
       if (truckId) {
-        const truck = await Truck.findById(truckId).session(mongoSession);
-        if (truck) {
-          truckData = { truck: truck._id, truckPlate: truck.plateNumber, driverName: truck.driverName };
+        truckDoc = await Truck.findById(truckId).session(mongoSession);
+        if (truckDoc) {
+          truckData = { truck: truckDoc._id, truckPlate: truckDoc.plateNumber, driverName: truckDoc.driverName };
         }
       }
 
@@ -133,22 +137,43 @@ export async function POST(request) {
           const product = await StoneDustProduct.findById(item.stoneDustProduct).session(mongoSession);
           if (!product) throw new ApiError('Aggregate product not found', 404);
 
-          if (!item.quarryPurchase) throw new ApiError('Aggregate item must reference a quarry purchase', 400);
-          const purchase = await QuarryPurchase.findById(item.quarryPurchase).session(mongoSession);
-          if (!purchase) throw new ApiError('Quarry purchase reference not found', 404);
-          if (actualQty > purchase.tonnesRemaining) {
-            throw new ApiError(`Only ${purchase.tonnesRemaining} tonnes remaining on reference ${purchase.referenceNumber}`, 400);
+          if (!truckDoc) throw new ApiError('Truck required for aggregate sales', 400);
+          if (truckDoc.type !== 'stonedust') {
+            throw new ApiError(`${truckDoc.plateNumber} is registered for cement, not aggregates — assign an aggregate truck instead`, 400);
           }
-          purchase.tonnesRemaining -= actualQty;
-          await purchase.save({ session: mongoSession });
+          const busyCutoff = new Date(Date.now() - QUARRY_TRUCK_LOCK_MS);
+          const busyOn = await QuarryPurchase.findOne({ truck: truckDoc._id, date: { $gte: busyCutoff } }).session(mongoSession);
+          if (busyOn) {
+            throw new ApiError(`Truck ${truckDoc.plateNumber} is still out on an aggregate delivery (ref ${busyOn.referenceNumber}) — it'll be free 30 minutes after that sale`, 400);
+          }
+
+          const costPricePerTonne = product.currentPricePerTonne || 0;
+          const referenceNumber = await generateQuarryReferenceNumber(mongoSession);
+          const purchase = await QuarryPurchase.create([{
+            referenceNumber,
+            quarry: product.quarry,
+            quarryName: product.quarryName,
+            stoneDustProduct: product._id,
+            size: product.size,
+            truck: truckDoc._id,
+            truckPlate: truckDoc.plateNumber,
+            driverName: truckDoc.driverName,
+            tonnage: actualQty,
+            tonnesRemaining: 0,
+            costPricePerTonne,
+            totalCost: actualQty * costPricePerTonne,
+            date: date ? new Date(date) : new Date(),
+            createdBy: session.user.id,
+            createdByName: session.user.name,
+          }], { session: mongoSession });
 
           processedItems.push({
             itemType: 'stonedust',
             stoneDustProduct: product._id,
             quarryName: product.quarryName,
             size: product.size,
-            quarryPurchase: purchase._id,
-            quarryPurchaseRef: purchase.referenceNumber,
+            quarryPurchase: purchase[0]._id,
+            quarryPurchaseRef: purchase[0].referenceNumber,
             billQuantity: billQty,
             actualQuantity: actualQty,
             unitPrice,

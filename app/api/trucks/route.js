@@ -7,6 +7,8 @@ import ATC from '@/models/ATC';
 import QuarryPurchase from '@/models/QuarryPurchase';
 import { logAudit } from '@/lib/audit';
 
+const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -14,10 +16,11 @@ export async function GET() {
     await dbConnect();
     const trucks = await Truck.find({ isActive: true }).sort({ plateNumber: 1 });
     const truckIds = trucks.map(t => t._id);
+    const busyCutoff = new Date(Date.now() - QUARRY_TRUCK_LOCK_MS);
 
     const [busyAtcs, busyPurchases] = await Promise.all([
       ATC.find({ assignedTruck: { $in: truckIds }, status: { $ne: 'closed' } }),
-      QuarryPurchase.find({ truck: { $in: truckIds }, tonnesRemaining: { $gt: 0 } }),
+      QuarryPurchase.find({ truck: { $in: truckIds }, date: { $gte: busyCutoff } }),
     ]);
 
     const data = trucks.map(t => {
@@ -25,7 +28,7 @@ export async function GET() {
       const purchase = busyPurchases.find(p => String(p.truck) === String(t._id));
       let busyReason = null;
       if (atc) busyReason = `On ATC ${atc.atcNumber} (${atc.bagsRemaining} bags remaining)`;
-      else if (purchase) busyReason = `Carrying ref ${purchase.referenceNumber} (${purchase.tonnesRemaining}t left)`;
+      else if (purchase) busyReason = `On aggregate delivery (ref ${purchase.referenceNumber})`;
       return { ...t.toObject(), busy: !!busyReason, busyReason };
     });
 

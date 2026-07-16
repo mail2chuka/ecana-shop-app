@@ -4,7 +4,6 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import ATC from '@/models/ATC';
 import Truck from '@/models/Truck';
-import QuarryPurchase from '@/models/QuarryPurchase';
 import { logAudit } from '@/lib/audit';
 
 export async function POST(request, { params }) {
@@ -32,11 +31,6 @@ export async function POST(request, { params }) {
     const busyOn = await ATC.findOne({ _id: { $ne: id }, assignedTruck: truck._id, status: { $ne: 'closed' } });
     if (busyOn) {
       return NextResponse.json({ error: `Truck ${truck.plateNumber} is still tied to ATC ${busyOn.atcNumber} (${busyOn.bagsRemaining} bags remaining) — it'll be free once that one closes` }, { status: 400 });
-    }
-
-    const busyOnPurchase = await QuarryPurchase.findOne({ truck: truck._id, tonnesRemaining: { $gt: 0 } });
-    if (busyOnPurchase) {
-      return NextResponse.json({ error: `Truck ${truck.plateNumber} is still carrying quarry reference ${busyOnPurchase.referenceNumber} (${busyOnPurchase.tonnesRemaining}t remaining) — it must be fully supplied before it can be assigned an ATC` }, { status: 400 });
     }
 
     atc.assignedTruck = truck._id;

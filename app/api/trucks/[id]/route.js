@@ -8,11 +8,14 @@ import QuarryPurchase from '@/models/QuarryPurchase';
 import { logAudit } from '@/lib/audit';
 import { requireObjectId } from '@/lib/validate';
 
+const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
+
 async function findBusyReason(truckId) {
   const busyAtc = await ATC.findOne({ assignedTruck: truckId, status: { $ne: 'closed' } });
   if (busyAtc) return `it's still tied to ATC ${busyAtc.atcNumber} (${busyAtc.bagsRemaining} bags remaining) — it'll be free once that closes`;
-  const busyPurchase = await QuarryPurchase.findOne({ truck: truckId, tonnesRemaining: { $gt: 0 } });
-  if (busyPurchase) return `it's still carrying quarry reference ${busyPurchase.referenceNumber} (${busyPurchase.tonnesRemaining}t remaining) — it'll be free once that's fully supplied`;
+  const busyCutoff = new Date(Date.now() - QUARRY_TRUCK_LOCK_MS);
+  const busyPurchase = await QuarryPurchase.findOne({ truck: truckId, date: { $gte: busyCutoff } });
+  if (busyPurchase) return `it's on an aggregate delivery (ref ${busyPurchase.referenceNumber}) — it'll be free 30 minutes after that sale`;
   return null;
 }
 
