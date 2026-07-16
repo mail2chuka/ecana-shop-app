@@ -29,10 +29,12 @@ export default function TrucksPage() {
     setEditing(t);
     setForm({
       plateNumber: t.plateNumber, driverName: t.driverName, driverPhone: t.driverPhone || '',
-      type: t.type, capacityTonnes: t.capacityTonnes || '', ownership: t.ownership,
+      type: t.type || '', capacityTonnes: t.capacityTonnes || '', ownership: t.ownership,
     });
     setShowModal(true);
   };
+
+  const trucksNeedingType = trucks.filter(t => t.type !== 'cement' && t.type !== 'stonedust');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,6 +77,25 @@ export default function TrucksPage() {
         action={<button onClick={openCreate} className={btnPrimaryCls}>Add Truck</button>}
       />
 
+      {trucksNeedingType.length > 0 && (
+        <div className="mb-4 bg-amber-50 border border-amber-300 rounded-lg p-4">
+          <p className="text-sm font-medium text-amber-800 mb-2">
+            {trucksNeedingType.length} truck{trucksNeedingType.length === 1 ? '' : 's'} {trucksNeedingType.length === 1 ? "doesn't" : "don't"} have a product type set — cement and aggregate trucks must be kept separate. Click to fix:
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {trucksNeedingType.map(t => (
+              <button
+                key={t._id}
+                onClick={() => openEdit(t)}
+                className="px-3 py-1 bg-amber-100 border border-amber-300 rounded text-sm text-amber-800 hover:bg-amber-200"
+              >
+                {t.plateNumber} — {t.driverName}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <Card className="overflow-hidden">
         <div className={tableScrollCls}>
         <table className="w-full text-sm">
@@ -97,7 +118,13 @@ export default function TrucksPage() {
                 <td className="px-4 py-3 font-medium">{t.plateNumber}</td>
                 <td className="px-4 py-3">{t.driverName}</td>
                 <td className="px-4 py-3 text-gray-500">{t.driverPhone || '-'}</td>
-                <td className="px-4 py-3"><StatusPill status={t.type === 'cement' ? 'Cement (Bags)' : 'Stone (Tonnes)'} color={t.type === 'cement' ? 'blue' : 'amber'} /></td>
+                <td className="px-4 py-3">
+                  {t.type === 'cement'
+                    ? <StatusPill status="Cement (Bags)" color="blue" />
+                    : t.type === 'stonedust'
+                      ? <StatusPill status="Stone (Tonnes)" color="amber" />
+                      : <StatusPill status="Type not set" color="gray" />}
+                </td>
                 <td className="px-4 py-3 text-right">{t.capacityTonnes ? `${t.capacityTonnes}t` : '-'}</td>
                 <td className="px-4 py-3"><StatusPill status={t.ownership === 'own' ? 'Own' : 'Supplier'} color={t.ownership === 'own' ? 'green' : 'blue'} /></td>
                 <td className="px-4 py-3">
@@ -127,6 +154,7 @@ export default function TrucksPage() {
           </Field>
           <Field label="Truck type" required>
             <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className={inputCls} required>
+              <option value="" disabled>— Select type —</option>
               <option value="cement">Cement (Bags)</option>
               <option value="stonedust">Aggregate (Tonnes)</option>
             </select>
