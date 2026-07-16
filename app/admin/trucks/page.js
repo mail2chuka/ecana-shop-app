@@ -79,8 +79,8 @@ export default function TrucksPage() {
 
       {trucksNeedingType.length > 0 && (
         <div className="mb-4 bg-amber-50 border border-amber-300 rounded-lg p-4">
-          <p className="text-sm font-medium text-amber-800 mb-2">
-            {trucksNeedingType.length} truck{trucksNeedingType.length === 1 ? '' : 's'} {trucksNeedingType.length === 1 ? "doesn't" : "don't"} have a product type set — cement and aggregate trucks must be kept separate. Click to fix:
+          <p className="text-sm font-medium text-amber-800 mb-2"> a
+            {trucksNeedingType.length} truck{trucksNeedingType.length === 1 ? '' : 's'} {trucksNeedingType.length === 1 ? "doesn't" : "don't"} have a product type set — cement and aggregates trucks must be kept separate. Click to fix:
           </p>
           <div className="flex flex-wrap gap-2">
             {trucksNeedingType.map(t => (
