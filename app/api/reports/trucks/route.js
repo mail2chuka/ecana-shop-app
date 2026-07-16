@@ -29,15 +29,15 @@ export async function GET(request) {
       {
         $group: {
           _id: '$truck',
-          truckPlate: { $first: '$truckPlate' },
+          plateNumber: { $first: '$truckPlate' },
           driverName: { $first: '$driverName' },
-          deliveryCount: { $sum: 1 },
-          totalRevenue: { $sum: '$grandTotal' },
-          totalTransport: { $sum: '$transportFee' },
+          trips: { $sum: 1 },
+          revenue: { $sum: '$grandTotal' },
+          transportFees: { $sum: '$transportFee' },
           lastTrip: { $max: '$date' },
         },
       },
-      { $sort: { deliveryCount: -1 } },
+      { $sort: { trips: -1 } },
     ]);
 
     return NextResponse.json({ success: true, data });
