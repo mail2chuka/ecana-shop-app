@@ -146,7 +146,7 @@ export async function POST(request) {
             throw new ApiError(`${truckDoc.plateNumber} is registered for cement, not aggregates — assign an aggregate truck instead`, 400);
           }
           const busyCutoff = new Date(Date.now() - QUARRY_TRUCK_LOCK_MS);
-          const busyOn = await QuarryPurchase.findOne({ truck: truckDoc._id, date: { $gte: busyCutoff } }).session(mongoSession);
+          const busyOn = await QuarryPurchase.findOne({ truck: truckDoc._id, createdAt: { $gte: busyCutoff } }).session(mongoSession);
           if (busyOn) {
             throw new ApiError(`Truck ${truckDoc.plateNumber} is still out on an aggregate delivery (ref ${busyOn.referenceNumber}) — it'll be free 30 minutes after that sale`, 400);
           }

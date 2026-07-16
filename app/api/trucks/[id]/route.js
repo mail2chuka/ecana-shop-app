@@ -14,7 +14,7 @@ async function findBusyReason(truckId) {
   const busyAtc = await ATC.findOne({ assignedTruck: truckId, status: { $ne: 'closed' } });
   if (busyAtc) return `it's still tied to ATC ${busyAtc.atcNumber} (${busyAtc.bagsRemaining} bags remaining) — it'll be free once that closes`;
   const busyCutoff = new Date(Date.now() - QUARRY_TRUCK_LOCK_MS);
-  const busyPurchase = await QuarryPurchase.findOne({ truck: truckId, date: { $gte: busyCutoff } });
+  const busyPurchase = await QuarryPurchase.findOne({ truck: truckId, createdAt: { $gte: busyCutoff } });
   if (busyPurchase) return `it's on an aggregate delivery (ref ${busyPurchase.referenceNumber}) — it'll be free 30 minutes after that sale`;
   return null;
 }

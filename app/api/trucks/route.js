@@ -20,7 +20,7 @@ export async function GET() {
 
     const [busyAtcs, busyPurchases] = await Promise.all([
       ATC.find({ assignedTruck: { $in: truckIds }, status: { $ne: 'closed' } }),
-      QuarryPurchase.find({ truck: { $in: truckIds }, date: { $gte: busyCutoff } }),
+      QuarryPurchase.find({ truck: { $in: truckIds }, createdAt: { $gte: busyCutoff } }),
     ]);
 
     const data = trucks.map(t => {
