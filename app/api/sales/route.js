@@ -86,6 +86,10 @@ export async function POST(request) {
       const customer = await Customer.findById(customerId).session(mongoSession);
       if (!customer) throw new ApiError('Customer not found', 404);
 
+      // Generated up front so stonedust items can link their auto-created QuarryPurchase
+      // back to this sale before the Sale document itself exists.
+      const saleId = new mongoose.Types.ObjectId();
+
       let truckData = {};
       let truckDoc = null;
       if (truckId) {
@@ -162,6 +166,7 @@ export async function POST(request) {
             tonnesRemaining: 0,
             costPricePerTonne,
             totalCost: actualQty * costPricePerTonne,
+            sale: saleId,
             date: date ? new Date(date) : new Date(),
             createdBy: session.user.id,
             createdByName: session.user.name,
@@ -227,6 +232,7 @@ export async function POST(request) {
       const transactionNumber = await generateTransactionNumber('SAL');
 
       const sale = await Sale.create([{
+        _id: saleId,
         saleNumber,
         transactionNumber,
         saleType,

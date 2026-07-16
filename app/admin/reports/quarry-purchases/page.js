@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { formatNaira, formatDate } from '@/lib/format';
-import { btnPrimaryCls, theadCls, tableScrollCls } from '@/components/ui';
+import { btnPrimaryCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
 
 export default function QuarryPurchasesReportPage() {
   const [rows, setRows] = useState([]);
@@ -91,7 +92,11 @@ export default function QuarryPurchasesReportPage() {
             {rows.map((r) => (
               <tr key={r._id} className="hover:bg-gray-50">
                 <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{formatDate(r.date)}</td>
-                <td className="px-4 py-2 font-medium">{r.referenceNumber}</td>
+                <td className="px-4 py-2 font-medium">
+                  {r.sale
+                    ? <Link href={`/admin/sales/${r.sale}`} className={`${tableActionCls} hover:underline`}>{r.referenceNumber}</Link>
+                    : r.referenceNumber}
+                </td>
                 <td className="px-4 py-2">{r.quarryName}</td>
                 <td className="px-4 py-2">{r.size}</td>
                 <td className="px-4 py-2 text-gray-600">{r.truckPlate}</td>

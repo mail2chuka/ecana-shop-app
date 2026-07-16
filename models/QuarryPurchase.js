@@ -13,6 +13,7 @@ const QuarryPurchaseSchema = new mongoose.Schema({
   tonnesRemaining: { type: Number, required: true },
   costPricePerTonne: { type: Number, required: true },
   totalCost: { type: Number, required: true },
+  sale: { type: mongoose.Schema.Types.ObjectId, ref: 'Sale' },
   date: { type: Date, required: true, default: Date.now },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   createdByName: String,

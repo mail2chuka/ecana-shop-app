@@ -218,6 +218,7 @@ export async function PUT(request, { params }) {
             tonnesRemaining: 0,
             costPricePerTonne,
             totalCost: actualQty * costPricePerTonne,
+            sale: sale._id,
             date: date ? new Date(date) : sale.date,
             createdBy: session.user.id,
             createdByName: session.user.name,
