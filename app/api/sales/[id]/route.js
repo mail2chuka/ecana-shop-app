@@ -192,8 +192,19 @@ export async function PUT(request, { params }) {
           await atc.save({ session: mongoSession });
 
           if (isShopCustomer(customer)) {
-            const shopProduct = await ShopProduct.findOne({ cementBrand: atc.cementBrand }).session(mongoSession);
-            if (!shopProduct) throw new ApiError(`No shop product is linked to ${atc.cementBrandName} — link one under Shop > Manage Products first`, 400);
+            let shopProduct = await ShopProduct.findOne({ cementBrand: atc.cementBrand }).session(mongoSession);
+            if (!shopProduct) {
+              const created = await ShopProduct.create([{
+                name: atc.cementBrandName?.trim() || 'Cement',
+                unit: 'bag',
+                price: unitPrice,
+                stockQuantity: 0,
+                cementBrand: atc.cementBrand,
+                createdBy: session.user.id,
+                createdByName: session.user.name,
+              }], { session: mongoSession });
+              shopProduct = created[0];
+            }
             shopProduct.stockQuantity += actualQty;
             await shopProduct.save({ session: mongoSession });
           }
