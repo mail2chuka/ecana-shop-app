@@ -14,6 +14,8 @@ export async function POST(request, { params }) {
     const atc = await ATC.findById(id);
     if (!atc) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     if (!atc.assignedTruck) return NextResponse.json({ error: 'Assign a truck first' }, { status: 400 });
+    if (atc.status === 'closed') return NextResponse.json({ error: 'ATC is already closed' }, { status: 400 });
+    if (atc.bagsRemaining <= 0) return NextResponse.json({ error: `ATC ${atc.atcNumber} has no bags remaining — it should be closed, not marked arrived` }, { status: 400 });
     atc.status = 'arrived';
     atc.arrivalDate = new Date();
     atc.deliveryDate = atc.deliveryDate || atc.arrivalDate;
