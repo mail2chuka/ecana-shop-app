@@ -73,6 +73,25 @@ export default function CustomersPage() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`PERMANENTLY delete ${ids.length} customer${ids.length === 1 ? '' : 's'}? This cannot be undone. Their past sales/payments will remain in reports but will no longer link to a customer profile.`)) return;
+    setBulkSubmitting(true);
+    try {
+      const r = await fetch('/api/customers/bulk-purge', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }),
+      });
+      const d = await r.json();
+      if (d.success) { toast.success(`${d.data.deletedCount} customer${d.data.deletedCount === 1 ? '' : 's'} deleted`); load(search, statusFilter); }
+      else toast.error(d.error);
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong, please try again');
+    } finally {
+      setBulkSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -127,6 +146,9 @@ export default function CustomersPage() {
           <span className="text-sm font-medium">{selectedIds.size} selected</span>
           <button onClick={() => handleBulkStatus(true)} disabled={bulkSubmitting} className={btnPrimaryCls}>Activate</button>
           <button onClick={() => handleBulkStatus(false)} disabled={bulkSubmitting} className={btnDangerCls}>Deactivate</button>
+          {statusFilter === 'archived' && (
+            <button onClick={handleBulkDelete} disabled={bulkSubmitting} className={btnDangerCls}>Delete Permanently</button>
+          )}
           <button onClick={() => setSelectedIds(new Set())} className="text-sm text-gray-500 hover:underline ml-auto">Clear selection</button>
         </div>
       )}
