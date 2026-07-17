@@ -43,6 +43,10 @@ const getStatusLabel = (atc) => atc.status[0].toUpperCase() + atc.status.slice(1
 const formatHoursAgo = (since, nowMs) => {
   if (!since) return null;
   const hours = Math.floor((nowMs - new Date(since).getTime()) / (60 * 60 * 1000));
+  if (hours >= 24) {
+    const days = Math.floor(hours / 24);
+    return `${days} day${days === 1 ? '' : 's'} ago`;
+  }
   return `${hours <= 0 ? '<1' : hours} hour${hours === 1 ? '' : 's'} ago`;
 };
 

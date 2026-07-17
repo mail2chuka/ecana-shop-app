@@ -29,6 +29,10 @@ export default function NewCementSalePage() {
     const label = isArrived ? 'Arrived' : 'Loaded';
     if (!since) return label;
     const hours = Math.floor((Date.now() - new Date(since).getTime()) / (60 * 60 * 1000));
+    if (hours >= 24) {
+      const days = Math.floor(hours / 24);
+      return `${label} (${days} day${days === 1 ? '' : 's'})`;
+    }
     return `${label} (${hours <= 0 ? '<1' : hours}hr${hours === 1 ? '' : 's'})`;
   };
 
