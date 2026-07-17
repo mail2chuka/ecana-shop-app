@@ -18,6 +18,7 @@ const ATCSchema = new mongoose.Schema({
   assignedTruck: { type: mongoose.Schema.Types.ObjectId, ref: 'Truck' },
   assignedTruckPlate: String,
   assignedDriverName: String,
+  assignedDriverPhone: String,
   assignedDate: Date,
   loadedAt: Date,
   arrivalDate: Date,

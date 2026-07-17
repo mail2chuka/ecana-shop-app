@@ -236,7 +236,9 @@ export default function NewCementSalePage() {
                       className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-b last:border-0"
                     >
                       <p>{a.assignedTruckPlate || 'No truck'} - {formatStatusHours(a)}</p>
-                      <p className="text-xs text-gray-500">{formatAtcNumber(a)}</p>
+                      <p className="text-xs text-gray-500">
+                        {formatAtcNumber(a)}{a.assignedDriverPhone ? ` (${a.assignedDriverPhone})` : ''}
+                      </p>
                     </button>
                   ))}
                 </div>

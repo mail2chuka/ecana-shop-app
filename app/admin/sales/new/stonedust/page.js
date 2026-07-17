@@ -18,6 +18,7 @@ export default function NewAggregateSalePage() {
 
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [truckId, setTruckId] = useState('');
+  const [showTruckDrop, setShowTruckDrop] = useState(false);
   const [discount, setDiscount] = useState('');
   const [transportFee, setTransportFee] = useState('');
   const [notes, setNotes] = useState('');
@@ -53,6 +54,7 @@ export default function NewAggregateSalePage() {
     : customers.slice(0, 20);
 
   const selectedProduct = products.find(p => p._id === productId);
+  const selectedTruck = trucks.find(t => t._id === truckId);
   const effectiveBillQty = billQty || actualQty;
 
   const handleUnitPriceChange = (val) => {
@@ -152,16 +154,30 @@ export default function NewAggregateSalePage() {
             <label className="block text-sm font-medium mb-1">Date</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" required />
           </div>
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium mb-1">Truck</label>
-            <select value={truckId} onChange={e => setTruckId(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" required>
-              <option value="">Choose truck...</option>
-              {trucks.map(t => (
-                <option key={t._id} value={t._id} disabled={t.busy}>
-                  {t.plateNumber} — {t.driverName}{t.busy ? ` (${t.busyReason})` : ''}
-                </option>
-              ))}
-            </select>
+            <button type="button" onClick={() => setShowTruckDrop(v => !v)} className="w-full px-3 py-2 border rounded text-sm text-left bg-white">
+              {selectedTruck ? `${selectedTruck.plateNumber} — ${selectedTruck.driverName}` : 'Choose truck...'}
+            </button>
+            {showTruckDrop && (
+              <div className="absolute z-10 w-full bg-white border rounded shadow-lg mt-1 max-h-64 overflow-y-auto">
+                {trucks.length === 0 && <p className="px-3 py-3 text-sm text-gray-500">No aggregate trucks available</p>}
+                {trucks.map(t => (
+                  <button
+                    key={t._id}
+                    type="button"
+                    disabled={t.busy}
+                    onClick={() => { setTruckId(t._id); setShowTruckDrop(false); }}
+                    className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-b last:border-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <p>{t.plateNumber} — {t.driverName}</p>
+                    <p className="text-xs text-gray-500">
+                      {t.driverPhone ? `(${t.driverPhone})` : ''}{t.busy ? ` ${t.busyReason}` : ''}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
