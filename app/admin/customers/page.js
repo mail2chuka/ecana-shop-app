@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, theadCls, tableScrollCls } from '@/components/ui';
+import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, btnDangerCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatCustomerLabel } from '@/lib/format';
 import toast from 'react-hot-toast';
 
@@ -19,6 +19,8 @@ export default function CustomersPage() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(blankForm);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
 
   const load = async (q = '', status = statusFilter) => {
     setLoading(true);
@@ -27,6 +29,7 @@ export default function CustomersPage() {
     const r = await fetch(`/api/customers?${params.toString()}`);
     const d = await r.json();
     if (d.success) setCustomers(d.data);
+    setSelectedIds(new Set());
     setLoading(false);
   };
 
@@ -38,6 +41,37 @@ export default function CustomersPage() {
   }, [search]);
 
   const openCreate = () => { setForm(blankForm); setShowModal(true); };
+
+  const toggleSelected = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds(prev => prev.size === customers.length ? new Set() : new Set(customers.map(c => c._id)));
+  };
+
+  const handleBulkStatus = async (isActive) => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`${isActive ? 'Reactivate' : 'Deactivate'} ${ids.length} customer${ids.length === 1 ? '' : 's'}?`)) return;
+    setBulkSubmitting(true);
+    try {
+      const r = await fetch('/api/customers/bulk-status', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids, isActive }),
+      });
+      const d = await r.json();
+      if (d.success) { toast.success(`${d.data.modifiedCount} customer${d.data.modifiedCount === 1 ? '' : 's'} ${isActive ? 'reactivated' : 'deactivated'}`); load(search, statusFilter); }
+      else toast.error(d.error);
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong, please try again');
+    } finally {
+      setBulkSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -88,20 +122,35 @@ export default function CustomersPage() {
         </div>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="mb-4 flex items-center gap-3 bg-gray-50 border rounded-lg px-4 py-2">
+          <span className="text-sm font-medium">{selectedIds.size} selected</span>
+          <button onClick={() => handleBulkStatus(true)} disabled={bulkSubmitting} className={btnPrimaryCls}>Activate</button>
+          <button onClick={() => handleBulkStatus(false)} disabled={bulkSubmitting} className={btnDangerCls}>Deactivate</button>
+          <button onClick={() => setSelectedIds(new Set())} className="text-sm text-gray-500 hover:underline ml-auto">Clear selection</button>
+        </div>
+      )}
+
       {loading ? <Loader /> : (
         <Card className="overflow-hidden">
           <div className={tableScrollCls}>
           <table className="w-full text-sm">
             <thead className={theadCls}>
               <tr>
+                <th className="px-4 py-3 text-left font-medium w-10">
+                  <input type="checkbox" checked={customers.length > 0 && selectedIds.size === customers.length} onChange={toggleSelectAll} />
+                </th>
                 <th className="px-4 py-3 text-left font-medium">Name</th>
                 <th className="px-4 py-3 text-right font-medium">Balance</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {customers.length === 0 && <EmptyRow colSpan={2} text="No customers found" />}
+              {customers.length === 0 && <EmptyRow colSpan={3} text="No customers found" />}
               {customers.map(c => (
-                <tr key={c._id}>
+                <tr key={c._id} className={selectedIds.has(c._id) ? 'bg-green-50' : ''}>
+                  <td className="px-4 py-3">
+                    <input type="checkbox" checked={selectedIds.has(c._id)} onChange={() => toggleSelected(c._id)} />
+                  </td>
                   <td className="px-4 py-3">
                     <Link href={`/admin/customers/${c._id}`} className="font-medium hover:underline">
                       {formatCustomerLabel(c)}
