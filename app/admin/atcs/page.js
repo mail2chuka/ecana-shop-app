@@ -13,6 +13,14 @@ const statusColor = {
   closed: 'gray',
 };
 
+const statusSortOrder = {
+  arrived: 0,
+  loaded: 1,
+  assigned: 2,
+  pending: 3,
+  closed: 4,
+};
+
 const formatAtcNumber = (atc, brands) => {
   const brand = brands.find(b => b._id === atc.cementBrand);
   const abbr = brand?.abbreviation || '???';
@@ -81,7 +89,13 @@ export default function ATCsPage() {
     return () => clearInterval(timer);
   }, [brandFilter]);
 
-  const atcs = statusFilter ? allAtcs.filter(a => a.status === statusFilter) : allAtcs;
+  const atcs = (statusFilter ? allAtcs.filter(a => a.status === statusFilter) : allAtcs)
+    .slice()
+    .sort((x, y) => {
+      const diff = (statusSortOrder[x.status] ?? 5) - (statusSortOrder[y.status] ?? 5);
+      if (diff !== 0) return diff;
+      return new Date(y.atcDate).getTime() - new Date(x.atcDate).getTime();
+    });
   const statusCounts = allAtcs.reduce((acc, a) => { acc[a.status] = (acc[a.status] || 0) + 1; return acc; }, {});
 
   const handleCreate = async (e) => {
