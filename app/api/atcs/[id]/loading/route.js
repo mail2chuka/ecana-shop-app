@@ -5,6 +5,7 @@ import dbConnect from '@/lib/db';
 import ATC from '@/models/ATC';
 import { logAudit } from '@/lib/audit';
 import { requireObjectId } from '@/lib/validate';
+import { LOADING_WINDOW_MS } from '@/lib/atcLifecycle';
 
 const loadingChoices = new Set([
   'just_loaded',
@@ -13,6 +14,7 @@ const loadingChoices = new Set([
   'three_hours_ago',
   'four_hours_ago',
   'five_hours_ago',
+  'arrived',
 ]);
 
 export async function POST(request, { params }) {
@@ -46,8 +48,14 @@ export async function POST(request, { params }) {
       five_hours_ago: 5,
     }[mode];
 
-    atc.status = 'loaded';
-    atc.loadedAt = new Date(now.getTime() - offsetHours * 60 * 60 * 1000);
+    if (mode === 'arrived') {
+      atc.status = 'arrived';
+      atc.loadedAt = new Date(now.getTime() - LOADING_WINDOW_MS);
+      atc.arrivalDate = now;
+    } else {
+      atc.status = 'loaded';
+      atc.loadedAt = new Date(now.getTime() - offsetHours * 60 * 60 * 1000);
+    }
 
     await atc.save();
     await logAudit({

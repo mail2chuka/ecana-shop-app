@@ -36,6 +36,7 @@ const loadingOptions = [
   { value: 'three_hours_ago', label: 'Three Hours ago' },
   { value: 'four_hours_ago', label: 'Four Hours ago' },
   { value: 'five_hours_ago', label: 'Five Hours ago' },
+  { value: 'arrived', label: 'Arrived' },
 ];
 
 const getStatusLabel = (atc) => atc.status[0].toUpperCase() + atc.status.slice(1);
@@ -195,7 +196,7 @@ export default function ATCsPage() {
 
       <Card className="overflow-hidden">
         <div className={tableScrollCls}>
-          <table className="w-full text-sm min-w-[980px]">
+          <table className="w-full text-sm min-w-[1080px]">
             <thead className={theadCls}>
               <tr>
                 <th className="px-4 py-3 text-left font-medium">ATC #</th>
@@ -204,6 +205,7 @@ export default function ATCsPage() {
                 <th className="px-3 py-3 text-left font-medium">Delivery Date</th>
                 <th className="px-4 py-3 text-right font-medium">Remaining</th>
                 <th className="px-3 py-3 text-left font-medium">Qty Supplied</th>
+                <th className="px-3 py-3 text-left font-medium">Supplied On</th>
                 <th className="px-3 py-3 text-left font-medium">Ref</th>
                 <th className="px-3 py-3 text-left font-medium">Truck</th>
                 <th className="px-3 py-3 text-left font-medium">Status</th>
@@ -211,7 +213,7 @@ export default function ATCsPage() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {atcs.length === 0 && <EmptyRow colSpan={10} text="No ATCs" />}
+              {atcs.length === 0 && <EmptyRow colSpan={11} text="No ATCs" />}
               {atcs.map(a => {
                 const supplies = a.supplies || [];
                 const deliveryDate = a.deliveryDate || a.arrivalDate;
@@ -229,6 +231,17 @@ export default function ATCsPage() {
                           {supplies.map((s, idx) => (
                             <div key={`${a._id}-qty-${idx}`} className="whitespace-nowrap">
                               {formatNumber(s.qtySupplied)}
+                            </div>
+                          ))}
+                        </div>
+                      ) : '-'}
+                    </td>
+                    <td className="px-3 py-3 align-top">
+                      {supplies.length > 0 ? (
+                        <div className="space-y-1 text-xs">
+                          {supplies.map((s, idx) => (
+                            <div key={`${a._id}-suppliedon-${idx}`} className="whitespace-nowrap">
+                              {s.saleDate ? formatDate(s.saleDate) : '-'}
                             </div>
                           ))}
                         </div>

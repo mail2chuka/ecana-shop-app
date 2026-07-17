@@ -13,7 +13,6 @@ export default function ShopPage() {
   const [loading, setLoading] = useState(true);
 
   const [products, setProducts] = useState([]);
-  const [atcs, setAtcs] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [sales, setSales] = useState([]);
 
@@ -22,12 +21,6 @@ export default function ShopPage() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [productForm, setProductForm] = useState(blankProductForm);
   const [submitting, setSubmitting] = useState(false);
-
-  // Receive Stock modal
-  const [restockModal, setRestockModal] = useState(null);
-  const [restockSource, setRestockSource] = useState('manual');
-  const [restockAtc, setRestockAtc] = useState('');
-  const [restockQty, setRestockQty] = useState('');
 
   // Record Sale state
   const [customerSearch, setCustomerSearch] = useState('');
@@ -42,14 +35,12 @@ export default function ShopPage() {
 
   const load = async () => {
     setLoading(true);
-    const [p, a, c, s] = await Promise.all([
+    const [p, c, s] = await Promise.all([
       fetch('/api/shop-products').then(r => r.json()),
-      fetch('/api/atcs?availableForSale=true').then(r => r.json()),
       fetch('/api/customers').then(r => r.json()),
       fetch('/api/sales?type=shop').then(r => r.json()),
     ]);
     if (p.success) setProducts(p.data);
-    if (a.success) setAtcs(a.data);
     if (c.success) {
       setCustomers(c.data);
       setSelectedCustomer(prev => prev || c.data.find(x => x.name.toLowerCase() === 'walk-in customer') || null);
@@ -108,34 +99,6 @@ export default function ShopPage() {
     const d = await r.json();
     if (d.success) { toast.success('Deactivated'); load(); }
     else toast.error(d.error);
-  };
-
-  // --- Receive Stock ---
-  const openRestock = (p) => {
-    setRestockModal(p);
-    setRestockSource(p.cementBrand ? 'atc' : 'manual');
-    setRestockAtc('');
-    setRestockQty('');
-  };
-
-  const handleRestock = async (e) => {
-    e.preventDefault();
-    if (!restockQty || restockQty <= 0) return toast.error('Enter a valid quantity');
-    if (restockSource === 'atc' && !restockAtc) return toast.error('Select an ATC');
-    setSubmitting(true);
-    try {
-      const body = { quantity: Number(restockQty), atcId: restockSource === 'atc' ? restockAtc : undefined };
-      const r = await fetch(`/api/shop-products/${restockModal._id}/restock`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-      });
-      const d = await r.json();
-      if (d.success) { toast.success('Stock received'); setRestockModal(null); load(); }
-      else toast.error(d.error);
-    } catch (err) {
-      toast.error(err.message || 'Something went wrong, please try again');
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   // --- Record Sale ---
@@ -243,6 +206,7 @@ export default function ShopPage() {
       {/* INVENTORY TAB */}
       {tab === 'inventory' && (
         <Card className="overflow-hidden">
+          <p className="px-4 pt-4 text-xs text-gray-500">Stock updates automatically when cement is sold to the "Shop" customer — see Cement Sale.</p>
           <div className={tableScrollCls}>
           <table className="w-full text-sm">
             <thead className={theadCls}>
@@ -251,20 +215,16 @@ export default function ShopPage() {
                 <th className="px-4 py-3 text-left font-medium">Unit</th>
                 <th className="px-4 py-3 text-right font-medium">Price</th>
                 <th className="px-4 py-3 text-right font-medium">In Stock</th>
-                <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {products.length === 0 && <EmptyRow colSpan={5} text="No shop products yet — add one under Manage Products" />}
+              {products.length === 0 && <EmptyRow colSpan={4} text="No shop products yet — add one under Manage Products" />}
               {products.map(p => (
                 <tr key={p._id} className={p.stockQuantity === 0 ? 'bg-amber-50' : ''}>
                   <td className="px-4 py-3 font-medium">{p.name}</td>
                   <td className="px-4 py-3 text-gray-500">{p.unit}</td>
                   <td className="px-4 py-3 text-right">{formatNaira(p.price)}</td>
                   <td className={`px-4 py-3 text-right font-bold ${p.stockQuantity === 0 ? 'text-amber-700' : 'text-green-600'}`}>{p.stockQuantity}</td>
-                  <td className="px-4 py-3 text-right">
-                    <button onClick={() => openRestock(p)} className={tableActionCls}>Receive Stock</button>
-                  </td>
                 </tr>
               ))}
             </tbody>
@@ -471,36 +431,6 @@ export default function ShopPage() {
           )}
           <FormButtons onCancel={() => setShowProductModal(false)} submitting={submitting} />
         </form>
-      </Modal>
-
-      {/* Receive Stock Modal */}
-      <Modal open={!!restockModal} onClose={() => setRestockModal(null)} title="Receive Stock">
-        {restockModal && (
-          <form onSubmit={handleRestock} className="space-y-4">
-            <div className="bg-gray-50 p-3 rounded text-sm">
-              <p><span className="text-gray-500">Product:</span> <span className="font-medium">{restockModal.name}</span></p>
-              <p><span className="text-gray-500">Current Stock:</span> <span className="font-medium">{restockModal.stockQuantity} {restockModal.unit}</span></p>
-            </div>
-            <Field label="Source">
-              <select value={restockSource} onChange={e => setRestockSource(e.target.value)} className={inputCls}>
-                <option value="manual">Manual (direct restock)</option>
-                <option value="atc">From ATC (cement delivered to shop)</option>
-              </select>
-            </Field>
-            {restockSource === 'atc' && (
-              <Field label="ATC" required>
-                <select value={restockAtc} onChange={e => setRestockAtc(e.target.value)} className={inputCls} required>
-                  <option value="">— Select ATC —</option>
-                  {atcs.map(a => <option key={a._id} value={a._id}>{a.atcNumber} — {a.cementBrandName} ({a.bagsRemaining} bags left)</option>)}
-                </select>
-              </Field>
-            )}
-            <Field label="Quantity" required>
-              <input type="number" min="0.01" step="0.01" value={restockQty} onChange={e => setRestockQty(e.target.value)} className={inputCls} required />
-            </Field>
-            <FormButtons onCancel={() => setRestockModal(null)} submitting={submitting} submitLabel="Receive" />
-          </form>
-        )}
       </Modal>
     </div>
   );
