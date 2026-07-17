@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { formatNaira, formatDate, formatCustomerLabel } from '@/lib/format';
 import { Modal, Field, FormButtons, inputCls, CurrencyInput, btnPrimaryCls, btnDangerCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
@@ -20,6 +20,7 @@ const blankEditForm = { name: '', phone: '', address: '', businessName: '', cred
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
+  const router = useRouter();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -30,6 +31,7 @@ export default function CustomerDetailPage() {
   const [editForm, setEditForm] = useState(blankEditForm);
   const [savingEdit, setSavingEdit] = useState(false);
   const [togglingActive, setTogglingActive] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = () => {
     fetch(`/api/customers/${id}/statement`)
@@ -92,6 +94,22 @@ export default function CustomerDetailPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm(`PERMANENTLY delete ${data.customer.name}? This cannot be undone. Their past sales/payments will remain in reports but will no longer link to a customer profile.`)) return;
+    setDeleting(true);
+    try {
+      const r = await fetch('/api/customers/bulk-purge', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [id] }),
+      });
+      const d = await r.json();
+      if (d.success) { toast.success('Customer deleted'); router.push('/admin/customers'); }
+      else { toast.error(d.error); setDeleting(false); }
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong, please try again');
+      setDeleting(false);
+    }
+  };
+
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
     if (!paymentForm.amount || paymentForm.amount <= 0) return toast.error('Enter amount');
@@ -138,6 +156,9 @@ export default function CustomerDetailPage() {
           <button onClick={handleToggleActive} disabled={togglingActive} className={customer.isActive ? btnDangerCls : btnPrimaryCls}>
             {customer.isActive ? 'Deactivate' : 'Reactivate'}
           </button>
+          {!customer.isActive && (
+            <button onClick={handleDelete} disabled={deleting} className={btnDangerCls}>Delete Permanently</button>
+          )}
           <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Statement</button>
         </div>
       </div>
