@@ -13,6 +13,7 @@ import ShopProduct from '@/models/ShopProduct';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
 import { generateQuarryReferenceNumber } from '@/lib/quarryReference';
+import { isShopCustomer } from '@/lib/shopStock';
 import { ApiError } from '@/lib/apiError';
 
 const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
@@ -124,6 +125,13 @@ export async function POST(request) {
           atc.bagsRemaining -= actualQty;
           if (atc.bagsRemaining === 0) atc.status = 'closed';
           await atc.save({ session: mongoSession });
+
+          if (isShopCustomer(customer)) {
+            const shopProduct = await ShopProduct.findOne({ cementBrand: atc.cementBrand }).session(mongoSession);
+            if (!shopProduct) throw new ApiError(`No shop product is linked to ${atc.cementBrandName} — link one under Shop > Manage Products first`, 400);
+            shopProduct.stockQuantity += actualQty;
+            await shopProduct.save({ session: mongoSession });
+          }
 
           processedItems.push({
             itemType: 'cement',

@@ -12,6 +12,7 @@ import QuarryPurchase from '@/models/QuarryPurchase';
 import ShopProduct from '@/models/ShopProduct';
 import { logAudit } from '@/lib/audit';
 import { generateQuarryReferenceNumber } from '@/lib/quarryReference';
+import { isShopCustomer } from '@/lib/shopStock';
 import { ApiError } from '@/lib/apiError';
 
 const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
@@ -49,12 +50,10 @@ export async function DELETE(request, { params }) {
       if (sale.status === 'cancelled') throw new ApiError('This sale was already cancelled', 400);
 
       // Reverse the sale's effects on stock/balance, same as a cancellation would.
-      if (sale.saleType !== 'shop') {
-        const customer = await Customer.findById(sale.customer).session(mongoSession);
-        if (customer) {
-          customer.balance += sale.grandTotal;
-          await customer.save({ session: mongoSession });
-        }
+      const customer = await Customer.findById(sale.customer).session(mongoSession);
+      if (sale.saleType !== 'shop' && customer) {
+        customer.balance += sale.grandTotal;
+        await customer.save({ session: mongoSession });
       }
 
       for (const item of sale.items) {
@@ -64,6 +63,13 @@ export async function DELETE(request, { params }) {
             atc.bagsRemaining += item.actualQuantity;
             if (atc.status === 'closed' && atc.bagsRemaining > 0) atc.status = 'arrived';
             await atc.save({ session: mongoSession });
+          }
+          if (isShopCustomer(customer)) {
+            const shopProduct = await ShopProduct.findOne({ cementBrand: item.cementBrand }).session(mongoSession);
+            if (shopProduct) {
+              shopProduct.stockQuantity = Math.max(0, shopProduct.stockQuantity - item.actualQuantity);
+              await shopProduct.save({ session: mongoSession });
+            }
           }
         } else if (item.itemType === 'stonedust' && item.quarryPurchase) {
           // Each stonedust item's purchase record only exists to mirror that sale — remove it with the sale.
@@ -121,6 +127,9 @@ export async function PUT(request, { params }) {
         throw new ApiError('Payment method required for shop sales', 400);
       }
 
+      const customer = await Customer.findById(sale.customer).session(mongoSession);
+      if (!customer) throw new ApiError('Customer not found', 404);
+
       // --- Reverse the sale's original effects on stock/balance ---
       for (const oldItem of sale.items) {
         if (oldItem.itemType === 'cement' && oldItem.atc) {
@@ -129,6 +138,13 @@ export async function PUT(request, { params }) {
             atc.bagsRemaining += oldItem.actualQuantity;
             if (atc.status === 'closed' && atc.bagsRemaining > 0) atc.status = 'arrived';
             await atc.save({ session: mongoSession });
+          }
+          if (isShopCustomer(customer)) {
+            const shopProduct = await ShopProduct.findOne({ cementBrand: oldItem.cementBrand }).session(mongoSession);
+            if (shopProduct) {
+              shopProduct.stockQuantity = Math.max(0, shopProduct.stockQuantity - oldItem.actualQuantity);
+              await shopProduct.save({ session: mongoSession });
+            }
           }
         } else if (oldItem.itemType === 'stonedust' && oldItem.quarryPurchase) {
           // Each stonedust item's purchase record only exists to mirror that sale item — it gets
@@ -143,8 +159,6 @@ export async function PUT(request, { params }) {
         }
       }
 
-      const customer = await Customer.findById(sale.customer).session(mongoSession);
-      if (!customer) throw new ApiError('Customer not found', 404);
       if (!isShopSale) {
         customer.balance += sale.grandTotal;
       }
@@ -176,6 +190,13 @@ export async function PUT(request, { params }) {
           atc.bagsRemaining -= actualQty;
           if (atc.bagsRemaining === 0) atc.status = 'closed';
           await atc.save({ session: mongoSession });
+
+          if (isShopCustomer(customer)) {
+            const shopProduct = await ShopProduct.findOne({ cementBrand: atc.cementBrand }).session(mongoSession);
+            if (!shopProduct) throw new ApiError(`No shop product is linked to ${atc.cementBrandName} — link one under Shop > Manage Products first`, 400);
+            shopProduct.stockQuantity += actualQty;
+            await shopProduct.save({ session: mongoSession });
+          }
 
           processedItems.push({
             itemType: 'cement',

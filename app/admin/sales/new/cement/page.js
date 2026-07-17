@@ -227,7 +227,7 @@ export default function NewCementSalePage() {
             <div className="relative">
               <label className="block text-sm font-medium mb-2">Truck</label>
               <button type="button" onClick={() => setShowAtcDrop(v => !v)} className="w-full px-3 py-2 border rounded text-sm text-left bg-white">
-                {selectedAtc ? `${selectedAtc.assignedTruckPlate || 'No truck'} - ${formatStatusHours(selectedAtc)}` : 'Choose truck...'}
+                {selectedAtc ? `${selectedAtc.assignedTruckPlate || 'No truck'} - ${formatStatusHours(selectedAtc)} (${selectedAtc.bagsRemaining} bags)` : 'Choose truck...'}
               </button>
               {showAtcDrop && (
                 <div className="absolute z-10 w-full bg-white border rounded shadow-lg mt-1 max-h-64 overflow-y-auto">
@@ -239,7 +239,7 @@ export default function NewCementSalePage() {
                       onClick={() => { setSelectedAtcId(a._id); setShowAtcDrop(false); }}
                       className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-b last:border-0"
                     >
-                      <p>{a.assignedTruckPlate || 'No truck'} - {formatStatusHours(a)}</p>
+                      <p>{a.assignedTruckPlate || 'No truck'} - {formatStatusHours(a)} · {a.bagsRemaining} bags left</p>
                       <p className="text-xs text-gray-500">
                         {formatAtcNumber(a)}{a.assignedDriverPhone ? ` (${a.assignedDriverPhone})` : ''}
                       </p>
