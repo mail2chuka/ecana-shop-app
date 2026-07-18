@@ -43,7 +43,6 @@ export default function CustomerPortalPage() {
               <tr>
                 <th className="px-4 py-2 text-left">Date</th>
                 <th className="px-4 py-2 text-left">Ref</th>
-                <th className="px-4 py-2 text-left">Reference</th>
                 <th className="px-4 py-2 text-left">Description</th>
                 <th className="px-4 py-2 text-right">Debit</th>
                 <th className="px-4 py-2 text-right">Credit</th>
@@ -55,7 +54,6 @@ export default function CustomerPortalPage() {
                 <tr key={i}>
                   <td className="px-4 py-2 whitespace-nowrap">{formatDate(entry.date)}</td>
                   <td className="px-4 py-2">{entry.ref}</td>
-                  <td className="px-4 py-2 text-gray-600">{entry.reference || '-'}</td>
                   <td className="px-4 py-2 text-gray-600 max-w-xs truncate">{entry.description}</td>
                   <td className="px-4 py-2 text-right text-red-600">{entry.debit > 0 ? formatNaira(entry.debit) : '-'}</td>
                   <td className="px-4 py-2 text-right text-green-600">{entry.credit > 0 ? formatNaira(entry.credit) : '-'}</td>
