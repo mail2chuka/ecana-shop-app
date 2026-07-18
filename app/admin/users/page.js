@@ -13,6 +13,7 @@ const ROLE_LABELS = {
 };
 
 const blankForm = { name: '', role: 'gsm_manager', email: '', username: '', phone: '', password: '', linkedCustomer: null };
+const blankPinForm = { currentPassword: '', newPin: '', confirmPin: '' };
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -24,6 +25,9 @@ export default function UsersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');
   const [showCustomerDrop, setShowCustomerDrop] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinForm, setPinForm] = useState(blankPinForm);
+  const [submittingPin, setSubmittingPin] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -86,6 +90,25 @@ export default function UsersPage() {
     }
   };
 
+  const handlePinSubmit = async (e) => {
+    e.preventDefault();
+    if (pinForm.newPin !== pinForm.confirmPin) return toast.error('PINs do not match');
+    setSubmittingPin(true);
+    try {
+      const r = await fetch('/api/users/pin', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: pinForm.currentPassword, newPin: pinForm.newPin }),
+      });
+      const d = await r.json();
+      if (d.success) { toast.success('PIN updated'); setShowPinModal(false); setPinForm(blankPinForm); }
+      else toast.error(d.error);
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong, please try again');
+    } finally {
+      setSubmittingPin(false);
+    }
+  };
+
   const toggleActive = async (u) => {
     if (!confirm(`${u.isActive ? 'Deactivate' : 'Reactivate'} ${u.name}?`)) return;
     const r = await fetch(`/api/users/${u._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive: !u.isActive }) });
@@ -96,7 +119,16 @@ export default function UsersPage() {
 
   return (
     <div>
-      <PageHeader title="Users" subtitle="Staff and customer logins" action={<button onClick={openCreate} className={btnPrimaryCls}>Add User</button>} />
+      <PageHeader
+        title="Users"
+        subtitle="Staff and customer logins"
+        action={
+          <div className="flex gap-2">
+            <button onClick={() => { setPinForm(blankPinForm); setShowPinModal(true); }} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Set/Change My PIN</button>
+            <button onClick={openCreate} className={btnPrimaryCls}>Add User</button>
+          </div>
+        }
+      />
 
       {loading ? <Loader /> : (
         <Card className="overflow-hidden">
@@ -213,6 +245,32 @@ export default function UsersPage() {
           </Field>
 
           <FormButtons onCancel={() => setShowModal(false)} submitting={submitting} />
+        </form>
+      </Modal>
+
+      <Modal open={showPinModal} onClose={() => setShowPinModal(false)} title="Set/Change My PIN">
+        <form onSubmit={handlePinSubmit} className="space-y-4">
+          <p className="text-sm text-gray-500">This 4-digit PIN is required to apply a surcharge or refund on a sale. It's separate from your login password.</p>
+          <Field label="Your current password" required>
+            <input type="password" value={pinForm.currentPassword} onChange={e => setPinForm({ ...pinForm, currentPassword: e.target.value })} className={inputCls} required />
+          </Field>
+          <Field label="New 4-digit PIN" required>
+            <input
+              type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
+              value={pinForm.newPin}
+              onChange={e => setPinForm({ ...pinForm, newPin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+              className={inputCls} required
+            />
+          </Field>
+          <Field label="Confirm new PIN" required>
+            <input
+              type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
+              value={pinForm.confirmPin}
+              onChange={e => setPinForm({ ...pinForm, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+              className={inputCls} required
+            />
+          </Field>
+          <FormButtons onCancel={() => setShowPinModal(false)} submitting={submittingPin} submitLabel="Save PIN" />
         </form>
       </Modal>
     </div>

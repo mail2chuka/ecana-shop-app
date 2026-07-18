@@ -59,7 +59,7 @@ export async function GET(request) {
       paymentMatch.date = dateRange;
     }
 
-    const [debtByMonth, surplusByMonth] = await Promise.all([
+    const [debtByMonth, surplusByMonth, adjustmentsByMonth] = await Promise.all([
       Sale.aggregate([
         { $match: saleMatch },
         { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$date' } }, total: { $sum: '$grandTotal' } } },
@@ -67,6 +67,14 @@ export async function GET(request) {
       CustomerPayment.aggregate([
         { $match: paymentMatch },
         { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$date' } }, total: { $sum: '$amount' } } },
+      ]),
+      // Surcharges/refunds move balance independently of the original sale — grouped by the month
+      // they were actually applied (adjustments.appliedAt), not the original sale's month.
+      Sale.aggregate([
+        { $match: { 'adjustments.0': { $exists: true } } },
+        { $unwind: '$adjustments' },
+        ...(dateRange ? [{ $match: { 'adjustments.appliedAt': dateRange } }] : []),
+        { $group: { _id: { month: { $dateToString: { format: '%Y-%m', date: '$adjustments.appliedAt' } }, type: '$adjustments.type' }, total: { $sum: '$adjustments.amount' } } },
       ]),
     ]);
 
@@ -78,6 +86,13 @@ export async function GET(request) {
       const existing = monthMap.get(row._id);
       if (existing) existing.surplusAdded = row.total;
       else monthMap.set(row._id, { month: row._id, debtAdded: 0, surplusAdded: row.total });
+    }
+    for (const row of adjustmentsByMonth) {
+      const month = row._id.month;
+      if (!monthMap.has(month)) monthMap.set(month, { month, debtAdded: 0, surplusAdded: 0 });
+      const entry = monthMap.get(month);
+      if (row._id.type === 'surcharge') entry.debtAdded += row.total;
+      else entry.surplusAdded += row.total;
     }
     const monthly = Array.from(monthMap.values())
       .map(m => ({ ...m, net: m.surplusAdded - m.debtAdded }))

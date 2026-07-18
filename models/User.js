@@ -7,6 +7,7 @@ const UserSchema = new mongoose.Schema({
   username: { type: String, unique: true, sparse: true, lowercase: true },
   phone: { type: String, unique: true, sparse: true, trim: true }, // customer-role login identifier
   password: { type: String, required: true, select: false }, // also doubles as the PIN for customer-role accounts
+  actionPin: { type: String, select: false }, // separate 4-digit PIN gating sensitive actions (e.g. surcharge/refund), admin sets/changes their own
   role: { type: String, enum: ['admin', 'gsm_manager', 'atc_manager', 'customer'], required: true, default: 'admin' },
   linkedCustomer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
   isActive: { type: Boolean, default: true },
@@ -15,8 +16,12 @@ const UserSchema = new mongoose.Schema({
 UserSchema.index({ role: 1, isActive: 1 });
 
 UserSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 10);
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+  if (this.isModified('actionPin') && this.actionPin) {
+    this.actionPin = await bcrypt.hash(this.actionPin, 10);
+  }
   next();
 });
 

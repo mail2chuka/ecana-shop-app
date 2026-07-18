@@ -115,6 +115,9 @@ export default function SalesPage() {
                       {s.editedAt && (
                         <p className="text-xs text-amber-600 font-normal" title={formatDate(s.editedAt)}>Edited by {s.editedByName}</p>
                       )}
+                      {(s.adjustments?.length || 0) > 0 && (
+                        <p className="text-xs text-amber-600 font-normal">Adjusted ({s.adjustments.length})</p>
+                      )}
                     </td>
                     <td className="px-4 py-3">{formatDate(s.date)}</td>
                     <td className="px-4 py-3">

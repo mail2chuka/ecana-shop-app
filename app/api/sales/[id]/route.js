@@ -55,6 +55,12 @@ export async function DELETE(request, { params }) {
       const customer = await Customer.findById(sale.customer).session(mongoSession);
       if (sale.saleType !== 'shop' && customer) {
         customer.balance += sale.grandTotal;
+        // Any surcharge/refund layered on top of this sale also moved balance independently —
+        // deleting the sale (and its embedded adjustments with it) must undo those too, or the
+        // customer is left with a permanent, invisible drift equal to the net adjustment amount.
+        for (const adj of sale.adjustments || []) {
+          customer.balance += adj.type === 'surcharge' ? adj.amount : -adj.amount;
+        }
         await customer.save({ session: mongoSession });
       }
 

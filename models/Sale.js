@@ -65,6 +65,21 @@ const SaleSchema = new mongoose.Schema({
   editedAt: Date,
   editedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   editedByName: String,
+
+  // Retroactive financial corrections applied after the sale was recorded. These never mutate
+  // subtotal/grandTotal above (which stay as the historical record of what was actually sold) —
+  // each adjustment is its own dated, reason-tagged entry that separately moves the customer's balance.
+  adjustments: [{
+    type: { type: String, enum: ['surcharge', 'refund'], required: true },
+    method: String, // surcharge: 'per_unit' | 'flat_total' | 'transport'; refund: 'shortfall'
+    amount: { type: Number, required: true },
+    reason: { type: String, required: true },
+    appliedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    appliedByName: String,
+    appliedAt: { type: Date, default: Date.now },
+    balanceBefore: Number,
+    balanceAfter: Number,
+  }],
 }, { timestamps: true });
 
 SaleSchema.index({ customer: 1, date: -1 });

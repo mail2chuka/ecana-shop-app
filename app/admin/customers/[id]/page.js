@@ -211,7 +211,7 @@ export default function CustomerDetailPage() {
                 <tr key={i}>
                   <td className="px-4 py-2 whitespace-nowrap">{formatDate(entry.date)}</td>
                   <td className="px-4 py-2">
-                    {entry.type === 'sale'
+                    {entry.type === 'sale' || entry.type === 'surcharge' || entry.type === 'refund'
                       ? <Link href={`/admin/sales/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
                       : <button onClick={() => setSelectedPayment(entry)} className={`${tableActionCls} hover:underline text-left`}>{entry.ref}</button>}
                   </td>
