@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Customer from '@/models/Customer';
+import Sale from '@/models/Sale';
+import CustomerPayment from '@/models/CustomerPayment';
 
 export async function GET(request) {
   try {
@@ -33,7 +35,35 @@ export async function GET(request) {
     );
     totals.net = totals.totalCredit - totals.totalOwed;
 
-    return NextResponse.json({ success: true, data: { customers, totals } });
+    // Monthly summary: new debt incurred (credit sales) vs. surplus received (payments) per calendar
+    // month. This is an activity total, not a reconstructed point-in-time balance — the app doesn't
+    // keep historical month-end balance snapshots, and each customer's balance already folds in
+    // whatever opening balance they started with, so replaying transactions can't reliably
+    // reproduce a true historical total. Activity per month is what can be computed honestly.
+    const [debtByMonth, surplusByMonth] = await Promise.all([
+      Sale.aggregate([
+        { $match: { status: 'active', saleType: { $ne: 'shop' } } },
+        { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$date' } }, total: { $sum: '$grandTotal' } } },
+      ]),
+      CustomerPayment.aggregate([
+        { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$date' } }, total: { $sum: '$amount' } } },
+      ]),
+    ]);
+
+    const monthMap = new Map();
+    for (const row of debtByMonth) {
+      monthMap.set(row._id, { month: row._id, debtAdded: row.total, surplusAdded: 0 });
+    }
+    for (const row of surplusByMonth) {
+      const existing = monthMap.get(row._id);
+      if (existing) existing.surplusAdded = row.total;
+      else monthMap.set(row._id, { month: row._id, debtAdded: 0, surplusAdded: row.total });
+    }
+    const monthly = Array.from(monthMap.values())
+      .map(m => ({ ...m, net: m.surplusAdded - m.debtAdded }))
+      .sort((a, b) => b.month.localeCompare(a.month));
+
+    return NextResponse.json({ success: true, data: { customers, totals, monthly } });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

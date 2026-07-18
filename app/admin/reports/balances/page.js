@@ -5,6 +5,11 @@ import Link from 'next/link';
 import { formatNaira } from '@/lib/format';
 import { tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
 
+const formatMonth = (ym) => {
+  const [y, m] = ym.split('-').map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+};
+
 export default function BalancesReportPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -40,6 +45,39 @@ export default function BalancesReportPage() {
           </p>
         </div>
       </div>
+
+      {(data?.monthly?.length || 0) > 0 && (
+        <div className="bg-white border rounded-lg overflow-hidden mb-6">
+          <div className="px-4 py-3 border-b">
+            <h2 className="font-semibold text-sm">Monthly Summary</h2>
+            <p className="text-xs text-gray-500 mt-0.5">New debt incurred vs. payments received each month — not a running balance.</p>
+          </div>
+          <div className={tableScrollCls}>
+            <table className="w-full text-sm">
+              <thead className={theadCls}>
+                <tr>
+                  <th className="px-4 py-2 text-left font-medium">Month</th>
+                  <th className="px-4 py-2 text-right font-medium">Debt Added</th>
+                  <th className="px-4 py-2 text-right font-medium">Surplus Added</th>
+                  <th className="px-4 py-2 text-right font-medium">Net</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {data.monthly.map(m => (
+                  <tr key={m.month} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 font-medium">{formatMonth(m.month)}</td>
+                    <td className="px-4 py-2 text-right text-red-600">{formatNaira(m.debtAdded)}</td>
+                    <td className="px-4 py-2 text-right text-green-600">{formatNaira(m.surplusAdded)}</td>
+                    <td className={`px-4 py-2 text-right font-medium ${m.net < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {formatNaira(m.net)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white border rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b flex gap-2">
