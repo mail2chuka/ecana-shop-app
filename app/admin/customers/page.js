@@ -39,6 +39,10 @@ export default function CustomersPage() {
 
   const openCreate = () => { setForm(blankForm); setShowModal(true); };
 
+  const totalDebt = -customers.filter(c => c.balance < 0).reduce((s, c) => s + c.balance, 0);
+  const totalSurplus = customers.filter(c => c.balance > 0).reduce((s, c) => s + c.balance, 0);
+  const net = totalSurplus - totalDebt;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -66,6 +70,21 @@ export default function CustomersPage() {
         subtitle="Customer profiles and balances"
         action={<button onClick={openCreate} className={btnPrimaryCls}>Add Customer</button>}
       />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="rounded-lg p-4 bg-red-50 border border-red-200">
+          <p className="text-sm text-gray-600">Total Debt</p>
+          <p className="text-2xl font-bold text-red-600">{formatNaira(totalDebt)}</p>
+        </div>
+        <div className="rounded-lg p-4 bg-green-50 border border-green-200">
+          <p className="text-sm text-gray-600">Total Surplus</p>
+          <p className="text-2xl font-bold text-green-700">{formatNaira(totalSurplus)}</p>
+        </div>
+        <div className={`rounded-lg p-4 ${net < 0 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+          <p className="text-sm text-gray-600">Net (Surplus − Debt)</p>
+          <p className={`text-2xl font-bold ${net < 0 ? 'text-red-600' : 'text-green-700'}`}>{formatNaira(net)}</p>
+        </div>
+      </div>
 
       <div className="mb-4 flex flex-wrap gap-3 items-center">
         <input
