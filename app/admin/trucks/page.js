@@ -144,8 +144,11 @@ export default function TrucksPage() {
       <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Truck' : 'Add Truck'}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Field label="Plate number" required>
-            <input type="text" value={form.plateNumber} onChange={e => setForm({ ...form, plateNumber: e.target.value.toUpperCase() })} className={inputCls} required disabled={editing} />
+            <input type="text" value={form.plateNumber} onChange={e => setForm({ ...form, plateNumber: e.target.value.toUpperCase() })} className={inputCls} required />
           </Field>
+          {editing && (
+            <p className="text-xs text-gray-500 -mt-2">Changing this only updates the truck's own record — past ATCs, sales, and reports keep whatever plate number was recorded at the time.</p>
+          )}
           <Field label="Driver name" required>
             <input type="text" value={form.driverName} onChange={e => setForm({ ...form, driverName: e.target.value })} className={inputCls} required />
           </Field>

@@ -35,7 +35,16 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: `Truck ${before.plateNumber} can't be edited — ${busyReason}` }, { status: 400 });
     }
 
+    if (body.plateNumber) {
+      const newPlate = body.plateNumber.trim().toUpperCase();
+      if (newPlate !== before.plateNumber) {
+        const duplicate = await Truck.findOne({ plateNumber: newPlate, _id: { $ne: id } });
+        if (duplicate) return NextResponse.json({ error: `${newPlate} is already registered to another truck` }, { status: 400 });
+      }
+    }
+
     const update = {
+      plateNumber: body.plateNumber ? body.plateNumber.trim().toUpperCase() : undefined,
       driverName: body.driverName,
       driverPhone: body.driverPhone,
       type: body.type,
