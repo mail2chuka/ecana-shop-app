@@ -14,6 +14,7 @@ import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
 import { generateQuarryReferenceNumber } from '@/lib/quarryReference';
 import { isShopCustomer } from '@/lib/shopStock';
+import { can } from '@/lib/permissions';
 import { ApiError } from '@/lib/apiError';
 
 const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
@@ -65,7 +66,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== 'admin') {
+  if (!session || !can(session.user.role, 'sales.create')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   await dbConnect();

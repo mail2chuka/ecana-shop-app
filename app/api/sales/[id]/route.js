@@ -13,6 +13,8 @@ import ShopProduct from '@/models/ShopProduct';
 import { logAudit } from '@/lib/audit';
 import { generateQuarryReferenceNumber } from '@/lib/quarryReference';
 import { isShopCustomer } from '@/lib/shopStock';
+import { can } from '@/lib/permissions';
+import { isSameCalendarDay } from '@/lib/dayLock';
 import { ApiError } from '@/lib/apiError';
 
 const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
@@ -101,7 +103,7 @@ export async function DELETE(request, { params }) {
 
 export async function PUT(request, { params }) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== 'admin') {
+  if (!session || !can(session.user.role, 'sales.edit')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   await dbConnect();
@@ -121,6 +123,9 @@ export async function PUT(request, { params }) {
       const sale = await Sale.findById(id).session(mongoSession);
       if (!sale) throw new ApiError('Not found', 404);
       if (sale.status === 'cancelled') throw new ApiError('Cannot edit a cancelled sale', 400);
+      if (session.user.role !== 'admin' && !isSameCalendarDay(sale.date, new Date())) {
+        throw new ApiError('Only same-day sales can be edited', 403);
+      }
 
       const isShopSale = sale.saleType === 'shop';
       if (isShopSale && !['cash', 'transfer', 'pos', 'cheque'].includes(paymentMethod)) {

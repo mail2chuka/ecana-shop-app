@@ -129,12 +129,13 @@ export default function PaymentsPage() {
               <th className="px-4 py-3 text-left font-medium">Customer</th>
               <th className="px-4 py-3 text-left font-medium">Method</th>
               <th className="px-4 py-3 text-left font-medium">Depositor</th>
+              <th className="px-4 py-3 text-left font-medium">Reference</th>
               <th className="px-4 py-3 text-right font-medium">Amount</th>
               <th className="px-4 py-3 text-right font-medium">New Balance</th>
             </tr>
           </thead>
           <tbody className="divide-y">
-            {payments.length === 0 && <EmptyRow colSpan={6} text="No payments yet" />}
+            {payments.length === 0 && <EmptyRow colSpan={7} text="No payments yet" />}
             {payments.map(p => (
               <tr key={p._id}>
                 <td className="px-4 py-3">{formatDate(p.date)}</td>
@@ -143,6 +144,7 @@ export default function PaymentsPage() {
                 </td>
                 <td className="px-4 py-3 capitalize">{p.method === 'transfer' ? 'Bank Transfer' : p.method} {p.bankName ? `(${p.bankName})` : ''}</td>
                 <td className="px-4 py-3 text-gray-600">{p.depositorName || '-'}</td>
+                <td className="px-4 py-3 text-gray-600">{p.reference || '-'}</td>
                 <td className="px-4 py-3 text-right font-medium text-green-600">{formatNaira(p.amount)}</td>
                 <td className="px-4 py-3 text-right">{formatNaira(p.balanceAfter)}</td>
               </tr>

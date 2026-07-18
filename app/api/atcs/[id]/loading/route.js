@@ -6,6 +6,7 @@ import ATC from '@/models/ATC';
 import { logAudit } from '@/lib/audit';
 import { requireObjectId } from '@/lib/validate';
 import { LOADING_WINDOW_MS } from '@/lib/atcLifecycle';
+import { can } from '@/lib/permissions';
 
 const loadingChoices = new Set([
   'just_loaded',
@@ -20,7 +21,7 @@ const loadingChoices = new Set([
 export async function POST(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || !can(session.user.role, 'atcs.loading')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
 
     const { id } = await params;

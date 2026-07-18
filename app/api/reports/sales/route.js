@@ -44,6 +44,7 @@ export async function GET(request) {
           _id: { period: { $dateToString: { format: dateFormat, date: '$date' } }, saleType: '$saleType' },
           total: { $sum: '$grandTotal' },
           count: { $sum: 1 },
+          quantity: { $sum: '$items.billQuantity' },
         },
       },
       { $sort: { '_id.period': sortDir } },

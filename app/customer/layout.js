@@ -1,0 +1,46 @@
+'use client';
+
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { Logo } from '@/components/ui';
+import { FiLogOut } from 'react-icons/fi';
+
+export default function CustomerLayout({ children }) {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === 'loading') return;
+    if (!session) router.replace('/');
+    else if (session.user.role !== 'customer') router.replace('/');
+  }, [session, status, router]);
+
+  if (status === 'loading' || !session || session.user.role !== 'customer') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-gray-800 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <header className="bg-emerald-950 text-white">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+          <span className="flex items-center gap-2 font-bold tracking-wide">
+            <Logo className="h-7 w-7" />
+            GS&amp;M
+          </span>
+          <button
+            onClick={() => signOut({ callbackUrl: '/' })}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-800 hover:bg-green-900 rounded-md"
+          >
+            <FiLogOut size={14} /> Sign Out
+          </button>
+        </div>
+      </header>
+      <main className="max-w-3xl mx-auto px-4 py-6">{children}</main>
+    </div>
+  );
+}

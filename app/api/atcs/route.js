@@ -9,6 +9,7 @@ import Supplier from '@/models/Supplier';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
 import { autoArriveDueAtcs } from '@/lib/atcLifecycle';
+import { can } from '@/lib/permissions';
 
 export async function GET(request) {
   try {
@@ -69,7 +70,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || !can(session.user.role, 'atcs.create')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const body = await request.json();
     const { atcNumber, cementBrand, atcDate, bagsPaidFor, notes } = body;

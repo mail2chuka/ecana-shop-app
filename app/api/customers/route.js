@@ -5,6 +5,7 @@ import dbConnect from '@/lib/db';
 import Customer from '@/models/Customer';
 import { logAudit } from '@/lib/audit';
 import { generateCustomerId } from '@/lib/customerId';
+import { can } from '@/lib/permissions';
 
 export async function GET(request) {
   try {
@@ -31,7 +32,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || !can(session.user.role, 'customers.create')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const body = await request.json();
     if (!body.name || !body.phone) return NextResponse.json({ error: 'Name and phone required' }, { status: 400 });

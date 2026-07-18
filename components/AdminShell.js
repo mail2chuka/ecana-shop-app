@@ -6,36 +6,53 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { FiMenu, FiX, FiLogOut, FiArrowLeft, FiSearch } from 'react-icons/fi';
 import { Logo } from '@/components/ui';
+import { STAFF_ROLES } from '@/lib/permissions';
+import toast from 'react-hot-toast';
+
+// Non-admin staff roles are restricted to these path prefixes; the dashboard ('/admin' exactly) is always allowed.
+const ROLE_ALLOWED_PREFIXES = {
+  gsm_manager: ['/admin/customers', '/admin/sales', '/admin/shop', '/admin/payments', '/admin/reports'],
+  atc_manager: ['/admin/atcs'],
+};
+
+function isPathAllowed(role, pathname) {
+  if (role === 'admin') return true;
+  if (pathname === '/admin') return true;
+  const prefixes = ROLE_ALLOWED_PREFIXES[role] || [];
+  return prefixes.some((prefix) => pathname.startsWith(prefix));
+}
 
 // Sidebar nav links get their own dedicated class set — distinct from table-action and page-button classes.
 const navLinkCls = 'block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors bg-amber-700 text-neutral-100 border-amber-800 hover:bg-amber-600 hover:text-white';
 const navLinkActiveCls = 'block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors bg-amber-900 text-white border-amber-950 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]';
 
+// `allow` lists which roles see the item; omitted = all staff roles (admin, gsm_manager, atc_manager).
 const menu = [
   { label: 'Dashboard', href: '/admin' },
   {
     group: 'Setup',
     items: [
-      { label: 'Quarry', href: '/admin/suppliers' },
-      { label: 'Cement Brands', href: '/admin/cement-brands' },
-      { label: 'Aggregate', href: '/admin/stonedust' },
-      { label: 'Trucks', href: '/admin/trucks' },
-      { label: 'Customers', href: '/admin/customers' },
+      { label: 'Quarry', href: '/admin/suppliers', allow: ['admin'] },
+      { label: 'Cement Brands', href: '/admin/cement-brands', allow: ['admin'] },
+      { label: 'Aggregate', href: '/admin/stonedust', allow: ['admin'] },
+      { label: 'Trucks', href: '/admin/trucks', allow: ['admin'] },
+      { label: 'Customers', href: '/admin/customers', allow: ['admin', 'gsm_manager'] },
     ],
   },
   {
     group: 'Operations',
     items: [
-      { label: 'ATCs', href: '/admin/atcs' },
-      { label: 'Sales', href: '/admin/sales' },
-      { label: 'New Cement Sale', href: '/admin/sales/new/cement' },
-      { label: 'New Aggregate Sale', href: '/admin/sales/new/stonedust' },
-      { label: 'Shop', href: '/admin/shop' },
-      { label: 'Customer Payments', href: '/admin/payments' },
+      { label: 'ATCs', href: '/admin/atcs', allow: ['admin', 'atc_manager'] },
+      { label: 'Sales', href: '/admin/sales', allow: ['admin', 'gsm_manager'] },
+      { label: 'New Cement Sale', href: '/admin/sales/new/cement', allow: ['admin', 'gsm_manager'] },
+      { label: 'New Aggregate Sale', href: '/admin/sales/new/stonedust', allow: ['admin', 'gsm_manager'] },
+      { label: 'Shop', href: '/admin/shop', allow: ['admin', 'gsm_manager'] },
+      { label: 'Customer Payments', href: '/admin/payments', allow: ['admin', 'gsm_manager'] },
     ],
   },
   {
     group: 'Reports',
+    allow: ['admin', 'gsm_manager'],
     items: [
       { label: 'Sales Report', href: '/admin/reports/sales' },
       { label: 'Customer Balances', href: '/admin/reports/balances' },
@@ -45,7 +62,8 @@ const menu = [
       { label: 'Truck Utilization', href: '/admin/reports/trucks' },
     ],
   },
-  { label: 'Audit Log', href: '/admin/audit-log' },
+  { label: 'Users', href: '/admin/users', allow: ['admin'] },
+  { label: 'Audit Log', href: '/admin/audit-log', allow: ['admin'] },
 ];
 
 export default function AdminShell({ children }) {
@@ -62,8 +80,16 @@ export default function AdminShell({ children }) {
   useEffect(() => {
     if (status === 'loading') return;
     if (!session) router.replace('/');
-    else if (session.user.role !== 'admin') router.replace('/');
+    else if (!STAFF_ROLES.includes(session.user.role)) router.replace('/');
   }, [session, status, router]);
+
+  useEffect(() => {
+    if (status === 'loading' || !session) return;
+    if (!isPathAllowed(session.user.role, pathname)) {
+      toast.error('Not authorized for that page');
+      router.replace('/admin');
+    }
+  }, [session, status, pathname, router]);
 
   useEffect(() => {
     setSearchOpen(false);
@@ -105,7 +131,21 @@ export default function AdminShell({ children }) {
       </div>
     );
   }
-  if (session.user.role !== 'admin') return null;
+  if (!STAFF_ROLES.includes(session.user.role)) return null;
+  if (!isPathAllowed(session.user.role, pathname)) return null;
+
+  const role = session.user.role;
+  const itemAllowed = (item) => !item.allow || item.allow.includes(role);
+  const visibleMenu = menu
+    .map((entry) => {
+      if (entry.group) {
+        if (entry.allow && !entry.allow.includes(role)) return null;
+        const items = entry.items.filter(itemAllowed);
+        return items.length > 0 ? { ...entry, items } : null;
+      }
+      return itemAllowed(entry) ? entry : null;
+    })
+    .filter(Boolean);
 
   const renderItem = (item) => (
     <Link
@@ -163,7 +203,7 @@ export default function AdminShell({ children }) {
         </div>
 
         <nav className="flex-1 min-h-0 overflow-y-auto p-3 space-y-1">
-          {menu.map((entry, i) => {
+          {visibleMenu.map((entry) => {
             if (entry.group) {
               return (
                 <div key={entry.group} className="pt-3">

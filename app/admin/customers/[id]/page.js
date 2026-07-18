@@ -197,6 +197,7 @@ export default function CustomerDetailPage() {
               <tr>
                 <th className="px-4 py-2 text-left">Date</th>
                 <th className="px-4 py-2 text-left">Ref</th>
+                <th className="px-4 py-2 text-left">Reference</th>
                 <th className="px-4 py-2 text-left">Description</th>
                 <th className="px-4 py-2 text-right">Debit</th>
                 <th className="px-4 py-2 text-right">Credit</th>
@@ -212,6 +213,7 @@ export default function CustomerDetailPage() {
                       ? <Link href={`/admin/sales/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
                       : <button onClick={() => setSelectedPayment(entry)} className={`${tableActionCls} hover:underline text-left`}>{entry.ref}</button>}
                   </td>
+                  <td className="px-4 py-2 text-gray-600">{entry.reference || '-'}</td>
                   <td className="px-4 py-2 text-gray-600 max-w-xs truncate">{entry.description}</td>
                   <td className="px-4 py-2 text-right text-red-600">{entry.debit > 0 ? formatNaira(entry.debit) : '-'}</td>
                   <td className="px-4 py-2 text-right text-green-600">{entry.credit > 0 ? formatNaira(entry.credit) : '-'}</td>

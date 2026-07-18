@@ -5,11 +5,12 @@ import dbConnect from '@/lib/db';
 import ATC from '@/models/ATC';
 import Truck from '@/models/Truck';
 import { logAudit } from '@/lib/audit';
+import { can } from '@/lib/permissions';
 
 export async function POST(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || !can(session.user.role, 'atcs.assign')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { id } = await params;
     const { truckId } = await request.json();

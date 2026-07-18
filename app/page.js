@@ -15,7 +15,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      router.replace(`/${session.user.role}`);
+      router.replace(session.user.role === 'customer' ? '/customer' : '/admin');
     }
   }, [status, session, router]);
 
@@ -51,7 +51,7 @@ export default function LandingPage() {
             <p className="text-sm text-gray-500 mb-6">Access your account</p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Email or Username</label>
+                <label className="block text-sm font-medium mb-1">Email, Username, or Phone</label>
                 <input
                   type="text"
                   value={emailOrUsername}

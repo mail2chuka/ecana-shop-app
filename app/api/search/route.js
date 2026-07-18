@@ -7,6 +7,7 @@ import User from '@/models/User';
 import ShopProduct from '@/models/ShopProduct';
 import StoneDustProduct from '@/models/StoneDustProduct';
 import CementBrand from '@/models/CementBrand';
+import { STAFF_ROLES } from '@/lib/permissions';
 
 const quickLinks = [
   { label: 'Dashboard', href: '/admin', group: 'Link' },
@@ -36,7 +37,7 @@ function escapeRegex(value) {
 export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
+    if (!session || !STAFF_ROLES.includes(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
