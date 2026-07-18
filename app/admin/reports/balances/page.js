@@ -14,16 +14,21 @@ export default function BalancesReportPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [monthFrom, setMonthFrom] = useState('');
+  const [monthTo, setMonthTo] = useState('');
 
   const fetchData = async () => {
     setLoading(true);
-    const res = await fetch(`/api/reports/balances?filter=${filter}`);
+    const params = new URLSearchParams({ filter });
+    if (monthFrom) params.set('monthFrom', monthFrom);
+    if (monthTo) params.set('monthTo', monthTo);
+    const res = await fetch(`/api/reports/balances?${params.toString()}`);
     const d = await res.json();
     if (d.success) setData(d.data);
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [filter]);
+  useEffect(() => { fetchData(); }, [filter, monthFrom, monthTo]);
 
   return (
     <div>
@@ -46,12 +51,29 @@ export default function BalancesReportPage() {
         </div>
       </div>
 
-      {(data?.monthly?.length || 0) > 0 && (
-        <div className="bg-white border rounded-lg overflow-hidden mb-6">
-          <div className="px-4 py-3 border-b">
+      <div className="bg-white border rounded-lg overflow-hidden mb-6">
+        <div className="px-4 py-3 border-b flex flex-wrap items-end gap-3">
+          <div>
             <h2 className="font-semibold text-sm">Monthly Summary</h2>
             <p className="text-xs text-gray-500 mt-0.5">New debt incurred vs. payments received each month — not a running balance.</p>
           </div>
+          <div className="flex items-end gap-2 ml-auto">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
+              <input type="month" value={monthFrom} onChange={e => setMonthFrom(e.target.value)} className="px-2 py-1 border rounded text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
+              <input type="month" value={monthTo} onChange={e => setMonthTo(e.target.value)} className="px-2 py-1 border rounded text-sm" />
+            </div>
+            {(monthFrom || monthTo) && (
+              <button onClick={() => { setMonthFrom(''); setMonthTo(''); }} className="text-sm text-gray-500 hover:underline px-2 py-1">
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+        {(data?.monthly?.length || 0) > 0 ? (
           <div className={tableScrollCls}>
             <table className="w-full text-sm">
               <thead className={theadCls}>
@@ -76,8 +98,10 @@ export default function BalancesReportPage() {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        ) : (
+          !loading && <p className="text-center py-8 text-gray-500">No activity in this range</p>
+        )}
+      </div>
 
       <div className="bg-white border rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b flex gap-2">

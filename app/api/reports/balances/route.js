@@ -13,6 +13,8 @@ export async function GET(request) {
     await dbConnect();
     const { searchParams } = new URL(request.url);
     const filter = searchParams.get('filter') || 'all';
+    const monthFrom = searchParams.get('monthFrom'); // 'YYYY-MM'
+    const monthTo = searchParams.get('monthTo'); // 'YYYY-MM'
 
     const query = { isActive: true };
     if (filter === 'negative') query.balance = { $lt: 0 };
@@ -40,12 +42,30 @@ export async function GET(request) {
     // keep historical month-end balance snapshots, and each customer's balance already folds in
     // whatever opening balance they started with, so replaying transactions can't reliably
     // reproduce a true historical total. Activity per month is what can be computed honestly.
+    let dateRange;
+    if (monthFrom || monthTo) {
+      dateRange = {};
+      if (monthFrom) dateRange.$gte = new Date(`${monthFrom}-01T00:00:00.000Z`);
+      if (monthTo) {
+        const [y, m] = monthTo.split('-').map(Number);
+        dateRange.$lte = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
+      }
+    }
+
+    const saleMatch = { status: 'active', saleType: { $ne: 'shop' } };
+    const paymentMatch = {};
+    if (dateRange) {
+      saleMatch.date = dateRange;
+      paymentMatch.date = dateRange;
+    }
+
     const [debtByMonth, surplusByMonth] = await Promise.all([
       Sale.aggregate([
-        { $match: { status: 'active', saleType: { $ne: 'shop' } } },
+        { $match: saleMatch },
         { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$date' } }, total: { $sum: '$grandTotal' } } },
       ]),
       CustomerPayment.aggregate([
+        { $match: paymentMatch },
         { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$date' } }, total: { $sum: '$amount' } } },
       ]),
     ]);
