@@ -23,6 +23,7 @@ const ATCSchema = new mongoose.Schema({
   loadedAt: Date,
   arrivalDate: Date,
   deliveryDate: Date,
+  closedDate: Date,
   notes: String,
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   createdByName: String,

@@ -124,7 +124,10 @@ export async function POST(request) {
           }
 
           atc.bagsRemaining -= actualQty;
-          if (atc.bagsRemaining === 0) atc.status = 'closed';
+          if (atc.bagsRemaining === 0) {
+            atc.status = 'closed';
+            atc.closedDate = date ? new Date(date) : new Date();
+          }
           await atc.save({ session: mongoSession });
 
           if (isShopCustomer(customer)) {

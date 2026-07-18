@@ -196,16 +196,15 @@ export default function ATCsPage() {
 
       <Card className="overflow-hidden">
         <div className={tableScrollCls}>
-          <table className="w-full text-sm min-w-[1080px]">
+          <table className="w-full text-sm min-w-[1000px]">
             <thead className={theadCls}>
               <tr>
                 <th className="px-4 py-3 text-left font-medium">ATC #</th>
                 <th className="px-4 py-3 text-left font-medium">Date</th>
                 <th className="px-3 py-3 text-left font-medium">Assigned Date</th>
-                <th className="px-3 py-3 text-left font-medium">Delivery Date</th>
+                <th className="px-3 py-3 text-left font-medium">Closed Date</th>
                 <th className="px-4 py-3 text-right font-medium">Remaining</th>
                 <th className="px-3 py-3 text-left font-medium">Qty Supplied</th>
-                <th className="px-3 py-3 text-left font-medium">Supplied On</th>
                 <th className="px-3 py-3 text-left font-medium">Ref</th>
                 <th className="px-3 py-3 text-left font-medium">Truck</th>
                 <th className="px-3 py-3 text-left font-medium">Status</th>
@@ -213,17 +212,16 @@ export default function ATCsPage() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {atcs.length === 0 && <EmptyRow colSpan={11} text="No ATCs" />}
+              {atcs.length === 0 && <EmptyRow colSpan={10} text="No ATCs" />}
               {atcs.map(a => {
                 const supplies = a.supplies || [];
-                const deliveryDate = a.deliveryDate || a.arrivalDate;
 
                 return (
                   <tr key={a._id}>
                     <td className="px-4 py-3 font-medium">{formatAtcNumber(a, brands)}</td>
                     <td className="px-4 py-3">{formatDate(a.atcDate)}</td>
                     <td className="px-3 py-3">{a.assignedDate ? formatDate(a.assignedDate) : '-'}</td>
-                    <td className="px-3 py-3">{deliveryDate ? formatDate(deliveryDate) : '-'}</td>
+                    <td className="px-3 py-3">{a.closedDate ? formatDate(a.closedDate) : '-'}</td>
                     <td className="px-4 py-3 text-right font-medium whitespace-nowrap">{formatQtyRatio(formatNumber(a.bagsRemaining), formatNumber(a.bagsPaidFor))}</td>
                     <td className="px-3 py-3 align-top">
                       {supplies.length > 0 ? (
@@ -231,17 +229,6 @@ export default function ATCsPage() {
                           {supplies.map((s, idx) => (
                             <div key={`${a._id}-qty-${idx}`} className="whitespace-nowrap">
                               {formatNumber(s.qtySupplied)}
-                            </div>
-                          ))}
-                        </div>
-                      ) : '-'}
-                    </td>
-                    <td className="px-3 py-3 align-top">
-                      {supplies.length > 0 ? (
-                        <div className="space-y-1 text-xs">
-                          {supplies.map((s, idx) => (
-                            <div key={`${a._id}-suppliedon-${idx}`} className="whitespace-nowrap">
-                              {s.saleDate ? formatDate(s.saleDate) : '-'}
                             </div>
                           ))}
                         </div>

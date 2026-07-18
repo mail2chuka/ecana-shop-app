@@ -63,7 +63,10 @@ export async function DELETE(request, { params }) {
           const atc = await ATC.findById(item.atc).session(mongoSession);
           if (atc) {
             atc.bagsRemaining += item.actualQuantity;
-            if (atc.status === 'closed' && atc.bagsRemaining > 0) atc.status = 'arrived';
+            if (atc.status === 'closed' && atc.bagsRemaining > 0) {
+              atc.status = 'arrived';
+              atc.closedDate = undefined;
+            }
             await atc.save({ session: mongoSession });
           }
           if (isShopCustomer(customer)) {
@@ -141,7 +144,10 @@ export async function PUT(request, { params }) {
           const atc = await ATC.findById(oldItem.atc).session(mongoSession);
           if (atc) {
             atc.bagsRemaining += oldItem.actualQuantity;
-            if (atc.status === 'closed' && atc.bagsRemaining > 0) atc.status = 'arrived';
+            if (atc.status === 'closed' && atc.bagsRemaining > 0) {
+              atc.status = 'arrived';
+              atc.closedDate = undefined;
+            }
             await atc.save({ session: mongoSession });
           }
           if (isShopCustomer(customer)) {
@@ -193,7 +199,10 @@ export async function PUT(request, { params }) {
             throw new ApiError(`Only ${atc.bagsRemaining} bags remaining on ATC ${atc.atcNumber}`, 400);
           }
           atc.bagsRemaining -= actualQty;
-          if (atc.bagsRemaining === 0) atc.status = 'closed';
+          if (atc.bagsRemaining === 0) {
+            atc.status = 'closed';
+            atc.closedDate = date ? new Date(date) : sale.date;
+          }
           await atc.save({ session: mongoSession });
 
           if (isShopCustomer(customer)) {
