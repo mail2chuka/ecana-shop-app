@@ -146,6 +146,7 @@ export default function SalesReportPage() {
                   <th className="px-4 py-2 text-right font-medium">Transactions</th>
                   <th className="px-4 py-2 text-right font-medium">Quantity</th>
                   <th className="px-4 py-2 text-right font-medium">Rate</th>
+                  <th className="px-4 py-2 text-right font-medium">Transport</th>
                   <th className="px-4 py-2 text-right font-medium">Total</th>
                 </tr>
               </thead>
@@ -162,8 +163,9 @@ export default function SalesReportPage() {
                       <td className="px-4 py-2 text-right">
                         <Link href={href} className={`${tableActionCls} hover:underline`}>{row.count}</Link>
                       </td>
-                      <td className="px-4 py-2 text-right">{row.quantity}</td>
-                      <td className="px-4 py-2 text-right">{row.quantity > 0 ? formatNaira(row.total / row.quantity) : '-'}</td>
+                      <td className="px-4 py-2 text-right">{row.quantity || 0}</td>
+                      <td className="px-4 py-2 text-right">{row.quantity > 0 ? formatNaira(row.subtotal / row.quantity) : '-'}</td>
+                      <td className="px-4 py-2 text-right">{formatNaira(row.transport || 0)}</td>
                       <td className="px-4 py-2 text-right font-medium">{formatNaira(row.total)}</td>
                     </tr>
                   );

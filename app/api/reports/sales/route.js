@@ -39,12 +39,22 @@ export async function GET(request) {
 
     const grouped = await Sale.aggregate([
       { $match: match },
+      // $sum as a $group accumulator expects a per-document scalar — it won't reach into the
+      // `items` array on its own, so the per-sale quantity/transport totals are computed here
+      // first (where $sum is used as an expression operator, which does sum array elements).
+      {
+        $addFields: {
+          _saleQty: { $sum: '$items.billQuantity' },
+        },
+      },
       {
         $group: {
           _id: { period: { $dateToString: { format: dateFormat, date: '$date' } }, saleType: '$saleType' },
           total: { $sum: '$grandTotal' },
+          subtotal: { $sum: '$subtotal' },
           count: { $sum: 1 },
-          quantity: { $sum: '$items.billQuantity' },
+          quantity: { $sum: '$_saleQty' },
+          transport: { $sum: '$transportFee' },
         },
       },
       { $sort: { '_id.period': sortDir } },
