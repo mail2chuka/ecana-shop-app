@@ -13,9 +13,8 @@ export async function GET(request) {
     const filter = searchParams.get('filter') || 'all';
 
     const query = { isActive: true };
-    if (filter === 'owing') query.balance = { $lt: 0 };
-    else if (filter === 'credit') query.balance = { $gt: 0 };
-    else if (filter === 'zero') query.balance = 0;
+    if (filter === 'negative') query.balance = { $lt: 0 };
+    else if (filter === 'positive') query.balance = { $gt: 0 };
 
     const customers = await Customer.find(query).sort({ balance: 1 });
 
@@ -32,6 +31,7 @@ export async function GET(request) {
       },
       { totalOwed: 0, totalCredit: 0, owingCount: 0, creditCount: 0, zeroCount: 0 }
     );
+    totals.net = totals.totalCredit - totals.totalOwed;
 
     return NextResponse.json({ success: true, data: { customers, totals } });
   } catch (e) {

@@ -24,14 +24,20 @@ export default function BalancesReportPage() {
     <div>
       <h1 className="text-xl font-bold mb-6">Customer Balances</h1>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-xs text-gray-500">Total Owed to You</p>
-          <p className="text-xl font-bold text-red-600 mt-1">{formatNaira(data?.totalOwed || 0)}</p>
+          <p className="text-xl font-bold text-red-600 mt-1">{formatNaira(data?.totals?.totalOwed || 0)}</p>
         </div>
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <p className="text-xs text-gray-500">Total Customer Credit</p>
-          <p className="text-xl font-bold text-green-600 mt-1">{formatNaira(data?.totalCredit || 0)}</p>
+          <p className="text-xl font-bold text-green-600 mt-1">{formatNaira(data?.totals?.totalCredit || 0)}</p>
+        </div>
+        <div className={`rounded-lg p-4 border ${(data?.totals?.net || 0) < 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+          <p className="text-xs text-gray-500">Net (Credit − Owed)</p>
+          <p className={`text-xl font-bold mt-1 ${(data?.totals?.net || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+            {formatNaira(data?.totals?.net || 0)}
+          </p>
         </div>
       </div>
 
