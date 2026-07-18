@@ -198,6 +198,9 @@ export default function CustomerDetailPage() {
                 <th className="px-4 py-2 text-left">Date</th>
                 <th className="px-4 py-2 text-left">Ref</th>
                 <th className="px-4 py-2 text-left">Description</th>
+                <th className="px-4 py-2 text-right">Qty</th>
+                <th className="px-4 py-2 text-right">Unit Price</th>
+                <th className="px-4 py-2 text-right">Transport</th>
                 <th className="px-4 py-2 text-right">Debit</th>
                 <th className="px-4 py-2 text-right">Credit</th>
                 <th className="px-4 py-2 text-right">Balance</th>
@@ -213,6 +216,9 @@ export default function CustomerDetailPage() {
                       : <button onClick={() => setSelectedPayment(entry)} className={`${tableActionCls} hover:underline text-left`}>{entry.ref}</button>}
                   </td>
                   <td className="px-4 py-2 text-gray-600 max-w-xs truncate">{entry.description}</td>
+                  <td className="px-4 py-2 text-right">{entry.qty ?? '-'}</td>
+                  <td className="px-4 py-2 text-right">{entry.unitPrice ? formatNaira(entry.unitPrice) : '-'}</td>
+                  <td className="px-4 py-2 text-right">{entry.transport ? formatNaira(entry.transport) : '-'}</td>
                   <td className="px-4 py-2 text-right text-red-600">{entry.debit > 0 ? formatNaira(entry.debit) : '-'}</td>
                   <td className="px-4 py-2 text-right text-green-600">{entry.credit > 0 ? formatNaira(entry.credit) : '-'}</td>
                   <td className={`px-4 py-2 text-right font-medium ${(entry.balance ?? 0) < 0 ? 'text-red-600' : ''}`}>
