@@ -244,6 +244,9 @@ export default function AdminShell({ children }) {
           <button onClick={() => setOpen(true)} className="p-2 -ml-2 text-gray-600 shrink-0">
             <FiMenu size={20} />
           </button>
+          <span className="ml-2 shrink-0 bg-emerald-950 rounded p-1 flex items-center justify-center">
+            <Logo className="h-5 w-5" />
+          </span>
           <span className="ml-2 font-semibold text-sm truncate">
             <span className="sm:hidden">GS&amp;M</span>
             <span className="hidden sm:inline">GS&amp;M - Goods Sales and Management</span>
