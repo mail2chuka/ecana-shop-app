@@ -16,6 +16,14 @@ export default async function middleware(request) {
   const { pathname } = request.nextUrl;
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
+  // Platform (SaaS owner) area — spans all organizations, gated to platform admins only.
+  if (pathname.startsWith('/platform')) {
+    if (!token || !token.isPlatformAdmin) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    return NextResponse.next();
+  }
+
   if (pathname.startsWith('/admin')) {
     if (!token || !STAFF_ROLES.includes(token.role)) {
       return NextResponse.redirect(new URL('/', request.url));
@@ -31,6 +39,12 @@ export default async function middleware(request) {
   }
 
   if (pathname.startsWith('/api') && !pathname.startsWith('/api/auth')) {
+    if (pathname.startsWith('/api/platform')) {
+      if (!token || !token.isPlatformAdmin) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      return NextResponse.next();
+    }
     if (token?.role === 'customer' && !pathname.startsWith('/api/customer-portal')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -41,5 +55,5 @@ export default async function middleware(request) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/customer/:path*', '/api/:path*'],
+  matcher: ['/platform/:path*', '/admin/:path*', '/customer/:path*', '/api/:path*'],
 };

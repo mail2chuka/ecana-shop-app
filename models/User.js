@@ -15,6 +15,8 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, enum: ['admin', 'gsm_manager', 'atc_manager', 'customer'], required: true, default: 'admin' },
   linkedCustomer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
   isActive: { type: Boolean, default: true },
+  // Platform (SaaS) owner: can see and manage ALL organizations, above the per-org admin role.
+  isPlatformAdmin: { type: Boolean, default: false },
 }, { timestamps: true });
 
 UserSchema.index({ role: 1, isActive: 1 });
