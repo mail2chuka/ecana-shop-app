@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getOrgSession, withOrg } from '@/lib/session';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import ATC from '@/models/ATC';
@@ -18,9 +18,9 @@ const loadingChoices = new Set([
   'arrived',
 ]);
 
-export async function POST(request, { params }) {
+async function _h_POST(request, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOrgSession();
     if (!session || !can(session.user.role, 'atcs.loading')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
 
@@ -74,3 +74,5 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: e.message || 'Bad request' }, { status: e.status || 400 });
   }
 }
+
+export const POST = withOrg(_h_POST);

@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
+import { tenantPlugin } from '@/lib/tenantScope';
 
 const SupplierSchema = new mongoose.Schema({
+  organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
   name: { type: String, required: true },
   type: { type: String, enum: ['cement_depot', 'quarry'], required: true },
   address: String,
@@ -10,5 +12,7 @@ const SupplierSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 SupplierSchema.index({ type: 1, isActive: 1 });
+
+SupplierSchema.plugin(tenantPlugin);
 
 export default mongoose.models.Supplier || mongoose.model('Supplier', SupplierSchema);

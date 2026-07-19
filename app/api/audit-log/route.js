@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getOrgSession, withOrg } from '@/lib/session';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import AuditLog from '@/models/AuditLog';
 
-export async function GET(request) {
+async function _h_GET(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOrgSession();
     if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { searchParams } = new URL(request.url);
@@ -23,3 +23,5 @@ export async function GET(request) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
+
+export const GET = withOrg(_h_GET);

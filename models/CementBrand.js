@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
+import { tenantPlugin } from '@/lib/tenantScope';
 
 const CementBrandSchema = new mongoose.Schema({
+  organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
   name: { type: String, required: true },
   abbreviation: { type: String, required: true, maxlength: 3, uppercase: true },
   grade: String,
@@ -12,5 +14,7 @@ const CementBrandSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 CementBrandSchema.index({ isActive: 1 });
+
+CementBrandSchema.plugin(tenantPlugin);
 
 export default mongoose.models.CementBrand || mongoose.model('CementBrand', CementBrandSchema);

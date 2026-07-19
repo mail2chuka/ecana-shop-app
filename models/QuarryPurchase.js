@@ -1,7 +1,9 @@
 import mongoose from 'mongoose';
+import { tenantPlugin } from '@/lib/tenantScope';
 
 const QuarryPurchaseSchema = new mongoose.Schema({
-  referenceNumber: { type: String, required: true, unique: true },
+  organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+  referenceNumber: { type: String, required: true }, // unique per-org (compound index below)
   quarry: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier', required: true },
   quarryName: String,
   stoneDustProduct: { type: mongoose.Schema.Types.ObjectId, ref: 'StoneDustProduct', required: true },
@@ -21,5 +23,8 @@ const QuarryPurchaseSchema = new mongoose.Schema({
 
 QuarryPurchaseSchema.index({ quarry: 1, date: -1 });
 QuarryPurchaseSchema.index({ stoneDustProduct: 1, tonnesRemaining: 1 });
+QuarryPurchaseSchema.index({ organization: 1, referenceNumber: 1 }, { unique: true });
+
+QuarryPurchaseSchema.plugin(tenantPlugin);
 
 export default mongoose.models.QuarryPurchase || mongoose.model('QuarryPurchase', QuarryPurchaseSchema);

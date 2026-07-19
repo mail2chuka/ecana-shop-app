@@ -84,7 +84,7 @@ export default function LandingPage() {
 
           {/* Footer */}
           <div className="mt-8 text-center">
-            <p className="text-xs text-gray-400">© 2026 Ecana Family Limited. All rights reserved.</p>
+            <p className="text-xs text-gray-400">© 2026 GS&amp;M. All rights reserved.</p>
           </div>
         </div>
       </main>

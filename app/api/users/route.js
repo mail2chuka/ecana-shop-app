@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getOrgSession, withOrg } from '@/lib/session';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import User from '@/models/User';
@@ -8,9 +8,9 @@ import { ApiError } from '@/lib/apiError';
 
 const ROLES = ['admin', 'gsm_manager', 'atc_manager', 'customer'];
 
-export async function GET() {
+async function _h_GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOrgSession();
     if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const users = await User.find().populate('linkedCustomer', 'name phone').sort({ name: 1 });
@@ -20,9 +20,9 @@ export async function GET() {
   }
 }
 
-export async function POST(request) {
+async function _h_POST(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOrgSession();
     if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const body = await request.json();
@@ -56,3 +56,6 @@ export async function POST(request) {
     return NextResponse.json({ error: e.message }, { status: e.status || 400 });
   }
 }
+
+export const GET = withOrg(_h_GET);
+export const POST = withOrg(_h_POST);

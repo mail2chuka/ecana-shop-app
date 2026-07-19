@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getOrgSession, withOrg } from '@/lib/session';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Sale from '@/models/Sale';
@@ -8,9 +8,9 @@ import ATC from '@/models/ATC';
 import CementBrand from '@/models/CementBrand';
 import { autoArriveDueAtcs } from '@/lib/atcLifecycle';
 
-export async function GET() {
+async function _h_GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOrgSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
 
@@ -69,3 +69,5 @@ export async function GET() {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
+
+export const GET = withOrg(_h_GET);

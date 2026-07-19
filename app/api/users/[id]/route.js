@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getOrgSession, withOrg } from '@/lib/session';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import User from '@/models/User';
@@ -7,9 +7,9 @@ import { logAudit } from '@/lib/audit';
 import { ApiError } from '@/lib/apiError';
 import { requireObjectId } from '@/lib/validate';
 
-export async function PUT(request, { params }) {
+async function _h_PUT(request, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOrgSession();
     if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { id } = await params;
@@ -38,3 +38,5 @@ export async function PUT(request, { params }) {
     return NextResponse.json({ error: e.message }, { status: e.status || 400 });
   }
 }
+
+export const PUT = withOrg(_h_PUT);

@@ -256,7 +256,7 @@ export default function SaleDetailPage() {
           <div className="flex justify-between">
             <div>
               <h2 className="text-2xl font-bold">{formatSaleTypeLabel(sale.saleType)}</h2>
-              <p className="text-sm text-gray-500 mt-1">Ecana Family Limited</p>
+              <p className="text-sm text-gray-500 mt-1">{session?.user?.organizationName || ''}</p>
             </div>
             <div className="text-right text-sm">
               <p className="font-bold text-lg">{sale.saleNumber}</p>

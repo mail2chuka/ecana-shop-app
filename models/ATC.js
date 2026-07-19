@@ -1,8 +1,10 @@
 import mongoose from 'mongoose';
+import { tenantPlugin } from '@/lib/tenantScope';
 
 const ATCSchema = new mongoose.Schema({
-  atcNumber: { type: String, required: true, unique: true, trim: true },
-  transactionNumber: { type: String, required: true, unique: true },
+  organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+  atcNumber: { type: String, required: true, trim: true }, // unique per-org (compound index below)
+  transactionNumber: { type: String, required: true }, // unique per-org (compound index below)
   cementBrand: { type: mongoose.Schema.Types.ObjectId, ref: 'CementBrand', required: true },
   cementBrandName: String,
   supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },
@@ -31,5 +33,10 @@ const ATCSchema = new mongoose.Schema({
 
 ATCSchema.index({ status: 1, cementBrand: 1 });
 ATCSchema.index({ atcDate: -1 });
+ATCSchema.index({ organization: 1, atcNumber: 1 }, { unique: true });
+// transactionNumber is partial (unique when present): a few legacy records predate the field.
+ATCSchema.index({ organization: 1, transactionNumber: 1 }, { unique: true, partialFilterExpression: { transactionNumber: { $type: 'string' } } });
+
+ATCSchema.plugin(tenantPlugin);
 
 export default mongoose.models.ATC || mongoose.model('ATC', ATCSchema);

@@ -1,7 +1,11 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { tenantPlugin } from '@/lib/tenantScope';
 
 const UserSchema = new mongoose.Schema({
+  // Login identities (email/username/phone) stay GLOBALLY unique: one identity = one org, so the
+  // login lookup can resolve a user to their tenant unambiguously on a single shared domain.
+  organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
   name: { type: String, required: true },
   email: { type: String, unique: true, sparse: true, lowercase: true },
   username: { type: String, unique: true, sparse: true, lowercase: true },
@@ -24,5 +28,7 @@ UserSchema.pre('save', async function(next) {
   }
   next();
 });
+
+UserSchema.plugin(tenantPlugin);
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);

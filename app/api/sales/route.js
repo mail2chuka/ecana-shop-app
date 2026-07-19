@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getOrgSession, withOrg } from '@/lib/session';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import mongoose from 'mongoose';
@@ -31,9 +31,9 @@ async function nextSaleNumber() {
   return `${prefix}${String(n).padStart(4, '0')}`;
 }
 
-export async function GET(request) {
+async function _h_GET(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOrgSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { searchParams } = new URL(request.url);
@@ -64,8 +64,8 @@ export async function GET(request) {
   }
 }
 
-export async function POST(request) {
-  const session = await getServerSession(authOptions);
+async function _h_POST(request) {
+  const session = await getOrgSession();
   if (!session || !can(session.user.role, 'sales.create')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -297,3 +297,6 @@ export async function POST(request) {
     await mongoSession.endSession();
   }
 }
+
+export const GET = withOrg(_h_GET);
+export const POST = withOrg(_h_POST);

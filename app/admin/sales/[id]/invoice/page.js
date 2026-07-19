@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { formatNaira, formatDate, formatDateTime, formatSaleTypeLabel } from '@/lib/format';
 
 export default function SaleInvoicePage() {
   const { id } = useParams();
+  const { data: session } = useSession();
   const [sale, setSale] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +34,7 @@ export default function SaleInvoicePage() {
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-3xl font-bold">{formatSaleTypeLabel(sale.saleType)}</h2>
-              <p className="text-sm text-gray-600 mt-2">Ecana Family Limited</p>
+              <p className="text-sm text-gray-600 mt-2">{session?.user?.organizationName || ''}</p>
             </div>
             <div className="text-right text-sm">
               <p className="font-bold text-xl">{sale.saleNumber}</p>

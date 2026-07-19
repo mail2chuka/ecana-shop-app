@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { formatNaira, formatDate, formatCustomerLabel } from '@/lib/format';
 import { Modal, Field, FormButtons, inputCls, CurrencyInput, btnPrimaryCls, btnDangerCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
@@ -17,10 +18,14 @@ const blankPaymentForm = {
 };
 
 const blankEditForm = { name: '', phone: '', address: '', businessName: '', creditLimit: '' };
+const blankSurchargeForm = { method: 'flat_total', perUnitAmount: '', totalAmount: '', reason: '', confirmPin: '' };
+const blankRefundForm = { amount: '', reason: '', confirmPin: '' };
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === 'admin';
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -32,6 +37,16 @@ export default function CustomerDetailPage() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [togglingActive, setTogglingActive] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  const [showSurcharge, setShowSurcharge] = useState(false);
+  const [surchargeSaleId, setSurchargeSaleId] = useState(null);
+  const [surchargeForm, setSurchargeForm] = useState(blankSurchargeForm);
+  const [submittingSurcharge, setSubmittingSurcharge] = useState(false);
+
+  const [showRefund, setShowRefund] = useState(false);
+  const [refundSaleId, setRefundSaleId] = useState(null);
+  const [refundForm, setRefundForm] = useState(blankRefundForm);
+  const [submittingRefund, setSubmittingRefund] = useState(false);
 
   const load = () => {
     fetch(`/api/customers/${id}/statement`)
@@ -136,10 +151,62 @@ export default function CustomerDetailPage() {
     }
   };
 
+  const openSurcharge = () => { setSurchargeSaleId(null); setSurchargeForm(blankSurchargeForm); setShowSurcharge(true); };
+  const openRefund = () => { setRefundSaleId(null); setRefundForm(blankRefundForm); setShowRefund(true); };
+
+  const handleSurchargeSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingSurcharge(true);
+    try {
+      const r = await fetch(`/api/sales/${surchargeSaleId}/surcharge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(surchargeForm),
+      });
+      const d = await r.json();
+      if (d.success) {
+        toast.success('Surcharge applied');
+        setShowSurcharge(false);
+        load();
+      } else {
+        toast.error(d.error);
+      }
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong, please try again');
+    } finally {
+      setSubmittingSurcharge(false);
+    }
+  };
+
+  const handleRefundSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingRefund(true);
+    try {
+      const r = await fetch(`/api/sales/${refundSaleId}/refund`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(refundForm),
+      });
+      const d = await r.json();
+      if (d.success) {
+        toast.success('Refund applied');
+        setShowRefund(false);
+        load();
+      } else {
+        toast.error(d.error);
+      }
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong, please try again');
+    } finally {
+      setSubmittingRefund(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-gray-800 border-t-transparent rounded-full" /></div>;
   if (!data) return <p className="text-gray-500">Customer not found</p>;
 
   const { customer, ledger } = data;
+  const adjustableSales = ledger.filter(e => e.type === 'sale' && e.saleType !== 'shop');
 
   return (
     <div>
@@ -158,6 +225,12 @@ export default function CustomerDetailPage() {
           </button>
           {!customer.isActive && (
             <button onClick={handleDelete} disabled={deleting} className={btnDangerCls}>Delete Permanently</button>
+          )}
+          {isAdmin && (
+            <>
+              <button onClick={openSurcharge} className="px-4 py-2 bg-amber-700 text-neutral-100 rounded text-sm hover:bg-amber-800">Apply Surcharge</button>
+              <button onClick={openRefund} className="px-4 py-2 bg-amber-700 text-neutral-100 rounded text-sm hover:bg-amber-800">Refund</button>
+            </>
           )}
           <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Statement</button>
         </div>
@@ -360,6 +433,112 @@ export default function CustomerDetailPage() {
           </Field>
           <FormButtons onCancel={() => setShowEditModal(false)} submitting={savingEdit} />
         </form>
+      </Modal>
+
+      {/* Apply Surcharge Modal — pick a transaction, then enter the surcharge details */}
+      <Modal open={showSurcharge} onClose={() => setShowSurcharge(false)} title="Apply Surcharge" size="lg">
+        {!surchargeSaleId ? (
+          <div className="space-y-2">
+            <p className="text-sm text-gray-500 mb-2">Select which transaction to surcharge:</p>
+            {adjustableSales.length === 0 && <p className="text-sm text-gray-500">No cement/aggregate sales to surcharge.</p>}
+            <div className="max-h-72 overflow-y-auto divide-y border rounded">
+              {adjustableSales.map(s => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setSurchargeSaleId(s.id)}
+                  className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                >
+                  <p className="font-medium">{s.ref} — {formatDate(s.date)}</p>
+                  <p className="text-xs text-gray-500 truncate">{s.description} · {formatNaira(s.debit)}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSurchargeSubmit} className="space-y-4">
+            <div className="bg-gray-50 rounded p-3 text-sm flex justify-between items-center">
+              <span>{adjustableSales.find(s => s.id === surchargeSaleId)?.ref}</span>
+              <button type="button" onClick={() => setSurchargeSaleId(null)} className="text-xs text-gray-500 hover:underline">Change transaction</button>
+            </div>
+            <Field label="Method" required>
+              <select value={surchargeForm.method} onChange={e => setSurchargeForm({ ...surchargeForm, method: e.target.value })} className={inputCls} required>
+                <option value="flat_total">Flat total</option>
+                <option value="per_unit">Per unit (× quantity sold)</option>
+                <option value="transport">Transport surcharge</option>
+              </select>
+            </Field>
+            {surchargeForm.method === 'per_unit' ? (
+              <Field label="Amount per unit (₦)" required>
+                <CurrencyInput value={surchargeForm.perUnitAmount} onChange={val => setSurchargeForm({ ...surchargeForm, perUnitAmount: val })} className={inputCls} required />
+              </Field>
+            ) : (
+              <Field label="Total amount (₦)" required>
+                <CurrencyInput value={surchargeForm.totalAmount} onChange={val => setSurchargeForm({ ...surchargeForm, totalAmount: val })} className={inputCls} required />
+              </Field>
+            )}
+            <Field label="Reason" required>
+              <textarea value={surchargeForm.reason} onChange={e => setSurchargeForm({ ...surchargeForm, reason: e.target.value })} rows={2} className={inputCls} required />
+            </Field>
+            <Field label="4-digit PIN" required>
+              <input
+                type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
+                value={surchargeForm.confirmPin}
+                onChange={e => setSurchargeForm({ ...surchargeForm, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                className={inputCls} required
+              />
+            </Field>
+            <FormButtons onCancel={() => setShowSurcharge(false)} submitting={submittingSurcharge} submitLabel="Apply Surcharge" />
+          </form>
+        )}
+      </Modal>
+
+      {/* Refund Modal — pick a transaction, then enter the refund details */}
+      <Modal open={showRefund} onClose={() => setShowRefund(false)} title="Refund" size="lg">
+        {!refundSaleId ? (
+          <div className="space-y-2">
+            <p className="text-sm text-gray-500 mb-2">Select which transaction to refund:</p>
+            {adjustableSales.length === 0 && <p className="text-sm text-gray-500">No cement/aggregate sales to refund.</p>}
+            <div className="max-h-72 overflow-y-auto divide-y border rounded">
+              {adjustableSales.map(s => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setRefundSaleId(s.id)}
+                  className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                >
+                  <p className="font-medium">{s.ref} — {formatDate(s.date)}</p>
+                  <p className="text-xs text-gray-500 truncate">{s.description} · {formatNaira(s.debit)}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleRefundSubmit} className="space-y-4">
+            <div className="bg-gray-50 rounded p-3 text-sm flex justify-between items-center">
+              <span>{adjustableSales.find(s => s.id === refundSaleId)?.ref}</span>
+              <button type="button" onClick={() => setRefundSaleId(null)} className="text-xs text-gray-500 hover:underline">Change transaction</button>
+            </div>
+            <p className="text-sm text-gray-500">
+              For a billed-vs-actual quantity shortfall, open the transaction to check its Qty, then enter the refund amount below (this credits the customer's balance).
+            </p>
+            <Field label="Refund amount (₦)" required>
+              <CurrencyInput value={refundForm.amount} onChange={val => setRefundForm({ ...refundForm, amount: val })} className={inputCls} required />
+            </Field>
+            <Field label="Reason" required>
+              <textarea value={refundForm.reason} onChange={e => setRefundForm({ ...refundForm, reason: e.target.value })} rows={2} className={inputCls} required />
+            </Field>
+            <Field label="4-digit PIN" required>
+              <input
+                type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
+                value={refundForm.confirmPin}
+                onChange={e => setRefundForm({ ...refundForm, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                className={inputCls} required
+              />
+            </Field>
+            <FormButtons onCancel={() => setShowRefund(false)} submitting={submittingRefund} submitLabel="Apply Refund" />
+          </form>
+        )}
       </Modal>
     </div>
   );

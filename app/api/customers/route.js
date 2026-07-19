@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getOrgSession, withOrg } from '@/lib/session';
 import dbConnect from '@/lib/db';
 import Customer from '@/models/Customer';
 import { logAudit } from '@/lib/audit';
 import { generateCustomerId } from '@/lib/customerId';
 import { can } from '@/lib/permissions';
 
-export async function GET(request) {
+export const GET = withOrg(async (request) => {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOrgSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { searchParams } = new URL(request.url);
@@ -27,11 +26,11 @@ export async function GET(request) {
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
-}
+});
 
-export async function POST(request) {
+export const POST = withOrg(async (request) => {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOrgSession();
     if (!session || !can(session.user.role, 'customers.create')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const body = await request.json();
@@ -52,4 +51,4 @@ export async function POST(request) {
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 400 });
   }
-}
+});

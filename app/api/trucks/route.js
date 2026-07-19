@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getOrgSession, withOrg } from '@/lib/session';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Truck from '@/models/Truck';
@@ -9,9 +9,9 @@ import { logAudit } from '@/lib/audit';
 
 const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
 
-export async function GET() {
+async function _h_GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOrgSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const trucks = await Truck.find({ isActive: true }).sort({ plateNumber: 1 });
@@ -38,9 +38,9 @@ export async function GET() {
   }
 }
 
-export async function POST(request) {
+async function _h_POST(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOrgSession();
     if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const body = await request.json();
@@ -54,3 +54,6 @@ export async function POST(request) {
     return NextResponse.json({ error: e.message }, { status: 400 });
   }
 }
+
+export const GET = withOrg(_h_GET);
+export const POST = withOrg(_h_POST);

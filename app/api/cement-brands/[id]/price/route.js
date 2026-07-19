@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getOrgSession, withOrg } from '@/lib/session';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import mongoose from 'mongoose';
@@ -8,8 +8,8 @@ import PriceHistory from '@/models/PriceHistory';
 import { logAudit } from '@/lib/audit';
 import { ApiError } from '@/lib/apiError';
 
-export async function POST(request, { params }) {
-  const session = await getServerSession(authOptions);
+async function _h_POST(request, { params }) {
+  const session = await getOrgSession();
   if (!session || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -53,3 +53,5 @@ export async function POST(request, { params }) {
     await mongoSession.endSession();
   }
 }
+
+export const POST = withOrg(_h_POST);

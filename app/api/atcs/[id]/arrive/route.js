@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getOrgSession, withOrg } from '@/lib/session';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import ATC from '@/models/ATC';
 import { logAudit } from '@/lib/audit';
 import { can } from '@/lib/permissions';
 
-export async function POST(request, { params }) {
+async function _h_POST(request, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOrgSession();
     if (!session || !can(session.user.role, 'atcs.arrive')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { id } = await params;
@@ -27,3 +27,5 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: e.message }, { status: 400 });
   }
 }
+
+export const POST = withOrg(_h_POST);

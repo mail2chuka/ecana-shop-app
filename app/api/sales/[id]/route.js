@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getOrgSession, withOrg } from '@/lib/session';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import mongoose from 'mongoose';
@@ -19,9 +19,9 @@ import { ApiError } from '@/lib/apiError';
 
 const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
 
-export async function GET(request, { params }) {
+async function _h_GET(request, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOrgSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { id } = await params;
@@ -33,8 +33,8 @@ export async function GET(request, { params }) {
   }
 }
 
-export async function DELETE(request, { params }) {
-  const session = await getServerSession(authOptions);
+async function _h_DELETE(request, { params }) {
+  const session = await getOrgSession();
   if (!session || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -110,8 +110,8 @@ export async function DELETE(request, { params }) {
   }
 }
 
-export async function PUT(request, { params }) {
-  const session = await getServerSession(authOptions);
+async function _h_PUT(request, { params }) {
+  const session = await getOrgSession();
   if (!session || !can(session.user.role, 'sales.edit')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -368,3 +368,7 @@ export async function PUT(request, { params }) {
     await mongoSession.endSession();
   }
 }
+
+export const GET = withOrg(_h_GET);
+export const PUT = withOrg(_h_PUT);
+export const DELETE = withOrg(_h_DELETE);
