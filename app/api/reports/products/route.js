@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import mongoose from 'mongoose';
 import Sale from '@/models/Sale';
+import CementBrand from '@/models/CementBrand';
+import StoneDustProduct from '@/models/StoneDustProduct';
 
 async function _h_GET(request) {
   try {
@@ -30,7 +32,27 @@ async function _h_GET(request) {
 
     if (brandId) {
       const oid = new mongoose.Types.ObjectId(brandId);
-      pipeline.push({ $match: { $or: [{ 'items.cementBrand': oid }, { 'items.stoneDustProduct': oid }] } });
+      // Deleting a brand/product only deactivates it (isActive: false) — editing one can also
+      // leave old sales pointing at a since-recreated doc with a different _id. Match on the
+      // product's stable display name (what the picker actually shows) instead of its id, so
+      // filtering to one brand/product surfaces every historical sale recorded under that name,
+      // not just sales tied to whichever document id happens to be active right now.
+      const [cementBrand, stoneDustProduct] = await Promise.all([
+        CementBrand.findById(oid).select('name'),
+        StoneDustProduct.findById(oid).select('quarryName'),
+      ]);
+
+      if (cementBrand) {
+        pipeline.push({
+          $match: { $expr: { $eq: [{ $trim: { input: { $ifNull: ['$items.cementBrandName', ''] } } }, cementBrand.name.trim()] } },
+        });
+      } else if (stoneDustProduct) {
+        pipeline.push({
+          $match: { $expr: { $eq: [{ $trim: { input: { $ifNull: ['$items.quarryName', ''] } } }, stoneDustProduct.quarryName.trim()] } },
+        });
+      } else {
+        pipeline.push({ $match: { $or: [{ 'items.cementBrand': oid }, { 'items.stoneDustProduct': oid }] } });
+      }
     }
 
     pipeline.push(
