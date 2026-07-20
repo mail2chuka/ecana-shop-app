@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { signIn, useSession } from 'next-auth/react';
+import { signIn, useSession, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
@@ -25,13 +25,17 @@ export default function LandingPage() {
     e.preventDefault();
     setLoading(true);
     const result = await signIn('credentials', { emailOrUsername, password, redirect: false });
-    setLoading(false);
     if (result?.error) {
+      setLoading(false);
       toast.error(result.error);
-    } else {
-      toast.success('Welcome');
-      router.refresh();
+      return;
     }
+    toast.success('Welcome');
+    // Don't rely on useSession() reactively noticing the new cookie on its own schedule — fetch the
+    // fresh session directly and navigate off it, so the redirect isn't a race against that timing.
+    const freshSession = await getSession();
+    router.replace(freshSession?.user?.role === 'customer' ? '/customer' : '/admin');
+    setLoading(false);
   };
 
   return (
