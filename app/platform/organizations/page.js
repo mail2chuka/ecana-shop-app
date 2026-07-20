@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, StatusPill, btnPrimaryCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatDate } from '@/lib/format';
 import toast from 'react-hot-toast';
@@ -16,6 +18,7 @@ const blankForm = { orgName: '', adminName: '', adminUsername: '', adminPassword
 const statusColor = { trialing: 'blue', active: 'green', past_due: 'amber', canceled: 'gray' };
 
 export default function PlatformOrganizationsPage() {
+  const router = useRouter();
   const [orgs, setOrgs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -92,16 +95,18 @@ export default function PlatformOrganizationsPage() {
               <tbody className="divide-y">
                 {orgs.length === 0 && <EmptyRow colSpan={8} text="No organizations yet" />}
                 {orgs.map((o) => (
-                  <tr key={o._id}>
+                  <tr key={o._id} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/platform/organizations/${o._id}`)}>
                     <td className="px-4 py-3">
-                      <p className="font-medium">{o.name}</p>
+                      <Link href={`/platform/organizations/${o._id}`} className="font-medium hover:underline" onClick={(e) => e.stopPropagation()}>{o.name}</Link>
                       <p className="text-xs text-gray-500">{o.slug}</p>
                     </td>
                     <td className="px-4 py-3">
-                      {o.freeForever
+                      {!o.isActive
+                        ? <StatusPill status="Suspended" color="red" />
+                        : o.freeForever
                         ? <StatusPill status="Free forever" color="green" />
                         : <StatusPill status={o.subscriptionStatus} color={statusColor[o.subscriptionStatus] || 'gray'} />}
-                      {!o.freeForever && o.subscriptionStatus === 'trialing' && o.trialEndsAt && (
+                      {o.isActive && !o.freeForever && o.subscriptionStatus === 'trialing' && o.trialEndsAt && (
                         <p className="text-xs text-gray-500 mt-1">trial ends {formatDate(o.trialEndsAt)}</p>
                       )}
                     </td>
