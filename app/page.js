@@ -1,208 +1,105 @@
 import Link from 'next/link';
-import { Big_Shoulders_Display, IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google';
+import { Manrope } from 'next/font/google';
 import { Logo } from '@/components/ui';
 
-const display = Big_Shoulders_Display({ subsets: ['latin'], weight: ['600', '700', '900'], variable: '--font-display' });
-const body = IBM_Plex_Sans({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-body' });
-const mono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-mono' });
+const manrope = Manrope({ subsets: ['latin'], weight: ['400', '500', '700', '800'], variable: '--font-manrope' });
 
 const FEATURES = [
   {
-    code: '01 / CEMENT',
-    title: 'ATC lifecycle, start to close',
-    body: "Every Authorization to Collect tracked bag-by-bag: pending, assigned, loaded, arrived, closed. No spreadsheet ever caught a truck sitting on a half-loaded ATC for three days.",
+    title: 'From ATC to delivery',
+    body: 'Track every authorization to collect from issue to closed, so nothing sits waiting on the yard unnoticed.',
   },
   {
-    code: '02 / AGGREGATE',
-    title: 'Quarry tonnage, priced right',
-    body: 'Stonedust and aggregate sales by the tonne, tied to the quarry purchase that supplied them, with margins that stay visible instead of buried in a notebook.',
+    title: 'One ledger, always right',
+    body: 'Customer balances, payments, and statements reconcile automatically — no separate books to keep in sync.',
   },
   {
-    code: '03 / CREDIT',
-    title: 'A ledger that never loses a kobo',
-    body: 'Running customer balances, full statements, and audited surcharges or refunds behind a PIN — not an admin\'s memory of who owes what.',
-  },
-  {
-    code: '04 / FLEET',
-    title: 'Trucks that know where they are',
-    body: "A truck locked to an ATC or a quarry delivery can't be double-booked. Availability is a fact, not a phone call to the yard.",
-  },
-  {
-    code: '05 / ACCESS',
-    title: 'The right seat for every role',
-    body: 'Owners see everything. Managers run the floor. ATC handlers get exactly their queue. Auditors get read-only reports and nothing else.',
-  },
-  {
-    code: '06 / REPORTS',
-    title: 'Numbers your accountant trusts',
-    body: 'Sales, balances, quarry purchases, per-customer and per-product breakdowns, truck utilization — generated from the same ledger, always reconciled.',
+    title: 'Access that matches the job',
+    body: 'Owners, managers, ATC handlers, and auditors each see exactly what their role needs, nothing more.',
   },
 ];
 
-const TICKER_ITEMS = ['AUTHORIZATION TO COLLECT', 'TONNE', 'CUSTOMER LEDGER', 'QUARRY REFERENCE', 'BAG COUNT', 'TRUCK MANIFEST', 'CREDIT BALANCE', 'DISPATCH'];
-
 export default function LandingPage() {
   return (
-    <div className={`landing ${display.variable} ${body.variable} ${mono.variable}`} style={{ fontFamily: 'var(--font-body)', backgroundColor: 'var(--paper)', color: 'var(--ink)' }}>
+    <div className={`landing ${manrope.variable}`} style={{ fontFamily: 'var(--font-manrope)', backgroundColor: 'var(--surface)', color: 'var(--ink)' }}>
       {/* Nav */}
-      <header className="relative z-10 max-w-6xl mx-auto flex items-center justify-between px-6 py-6">
-        <span className="flex items-center gap-2 font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>
-          <span className="inline-flex items-center justify-center h-8 w-8 rounded" style={{ backgroundColor: 'var(--ink)' }}>
-            <Logo className="h-5 w-5" />
-          </span>
+      <header className="max-w-5xl mx-auto flex items-center justify-between px-6 py-6">
+        <span className="flex items-center gap-2 font-extrabold tracking-tight text-lg">
+          <Logo className="h-7 w-7" />
           GS&amp;M
         </span>
         <Link
           href="/login"
-          className="text-sm font-medium px-4 py-2 rounded-sm border transition-colors"
-          style={{ borderColor: 'var(--ink)', color: 'var(--ink)' }}
+          className="text-sm font-semibold px-5 py-2.5 rounded-full transition-transform hover:-translate-y-0.5"
+          style={{ backgroundColor: 'var(--green)', color: 'white' }}
         >
-          Sign In →
+          Sign In
         </Link>
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden diagonal-down pb-24 pt-8" style={{ backgroundColor: 'var(--ink)' }}>
-        <div className="grain" />
-        <div className="relative max-w-6xl mx-auto px-6 pt-16 pb-8">
+      <section className="relative overflow-hidden">
+        <div className="glow" />
+        <div className="relative max-w-3xl mx-auto px-6 pt-20 pb-24 text-center">
           <p
-            className="reveal text-xs tracking-[0.3em] uppercase mb-6"
-            style={{ color: 'var(--rust)', fontFamily: 'var(--font-mono)', animationDelay: '80ms' }}
+            className="reveal text-xs font-semibold tracking-widest uppercase mb-5"
+            style={{ color: 'var(--green-deep)', animationDelay: '60ms' }}
           >
-            Built for building-materials distributors
+            For building-materials distributors
           </p>
           <h1
-            className="reveal font-black leading-[0.92] text-[13vw] sm:text-[9vw] lg:text-[6.5rem]"
-            style={{ fontFamily: 'var(--font-display)', color: 'var(--paper)', animationDelay: '180ms' }}
+            className="reveal font-extrabold leading-[1.05] text-4xl sm:text-5xl lg:text-6xl tracking-tight"
+            style={{ animationDelay: '140ms' }}
           >
-            RUN THE
-            <br />
-            <span style={{ color: 'var(--rust)' }}>YARD</span>, NOT
-            <br />
-            THE SPREADSHEET
+            One system for your whole distribution business.
           </h1>
           <p
-            className="reveal mt-8 max-w-xl text-lg leading-relaxed"
-            style={{ color: 'var(--concrete)', animationDelay: '320ms' }}
+            className="reveal mt-6 text-lg leading-relaxed max-w-xl mx-auto"
+            style={{ color: 'var(--muted)', animationDelay: '240ms' }}
           >
-            GS&amp;M is the operating system for cement, aggregate, and shop distribution —
-            from the ATC that authorizes a truck to the report that closes your books.
+            Cement, aggregate, and shop sales on one ledger — with the right access for every person on your team.
           </p>
-          <div className="reveal mt-10 flex items-center gap-5" style={{ animationDelay: '440ms' }}>
+          <div className="reveal mt-9" style={{ animationDelay: '340ms' }}>
             <Link
               href="/login"
-              className="inline-block px-7 py-3.5 font-semibold rounded-sm transition-transform hover:-translate-y-0.5"
-              style={{ backgroundColor: 'var(--rust)', color: 'var(--paper)' }}
+              className="inline-block px-7 py-3.5 font-semibold rounded-full transition-transform hover:-translate-y-0.5"
+              style={{ backgroundColor: 'var(--green)', color: 'white' }}
             >
               Sign In
             </Link>
-            <p className="text-sm" style={{ color: 'var(--concrete)' }}>
-              New to GS&amp;M? Organizations are onboarded directly by our team.
-            </p>
           </div>
-        </div>
-      </section>
-
-      {/* Ticker */}
-      <div className="overflow-hidden border-y py-3" style={{ borderColor: 'var(--ink)', backgroundColor: 'var(--paper)' }}>
-        <div className="ticker-track flex whitespace-nowrap" style={{ fontFamily: 'var(--font-mono)' }}>
-          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-            <span key={i} className="text-xs tracking-widest mx-6" style={{ color: 'var(--rust-dim)' }}>
-              {item} <span style={{ color: 'var(--concrete)' }}>／</span>
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Positioning */}
-      <section className="max-w-6xl mx-auto px-6 py-20 grid md:grid-cols-5 gap-10">
-        <div className="md:col-span-2">
-          <p className="text-xs tracking-[0.3em] uppercase mb-3" style={{ color: 'var(--rust-dim)', fontFamily: 'var(--font-mono)' }}>
-            Why generic tools fail here
-          </p>
-          <h2 className="font-black text-4xl leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
-            Your business isn't a widget shop.
-          </h2>
-        </div>
-        <div className="md:col-span-3 space-y-4 text-base leading-relaxed" style={{ color: '#3a352c' }}>
-          <p>
-            Off-the-shelf inventory software doesn't know what an ATC is. It has no idea that a truck
-            can be locked to a quarry delivery for thirty minutes, or that a cement sale needs a bag
-            count reconciled against what actually left the depot.
-          </p>
-          <p>
-            GS&amp;M was built inside a real distribution yard, for the exact workflow that runs
-            one — cement, aggregate, and retail shop, under one ledger, one customer base, one set of books.
-          </p>
         </div>
       </section>
 
       {/* Features */}
-      <section className="relative diagonal-up py-24" style={{ backgroundColor: 'var(--ink)' }}>
-        <div className="max-w-6xl mx-auto px-6">
-          <h2
-            className="font-black text-4xl sm:text-5xl mb-14 max-w-lg"
-            style={{ fontFamily: 'var(--font-display)', color: 'var(--paper)' }}
-          >
-            EVERYTHING THE YARD RUNS ON.
-          </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px" style={{ backgroundColor: 'rgba(242,237,225,0.12)' }}>
-            {FEATURES.map((f) => (
-              <div key={f.code} className="p-7 transition-colors hover:bg-white/[0.03]" style={{ backgroundColor: 'var(--ink)' }}>
-                <p className="text-xs tracking-widest mb-4" style={{ color: 'var(--rust)', fontFamily: 'var(--font-mono)' }}>{f.code}</p>
-                <h3 className="font-bold text-xl mb-3" style={{ color: 'var(--paper)' }}>{f.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--concrete)' }}>{f.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Manifest / trust strip */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <div className="border-2 p-8 sm:p-10" style={{ borderColor: 'var(--ink)' }}>
-          <p className="text-xs tracking-[0.3em] uppercase mb-6" style={{ color: 'var(--rust-dim)', fontFamily: 'var(--font-mono)' }}>
-            Manifest — what's under the hood
-          </p>
-          <div className="grid sm:grid-cols-2 gap-x-10 gap-y-4" style={{ fontFamily: 'var(--font-mono)' }}>
-            {[
-              'Multi-tenant, one login per person',
-              'Role-based access down to the page',
-              'Reversible edits on every financial record',
-              'PIN-gated surcharges & refunds',
-              'Full audit log of every change',
-              'Reports reconciled to the same ledger',
-            ].map((line) => (
-              <div key={line} className="flex items-center gap-3 text-sm py-2 border-b" style={{ borderColor: '#00000014' }}>
-                <span style={{ color: 'var(--rust)' }}>▪</span>
-                <span>{line}</span>
-              </div>
-            ))}
-          </div>
+      <section className="max-w-5xl mx-auto px-6 pb-24">
+        <div className="grid sm:grid-cols-3 gap-8 sm:gap-10">
+          {FEATURES.map((f) => (
+            <div key={f.title}>
+              <div className="h-9 w-9 rounded-lg mb-4" style={{ backgroundColor: 'var(--green-glow)' }} />
+              <h3 className="font-bold text-lg mb-2">{f.title}</h3>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--muted)' }}>{f.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="px-6 pb-24">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8 border-t pt-14" style={{ borderColor: 'var(--ink)' }}>
-          <h2 className="font-black text-3xl sm:text-4xl max-w-md leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
-            Already a subscriber? Your ledger is waiting.
-          </h2>
+      <section className="border-t" style={{ borderColor: 'var(--line)' }}>
+        <div className="max-w-5xl mx-auto px-6 py-16 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+          <h2 className="font-extrabold text-2xl sm:text-3xl tracking-tight">Already a subscriber?</h2>
           <Link
             href="/login"
-            className="shrink-0 inline-block px-8 py-4 font-semibold rounded-sm transition-transform hover:-translate-y-0.5"
-            style={{ backgroundColor: 'var(--ink)', color: 'var(--paper)' }}
+            className="shrink-0 inline-block px-7 py-3.5 font-semibold rounded-full transition-transform hover:-translate-y-0.5"
+            style={{ backgroundColor: 'var(--green)', color: 'white' }}
           >
-            Sign In →
+            Sign In
           </Link>
         </div>
       </section>
 
-      <footer className="px-6 pb-10">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between gap-2 text-xs" style={{ color: 'var(--rust-dim)', fontFamily: 'var(--font-mono)' }}>
-          <span>© 2026 GS&amp;M — GOODS SALES &amp; MANAGEMENT</span>
-          <span>BUILT FOR THE YARD</span>
-        </div>
+      <footer className="max-w-5xl mx-auto px-6 py-8 text-center text-xs" style={{ color: 'var(--muted)' }}>
+        © 2026 GS&amp;M — Goods Sales and Management
       </footer>
     </div>
   );
