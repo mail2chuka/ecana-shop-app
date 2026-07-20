@@ -74,6 +74,10 @@ export default function UsersPage() {
       if (editingUser) {
         const body = { name: form.name };
         if (form.password) body.password = form.password;
+        if (form.role !== 'customer') {
+          body.email = form.email;
+          body.username = form.username;
+        }
         const r = await fetch(`/api/users/${editingUser._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         const d = await r.json();
         if (d.success) { toast.success('Updated'); setShowModal(false); load(); }
@@ -120,6 +124,14 @@ export default function UsersPage() {
     else toast.error(d.error);
   };
 
+  const handleDelete = async (u) => {
+    if (!confirm(`Permanently delete ${u.name}'s account? This cannot be undone — use Deactivate instead if you just want to disable their login.`)) return;
+    const r = await fetch(`/api/users/${u._id}`, { method: 'DELETE' });
+    const d = await r.json();
+    if (d.success) { toast.success('User deleted'); load(); }
+    else toast.error(d.error);
+  };
+
   return (
     <div>
       <PageHeader
@@ -159,9 +171,10 @@ export default function UsersPage() {
                   <td className="px-4 py-3"><StatusPill status={u.isActive ? 'Active' : 'Inactive'} color={u.isActive ? 'green' : 'gray'} /></td>
                   <td className="px-4 py-3 text-right">
                     <button onClick={() => openEdit(u)} className={`${tableActionCls} mr-3`}>Edit</button>
-                    <button onClick={() => toggleActive(u)} className={u.isActive ? 'text-sm font-medium text-amber-700 hover:text-amber-800' : tableActionCls}>
+                    <button onClick={() => toggleActive(u)} className={`mr-3 ${u.isActive ? 'text-sm font-medium text-amber-700 hover:text-amber-800' : tableActionCls}`}>
                       {u.isActive ? 'Deactivate' : 'Reactivate'}
                     </button>
+                    <button onClick={() => handleDelete(u)} className="text-sm font-medium text-red-700 hover:text-red-800">Delete</button>
                   </td>
                 </tr>
               ))}
@@ -193,15 +206,21 @@ export default function UsersPage() {
             <p className="text-sm text-gray-500">Role: {ROLE_LABELS[form.role]} (role can't be changed after creation — deactivate and create a new login instead)</p>
           )}
 
-          {!editingUser && form.role !== 'customer' && (
+          {form.role !== 'customer' && (
             <>
               <Field label="Email">
                 <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className={inputCls} />
               </Field>
-              <Field label="Username">
-                <input type="text" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} className={inputCls} placeholder="Leave blank to auto-generate" />
+              <Field label="Username" required={!!editingUser}>
+                <input
+                  type="text" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} className={inputCls}
+                  placeholder={editingUser ? '' : 'Leave blank to auto-generate'}
+                  required={!!editingUser}
+                />
               </Field>
-              <p className="text-xs text-gray-500 -mt-2">Username is required to log in and must be unique (not case-sensitive) — leave blank to auto-generate one from the name. Email is optional and can also be used to log in.</p>
+              <p className="text-xs text-gray-500 -mt-2">
+                Username is required to log in and must be unique (not case-sensitive){!editingUser && ' — leave blank to auto-generate one from the name'}. Email is optional and can also be used to log in.
+              </p>
             </>
           )}
 
