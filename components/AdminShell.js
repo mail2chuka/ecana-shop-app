@@ -37,12 +37,12 @@ const menu = [
       { label: 'Cement Brands', href: '/admin/cement-brands', allow: ['admin', 'gsm_manager'] },
       { label: 'Aggregate', href: '/admin/stonedust', allow: ['admin', 'gsm_manager'] },
       { label: 'Trucks', href: '/admin/trucks', allow: ['admin', 'gsm_manager'] },
-      { label: 'Customers', href: '/admin/customers', allow: ['admin', 'gsm_manager'] },
     ],
   },
   {
     group: 'Operations',
     items: [
+      { label: 'Customers', href: '/admin/customers', allow: ['admin', 'gsm_manager'] },
       { label: 'ATCs', href: '/admin/atcs', allow: ['admin', 'atc_manager'] },
       { label: 'Sales', href: '/admin/sales', allow: ['admin', 'gsm_manager'] },
       { label: 'New Cement Sale', href: '/admin/sales/new/cement', allow: ['admin', 'gsm_manager'] },
