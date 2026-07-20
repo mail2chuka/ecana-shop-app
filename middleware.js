@@ -15,9 +15,9 @@ export default async function middleware(request) {
   const { pathname } = request.nextUrl;
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
-  // Platform (SaaS owner) area — spans all organizations, gated to platform admins only.
+  // Platform (SaaS owner) area — spans all organizations, gated to the super_admin only.
   if (pathname.startsWith('/platform')) {
-    if (!token || !token.isPlatformAdmin) {
+    if (!token || token.role !== 'super_admin') {
       return NextResponse.redirect(new URL('/', request.url));
     }
     return NextResponse.next();
@@ -39,7 +39,7 @@ export default async function middleware(request) {
 
   if (pathname.startsWith('/api') && !pathname.startsWith('/api/auth')) {
     if (pathname.startsWith('/api/platform')) {
-      if (!token || !token.isPlatformAdmin) {
+      if (!token || token.role !== 'super_admin') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
       return NextResponse.next();

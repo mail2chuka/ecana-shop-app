@@ -57,3 +57,48 @@ input[type="number"]:focus {
   body { background: white; }
   .no-print { display: none !important; }
 }
+
+/* --- Landing page (marketing) — scoped so it never bleeds into the admin app's Inter/Tailwind defaults --- */
+.landing {
+  --ink: #16140f;
+  --paper: #f2ede1;
+  --rust: #c2551c;
+  --rust-dim: #8f3f16;
+  --concrete: #a9a297;
+}
+
+.landing .grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+.landing .diagonal-down {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 3vw), 0 100%);
+}
+
+.landing .diagonal-up {
+  clip-path: polygon(0 3vw, 100% 0, 100% 100%, 0 100%);
+}
+
+.landing .reveal {
+  opacity: 0;
+  animation: landing-reveal 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes landing-reveal {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.landing .ticker-track {
+  animation: landing-ticker 32s linear infinite;
+}
+
+@keyframes landing-ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}

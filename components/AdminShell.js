@@ -218,15 +218,6 @@ export default function AdminShell({ children }) {
         </nav>
 
         <div className="shrink-0 p-3 border-t border-emerald-800/60 bg-black/15">
-          {session.user.isPlatformAdmin && (
-            <Link
-              href="/platform/organizations"
-              onClick={() => setOpen(false)}
-              className="flex items-center w-full mb-2 px-3 py-2 text-sm text-white bg-slate-700 border border-slate-900 hover:bg-slate-600 rounded-md"
-            >
-              🛰️ Platform — All Organizations
-            </Link>
-          )}
           <div className="mb-2 px-3">
             <p className="text-sm text-emerald-50 font-medium break-words" title={session.user.name}>{session.user.name}</p>
             <p className="text-xs text-emerald-300/70 capitalize">{session.user.role}</p>

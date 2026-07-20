@@ -12,15 +12,15 @@ import { ApiError } from '@/lib/apiError';
 const TRIAL_DAYS = 14;
 
 // Platform routes are cross-tenant: they deliberately run unscoped (all queries span every org).
-// Middleware already gates /api/platform to platform admins; we re-check here for defense in depth.
-async function requirePlatformAdmin() {
+// Middleware already gates /api/platform to the super_admin; we re-check here for defense in depth.
+async function requireSuperAdmin() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.isPlatformAdmin) return null;
+  if (session?.user?.role !== 'super_admin') return null;
   return session;
 }
 
 export async function GET() {
-  const session = await requirePlatformAdmin();
+  const session = await requireSuperAdmin();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   await dbConnect();
   try {
@@ -50,7 +50,7 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  const session = await requirePlatformAdmin();
+  const session = await requireSuperAdmin();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   await dbConnect();
   const body = await request.json();
