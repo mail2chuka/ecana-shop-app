@@ -1,12 +1,49 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card } from '@/components/ui';
 import { formatNaira, formatNumber } from '@/lib/format';
 import toast from 'react-hot-toast';
 
+// Mirrors the `allow` lists on the matching sidebar links in components/AdminShell.js — a shortcut
+// here is pointless (and confusing) for a role that gets bounced back the moment they click it.
+const QUICK_ACTIONS = [
+  {
+    href: '/admin/sales/new/cement', allow: ['admin', 'gsm_manager'],
+    cls: 'block bg-rose-50 border border-rose-200 rounded-lg p-4 hover:bg-rose-100', titleCls: 'font-bold text-rose-800',
+    title: 'New Cement Sale', subtitle: 'Sell cement from an active ATC',
+  },
+  {
+    href: '/admin/sales/new/stonedust', allow: ['admin', 'gsm_manager'],
+    cls: 'block bg-amber-50 border border-amber-200 rounded-lg p-4 hover:bg-amber-100', titleCls: 'font-bold text-amber-800',
+    title: 'New Aggregate Sale', subtitle: 'Record a quarry product sale',
+  },
+  {
+    href: '/admin/atcs', allow: ['admin', 'atc_manager'],
+    cls: 'block bg-green-50 border border-green-200 rounded-lg p-4 hover:bg-green-100', titleCls: 'font-bold text-green-800',
+    title: 'Record ATC', subtitle: 'Add a new authorization to collect',
+  },
+  {
+    href: '/admin/payments', allow: ['admin', 'gsm_manager'],
+    cls: 'block bg-blue-50 border border-blue-200 rounded-lg p-4 hover:bg-blue-100', titleCls: 'font-bold text-blue-800',
+    title: 'Record Payment', subtitle: 'Top up a customer balance',
+  },
+  {
+    href: '/admin/customers', allow: ['admin', 'gsm_manager'],
+    cls: 'block bg-purple-50 border border-purple-200 rounded-lg p-4 hover:bg-purple-100', titleCls: 'font-bold text-purple-800',
+    title: 'Customers', subtitle: null,
+  },
+  {
+    href: '/admin/reports/sales', allow: ['admin', 'gsm_manager', 'auditor'],
+    cls: 'block bg-gray-100 border border-gray-300 rounded-lg p-4 hover:bg-gray-200', titleCls: 'font-bold text-gray-800',
+    title: 'Reports', subtitle: 'Sales, balances, and more',
+  },
+];
+
 export default function DashboardPage() {
+  const { data: session } = useSession();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -50,30 +87,14 @@ export default function DashboardPage() {
 
       <h2 className="text-sm font-semibold text-gray-700 mb-3">Quick Actions</h2>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Link href="/admin/sales/new/cement" className="block bg-rose-50 border border-rose-200 rounded-lg p-4 hover:bg-rose-100">
-          <h3 className="font-bold text-rose-800">New Cement Sale</h3>
-          <p className="text-sm text-gray-600 mt-1">Sell cement from an active ATC</p>
-        </Link>
-        <Link href="/admin/sales/new/stonedust" className="block bg-amber-50 border border-amber-200 rounded-lg p-4 hover:bg-amber-100">
-          <h3 className="font-bold text-amber-800">New Aggregate Sale</h3>
-          <p className="text-sm text-gray-600 mt-1">Record a quarry product sale</p>
-        </Link>
-        <Link href="/admin/atcs" className="block bg-green-50 border border-green-200 rounded-lg p-4 hover:bg-green-100">
-          <h3 className="font-bold text-green-800">Record ATC</h3>
-          <p className="text-sm text-gray-600 mt-1">Add a new authorization to collect</p>
-        </Link>
-        <Link href="/admin/payments" className="block bg-blue-50 border border-blue-200 rounded-lg p-4 hover:bg-blue-100">
-          <h3 className="font-bold text-blue-800">Record Payment</h3>
-          <p className="text-sm text-gray-600 mt-1">Top up a customer balance</p>
-        </Link>
-        <Link href="/admin/customers" className="block bg-purple-50 border border-purple-200 rounded-lg p-4 hover:bg-purple-100">
-          <h3 className="font-bold text-purple-800">Customers</h3>
-          <p className="text-sm text-gray-600 mt-1">{stats.activeCustomers} active customers</p>
-        </Link>
-        <Link href="/admin/reports/sales" className="block bg-gray-100 border border-gray-300 rounded-lg p-4 hover:bg-gray-200">
-          <h3 className="font-bold text-gray-800">Reports</h3>
-          <p className="text-sm text-gray-600 mt-1">Sales, balances, and more</p>
-        </Link>
+        {QUICK_ACTIONS.filter((a) => a.allow.includes(session?.user?.role)).map((a) => (
+          <Link key={a.href} href={a.href} className={a.cls}>
+            <h3 className={a.titleCls}>{a.title}</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              {a.href === '/admin/customers' ? `${stats.activeCustomers} active customers` : a.subtitle}
+            </p>
+          </Link>
+        ))}
       </div>
     </div>
   );
