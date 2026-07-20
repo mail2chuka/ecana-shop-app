@@ -17,8 +17,19 @@ async function _h_GET(request) {
     await dbConnect();
     const { searchParams } = new URL(request.url);
     const customerId = searchParams.get('customer');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
     const query = {};
     if (customerId) query.customer = customerId;
+    if (startDate || endDate) {
+      query.date = {};
+      if (startDate) query.date.$gte = new Date(startDate);
+      if (endDate) {
+        const e = new Date(endDate);
+        e.setHours(23, 59, 59, 999);
+        query.date.$lte = e;
+      }
+    }
     const payments = await CustomerPayment.find(query).sort({ date: -1 }).limit(200);
     return NextResponse.json({ success: true, data: payments });
   } catch (e) {

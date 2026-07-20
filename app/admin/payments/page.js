@@ -29,10 +29,18 @@ export default function PaymentsPage() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const searchRef = useRef(null);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
-  const load = async () => {
+  const load = async (overrides = {}) => {
+    setLoading(true);
+    const sd = overrides.startDate !== undefined ? overrides.startDate : startDate;
+    const ed = overrides.endDate !== undefined ? overrides.endDate : endDate;
+    const params = new URLSearchParams();
+    if (sd) params.set('startDate', sd);
+    if (ed) params.set('endDate', ed);
     const [p, c] = await Promise.all([
-      fetch('/api/payments').then(r => r.json()),
+      fetch(`/api/payments?${params.toString()}`).then(r => r.json()),
       fetch('/api/customers').then(r => r.json()),
     ]);
     if (p.success) setPayments(p.data);
@@ -41,6 +49,12 @@ export default function PaymentsPage() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const clearFilter = () => {
+    setStartDate('');
+    setEndDate('');
+    load({ startDate: '', endDate: '' });
+  };
 
   // Search customers as user types
   useEffect(() => {
@@ -110,8 +124,6 @@ export default function PaymentsPage() {
     setSelectedCustomer(null);
   };
 
-  if (loading) return <Loader />;
-
   return (
     <div>
       <PageHeader
@@ -120,39 +132,62 @@ export default function PaymentsPage() {
         action={<button onClick={openModal} className={btnPrimaryCls}>New Payment</button>}
       />
 
-      <Card className="overflow-hidden">
-        <div className={tableScrollCls}>
-        <table className="w-full text-sm">
-          <thead className={theadCls}>
-            <tr>
-              <th className="px-4 py-3 text-left font-medium">Date</th>
-              <th className="px-4 py-3 text-left font-medium">Ref</th>
-              <th className="px-4 py-3 text-left font-medium">Customer</th>
-              <th className="px-4 py-3 text-left font-medium">Method</th>
-              <th className="px-4 py-3 text-left font-medium">Depositor</th>
-              <th className="px-4 py-3 text-right font-medium">Amount</th>
-              <th className="px-4 py-3 text-right font-medium">New Balance</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {payments.length === 0 && <EmptyRow colSpan={7} text="No payments yet" />}
-            {payments.map(p => (
-              <tr key={p._id}>
-                <td className="px-4 py-3">{formatDate(p.date)}</td>
-                <td className="px-4 py-3 font-medium">{p.transactionNumber}</td>
-                <td className="px-4 py-3 font-medium">
-                  <Link href={`/admin/customers/${p.customer}`} className="hover:underline">{p.customerName}</Link>
-                </td>
-                <td className="px-4 py-3 capitalize">{p.method === 'transfer' ? 'Bank Transfer' : p.method} {p.bankName ? `(${p.bankName})` : ''}</td>
-                <td className="px-4 py-3 text-gray-600">{p.depositorName || '-'}</td>
-                <td className="px-4 py-3 text-right font-medium text-green-600">{formatNaira(p.amount)}</td>
-                <td className="px-4 py-3 text-right">{formatNaira(p.balanceAfter)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="bg-white border rounded-lg p-4 mb-6">
+        <div className="grid sm:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
+            <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
+            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
+          </div>
+          <div className="flex items-end gap-2">
+            <button onClick={() => load()} disabled={loading} className={`flex-1 ${btnPrimaryCls}`}>
+              {loading ? 'Loading...' : 'Filter'}
+            </button>
+            {(startDate || endDate) && (
+              <button onClick={clearFilter} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Clear</button>
+            )}
+          </div>
         </div>
-      </Card>
+      </div>
+
+      {loading ? <Loader /> : (
+        <Card className="overflow-hidden">
+          <div className={tableScrollCls}>
+          <table className="w-full text-sm">
+            <thead className={theadCls}>
+              <tr>
+                <th className="px-4 py-3 text-left font-medium">Date</th>
+                <th className="px-4 py-3 text-left font-medium">Ref</th>
+                <th className="px-4 py-3 text-left font-medium">Customer</th>
+                <th className="px-4 py-3 text-left font-medium">Method</th>
+                <th className="px-4 py-3 text-left font-medium">Depositor</th>
+                <th className="px-4 py-3 text-right font-medium">Amount</th>
+                <th className="px-4 py-3 text-right font-medium">New Balance</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {payments.length === 0 && <EmptyRow colSpan={7} text="No payments yet" />}
+              {payments.map(p => (
+                <tr key={p._id}>
+                  <td className="px-4 py-3">{formatDate(p.date)}</td>
+                  <td className="px-4 py-3 font-medium">{p.transactionNumber}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <Link href={`/admin/customers/${p.customer}`} className="hover:underline">{p.customerName}</Link>
+                  </td>
+                  <td className="px-4 py-3 capitalize">{p.method === 'transfer' ? 'Bank Transfer' : p.method} {p.bankName ? `(${p.bankName})` : ''}</td>
+                  <td className="px-4 py-3 text-gray-600">{p.depositorName || '-'}</td>
+                  <td className="px-4 py-3 text-right font-medium text-green-600">{formatNaira(p.amount)}</td>
+                  <td className="px-4 py-3 text-right">{formatNaira(p.balanceAfter)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          </div>
+        </Card>
+      )}
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title="Record Payment">
         <form onSubmit={handleSubmit} className="space-y-4">
