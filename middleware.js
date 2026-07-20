@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-
-const STAFF_ROLES = ['admin', 'gsm_manager', 'atc_manager'];
+import { STAFF_ROLES } from '@/lib/permissions';
 
 /**
  * Server-side route protection (defense-in-depth).
