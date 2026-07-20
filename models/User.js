@@ -12,7 +12,7 @@ const UserSchema = new mongoose.Schema({
   phone: { type: String, unique: true, sparse: true, trim: true }, // customer-role login identifier
   password: { type: String, required: true, select: false }, // also doubles as the PIN for customer-role accounts
   actionPin: { type: String, select: false }, // separate 4-digit PIN gating sensitive actions (e.g. surcharge/refund), admin sets/changes their own
-  role: { type: String, enum: ['admin', 'gsm_manager', 'atc_manager', 'customer'], required: true, default: 'admin' },
+  role: { type: String, enum: ['admin', 'gsm_manager', 'atc_manager', 'auditor', 'customer'], required: true, default: 'admin' },
   linkedCustomer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
   isActive: { type: Boolean, default: true },
   // Platform (SaaS) owner: can see and manage ALL organizations, above the per-org admin role.

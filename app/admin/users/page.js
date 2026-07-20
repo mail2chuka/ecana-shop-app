@@ -9,6 +9,7 @@ const ROLE_LABELS = {
   admin: 'Admin',
   gsm_manager: 'GSM Manager',
   atc_manager: 'ATC Manager',
+  auditor: 'Auditor',
   customer: 'Customer',
 };
 
@@ -80,8 +81,10 @@ export default function UsersPage() {
       } else {
         const r = await fetch('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
         const d = await r.json();
-        if (d.success) { toast.success('User created'); setShowModal(false); load(); }
-        else toast.error(d.error);
+        if (d.success) {
+          toast.success(d.data.username ? `User created — username: ${d.data.username}` : 'User created');
+          setShowModal(false); load();
+        } else toast.error(d.error);
       }
     } catch (err) {
       toast.error(err.message || 'Something went wrong, please try again');
@@ -179,6 +182,7 @@ export default function UsersPage() {
               <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className={inputCls} required>
                 <option value="gsm_manager">GSM Manager</option>
                 <option value="atc_manager">ATC Manager</option>
+                <option value="auditor">Auditor</option>
                 <option value="admin">Admin</option>
                 <option value="customer">Customer</option>
               </select>
@@ -195,9 +199,9 @@ export default function UsersPage() {
                 <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className={inputCls} />
               </Field>
               <Field label="Username">
-                <input type="text" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} className={inputCls} />
+                <input type="text" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} className={inputCls} placeholder="Leave blank to auto-generate" />
               </Field>
-              <p className="text-xs text-gray-500 -mt-2">At least one of email or username is required.</p>
+              <p className="text-xs text-gray-500 -mt-2">Username is required to log in and must be unique (not case-sensitive) — leave blank to auto-generate one from the name. Email is optional and can also be used to log in.</p>
             </>
           )}
 

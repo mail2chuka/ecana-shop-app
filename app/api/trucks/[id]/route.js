@@ -7,6 +7,7 @@ import ATC from '@/models/ATC';
 import QuarryPurchase from '@/models/QuarryPurchase';
 import { logAudit } from '@/lib/audit';
 import { requireObjectId } from '@/lib/validate';
+import { can } from '@/lib/permissions';
 
 const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
 
@@ -22,7 +23,7 @@ async function findBusyReason(truckId) {
 async function _h_PUT(request, { params }) {
   try {
     const session = await getOrgSession();
-    if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || !can(session.user.role, 'trucks.edit')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { id } = await params;
     requireObjectId(id, 'truck id');

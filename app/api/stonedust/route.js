@@ -5,6 +5,7 @@ import dbConnect from '@/lib/db';
 import StoneDustProduct from '@/models/StoneDustProduct';
 import Supplier from '@/models/Supplier';
 import { logAudit } from '@/lib/audit';
+import { can } from '@/lib/permissions';
 
 async function _h_GET() {
   try {
@@ -21,7 +22,7 @@ async function _h_GET() {
 async function _h_POST(request) {
   try {
     const session = await getOrgSession();
-    if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || !can(session.user.role, 'stonedust.create')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const body = await request.json();
     if (!body.quarry || !body.size) return NextResponse.json({ error: 'Quarry and size required' }, { status: 400 });

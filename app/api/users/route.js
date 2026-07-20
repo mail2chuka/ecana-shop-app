@@ -5,8 +5,9 @@ import dbConnect from '@/lib/db';
 import User from '@/models/User';
 import { logAudit } from '@/lib/audit';
 import { ApiError } from '@/lib/apiError';
+import { generateUsername, assertUsernameAvailable } from '@/lib/username';
 
-const ROLES = ['admin', 'gsm_manager', 'atc_manager', 'customer'];
+const ROLES = ['admin', 'gsm_manager', 'atc_manager', 'auditor', 'customer'];
 
 async function _h_GET() {
   try {
@@ -31,18 +32,21 @@ async function _h_POST(request) {
     if (!name || !role || !password) throw new ApiError('Name, role, and password required', 400);
     if (!ROLES.includes(role)) throw new ApiError('Invalid role', 400);
 
+    let finalUsername;
     if (role === 'customer') {
       if (!phone) throw new ApiError('Phone required for a customer login', 400);
       if (!linkedCustomer) throw new ApiError('Select which customer this login belongs to', 400);
-    } else if (!email && !username) {
-      throw new ApiError('Email or username required for a staff login', 400);
+    } else {
+      // Username is a required, globally-unique login identity for staff accounts — auto-generated
+      // from their name when left blank, otherwise validated for availability before creation.
+      finalUsername = username ? await assertUsernameAvailable(username) : await generateUsername(name);
     }
 
     const user = await User.create({
       name,
       role,
       email: email || undefined,
-      username: username || undefined,
+      username: finalUsername,
       phone: role === 'customer' ? phone : undefined,
       password,
       linkedCustomer: role === 'customer' ? linkedCustomer : undefined,

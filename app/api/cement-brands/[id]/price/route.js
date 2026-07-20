@@ -7,10 +7,11 @@ import CementBrand from '@/models/CementBrand';
 import PriceHistory from '@/models/PriceHistory';
 import { logAudit } from '@/lib/audit';
 import { ApiError } from '@/lib/apiError';
+import { can } from '@/lib/permissions';
 
 async function _h_POST(request, { params }) {
   const session = await getOrgSession();
-  if (!session || session.user.role !== 'admin') {
+  if (!session || !can(session.user.role, 'cementBrands.priceChange')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   await dbConnect();

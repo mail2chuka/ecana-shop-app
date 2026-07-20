@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import CementBrand from '@/models/CementBrand';
 import { logAudit } from '@/lib/audit';
+import { can } from '@/lib/permissions';
 
 async function _h_GET() {
   try {
@@ -20,7 +21,7 @@ async function _h_GET() {
 async function _h_POST(request) {
   try {
     const session = await getOrgSession();
-    if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || !can(session.user.role, 'cementBrands.create')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const body = await request.json();
     if (!body.name) return NextResponse.json({ error: 'Brand name required' }, { status: 400 });

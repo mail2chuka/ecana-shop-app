@@ -6,6 +6,7 @@ import Truck from '@/models/Truck';
 import ATC from '@/models/ATC';
 import QuarryPurchase from '@/models/QuarryPurchase';
 import { logAudit } from '@/lib/audit';
+import { can } from '@/lib/permissions';
 
 const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
 
@@ -41,7 +42,7 @@ async function _h_GET() {
 async function _h_POST(request) {
   try {
     const session = await getOrgSession();
-    if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || !can(session.user.role, 'trucks.create')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const body = await request.json();
     if (!body.plateNumber || !body.driverName) return NextResponse.json({ error: 'Plate number and driver name required' }, { status: 400 });

@@ -11,8 +11,9 @@ import toast from 'react-hot-toast';
 
 // Non-admin staff roles are restricted to these path prefixes; the dashboard ('/admin' exactly) is always allowed.
 const ROLE_ALLOWED_PREFIXES = {
-  gsm_manager: ['/admin/customers', '/admin/sales', '/admin/shop', '/admin/payments', '/admin/reports'],
+  gsm_manager: ['/admin/customers', '/admin/suppliers', '/admin/cement-brands', '/admin/stonedust', '/admin/trucks', '/admin/sales', '/admin/shop', '/admin/payments', '/admin/reports'],
   atc_manager: ['/admin/atcs'],
+  auditor: ['/admin/reports'],
 };
 
 function isPathAllowed(role, pathname) {
@@ -32,10 +33,10 @@ const menu = [
   {
     group: 'Setup',
     items: [
-      { label: 'Quarry', href: '/admin/suppliers', allow: ['admin'] },
-      { label: 'Cement Brands', href: '/admin/cement-brands', allow: ['admin'] },
-      { label: 'Aggregate', href: '/admin/stonedust', allow: ['admin'] },
-      { label: 'Trucks', href: '/admin/trucks', allow: ['admin'] },
+      { label: 'Quarry', href: '/admin/suppliers', allow: ['admin', 'gsm_manager'] },
+      { label: 'Cement Brands', href: '/admin/cement-brands', allow: ['admin', 'gsm_manager'] },
+      { label: 'Aggregate', href: '/admin/stonedust', allow: ['admin', 'gsm_manager'] },
+      { label: 'Trucks', href: '/admin/trucks', allow: ['admin', 'gsm_manager'] },
       { label: 'Customers', href: '/admin/customers', allow: ['admin', 'gsm_manager'] },
     ],
   },
@@ -52,7 +53,7 @@ const menu = [
   },
   {
     group: 'Reports',
-    allow: ['admin', 'gsm_manager'],
+    allow: ['admin', 'gsm_manager', 'auditor'],
     items: [
       { label: 'Sales Report', href: '/admin/reports/sales' },
       { label: 'Customer Balances', href: '/admin/reports/balances' },

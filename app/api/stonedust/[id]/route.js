@@ -5,11 +5,12 @@ import dbConnect from '@/lib/db';
 import StoneDustProduct from '@/models/StoneDustProduct';
 import { logAudit } from '@/lib/audit';
 import { requireObjectId } from '@/lib/validate';
+import { can } from '@/lib/permissions';
 
 async function _h_PUT(request, { params }) {
   try {
     const session = await getOrgSession();
-    if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || !can(session.user.role, 'stonedust.edit')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { id } = await params;
     requireObjectId(id, 'stone dust product id');
