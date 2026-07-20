@@ -21,8 +21,7 @@ const CustomerPaymentSchema = new mongoose.Schema({
 
 CustomerPaymentSchema.index({ customer: 1, date: -1 });
 CustomerPaymentSchema.index({ date: -1 });
-// transactionNumber is partial (unique when present): a few legacy records predate the field.
-CustomerPaymentSchema.index({ organization: 1, transactionNumber: 1 }, { unique: true, partialFilterExpression: { transactionNumber: { $type: 'string' } } });
+CustomerPaymentSchema.index({ organization: 1, transactionNumber: 1 }, { unique: true });
 
 CustomerPaymentSchema.plugin(tenantPlugin);
 

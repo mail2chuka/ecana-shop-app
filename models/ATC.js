@@ -34,8 +34,7 @@ const ATCSchema = new mongoose.Schema({
 ATCSchema.index({ status: 1, cementBrand: 1 });
 ATCSchema.index({ atcDate: -1 });
 ATCSchema.index({ organization: 1, atcNumber: 1 }, { unique: true });
-// transactionNumber is partial (unique when present): a few legacy records predate the field.
-ATCSchema.index({ organization: 1, transactionNumber: 1 }, { unique: true, partialFilterExpression: { transactionNumber: { $type: 'string' } } });
+ATCSchema.index({ organization: 1, transactionNumber: 1 }, { unique: true });
 
 ATCSchema.plugin(tenantPlugin);
 

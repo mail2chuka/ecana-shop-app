@@ -89,8 +89,7 @@ SaleSchema.index({ date: -1 });
 SaleSchema.index({ saleType: 1, date: -1 });
 SaleSchema.index({ truck: 1, date: -1 });
 SaleSchema.index({ organization: 1, saleNumber: 1 }, { unique: true });
-// transactionNumber is partial (unique when present): a few legacy records predate the field.
-SaleSchema.index({ organization: 1, transactionNumber: 1 }, { unique: true, partialFilterExpression: { transactionNumber: { $type: 'string' } } });
+SaleSchema.index({ organization: 1, transactionNumber: 1 }, { unique: true });
 
 SaleSchema.plugin(tenantPlugin);
 

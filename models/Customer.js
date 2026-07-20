@@ -16,12 +16,7 @@ const CustomerSchema = new mongoose.Schema({
 
 CustomerSchema.index({ name: 'text', phone: 'text', businessName: 'text' });
 CustomerSchema.index({ isActive: 1 });
-// customerId unique within an org, only when present (partial — a compound sparse index would not
-// skip nulls because organization is always set).
-CustomerSchema.index(
-  { organization: 1, customerId: 1 },
-  { unique: true, partialFilterExpression: { customerId: { $type: 'string' } } }
-);
+CustomerSchema.index({ organization: 1, customerId: 1 }, { unique: true });
 
 CustomerSchema.plugin(tenantPlugin);
 
