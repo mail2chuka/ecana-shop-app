@@ -28,7 +28,9 @@ export default function LandingPage() {
       {/* Nav */}
       <header className="max-w-5xl mx-auto flex items-center justify-between px-6 py-6">
         <span className="flex items-center gap-2 font-extrabold tracking-tight text-lg">
-          <Logo className="h-7 w-7" />
+          <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg shrink-0" style={{ backgroundColor: 'var(--ink)' }}>
+            <Logo className="h-6 w-6" />
+          </span>
           GS&amp;M
         </span>
         <Link
