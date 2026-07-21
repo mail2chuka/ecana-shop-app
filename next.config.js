@@ -20,6 +20,9 @@ const securityHeaders = [
 ];
 
 module.exports = {
+	// undici (a transitive dependency of @vercel/blob) ships syntax this Next.js version's default
+	// build pipeline excludes node_modules from transpiling, hence this can't parse — this opts it in.
+	transpilePackages: ['@vercel/blob', 'undici'],
 	async headers() {
 		return [
 			{
