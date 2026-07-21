@@ -13,12 +13,15 @@ const ROLE_LABELS = {
   customer: 'Customer',
 };
 
+const ROLE_FILTERS = ['all', 'admin', 'gsm_manager', 'atc_manager', 'auditor', 'customer'];
+
 const blankForm = { name: '', role: 'gsm_manager', email: '', username: '', phone: '', password: '', linkedCustomer: null };
 const blankPinForm = { currentPassword: '', newPin: '', confirmPin: '' };
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [roleFilter, setRoleFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -59,6 +62,8 @@ export default function UsersPage() {
     setCustomerSearch(u.linkedCustomer ? formatCustomerLabel(u.linkedCustomer) : '');
     setShowModal(true);
   };
+
+  const filteredUsers = roleFilter === 'all' ? users : users.filter(u => u.role === roleFilter);
 
   const filteredCustomers = customerSearch
     ? customers.filter(c =>
@@ -145,6 +150,18 @@ export default function UsersPage() {
         }
       />
 
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {ROLE_FILTERS.map(r => (
+          <button
+            key={r}
+            onClick={() => setRoleFilter(r)}
+            className={`px-3 py-1 text-sm rounded border ${roleFilter === r ? 'bg-green-800 text-neutral-100 border-green-800' : 'bg-white hover:bg-gray-50'}`}
+          >
+            {r === 'all' ? 'All' : ROLE_LABELS[r]}
+          </button>
+        ))}
+      </div>
+
       {loading ? <Loader /> : (
         <Card className="overflow-hidden">
           <div className={tableScrollCls}>
@@ -159,8 +176,8 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {users.length === 0 && <EmptyRow colSpan={5} text="No users found" />}
-              {users.map(u => (
+              {filteredUsers.length === 0 && <EmptyRow colSpan={5} text="No users found" />}
+              {filteredUsers.map(u => (
                 <tr key={u._id}>
                   <td className="px-4 py-3 font-medium">
                     {u.name}

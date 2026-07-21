@@ -3,18 +3,26 @@ import { getOrgSession, withOrg } from '@/lib/session';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import User from '@/models/User';
+// Registers the Customer schema with Mongoose so .populate('linkedCustomer') below can resolve it —
+// without this explicit import, it silently depended on some other route having loaded Customer
+// first in the same process, which fails on a fresh server start (or serverless cold start).
+import '@/models/Customer';
 import { logAudit } from '@/lib/audit';
 import { ApiError } from '@/lib/apiError';
 import { generateUsername, assertUsernameAvailable } from '@/lib/username';
 
 const ROLES = ['admin', 'gsm_manager', 'atc_manager', 'auditor', 'customer'];
+const ROLE_RANK = Object.fromEntries(ROLES.map((r, i) => [r, i]));
 
 async function _h_GET() {
   try {
     const session = await getOrgSession();
     if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
+    // Name-sorted first, then a stable re-sort by role rank — grouped by role, alphabetical within
+    // each group, rather than either sorted alone.
     const users = await User.find().populate('linkedCustomer', 'name phone').sort({ name: 1 });
+    users.sort((a, b) => (ROLE_RANK[a.role] ?? 99) - (ROLE_RANK[b.role] ?? 99));
     return NextResponse.json({ success: true, data: users });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
