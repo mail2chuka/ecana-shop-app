@@ -27,6 +27,8 @@ export default function OrganizationDetailPage() {
   const [resetTarget, setResetTarget] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [resetting, setResetting] = useState(false);
+  const [extendPlan, setExtendPlan] = useState('monthly');
+  const [extending, setExtending] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -40,6 +42,8 @@ export default function OrganizationDetailPage() {
         trialEndsAt: d.data.trialEndsAt ? d.data.trialEndsAt.split('T')[0] : '',
         freeForever: d.data.freeForever,
         enabledModules: d.data.enabledModules || [],
+        monthlyPrice: d.data.monthlyPrice || 0,
+        yearlyPrice: d.data.yearlyPrice || 0,
       });
     } else toast.error(d.error || 'Failed to load');
     setLoading(false);
@@ -85,6 +89,22 @@ export default function OrganizationDetailPage() {
       else toast.error(d.error);
     } finally {
       setTogglingActive(false);
+    }
+  };
+
+  const handleExtend = async () => {
+    const label = extendPlan === 'monthly' ? '1 month' : '1 year';
+    if (!confirm(`Extend ${org.name}'s subscription by ${label}?`)) return;
+    setExtending(true);
+    try {
+      const r = await fetch(`/api/platform/organizations/${id}/extend-subscription`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan: extendPlan }),
+      });
+      const d = await r.json();
+      if (d.success) { toast.success(`Extended by ${label}`); load(); }
+      else toast.error(d.error);
+    } finally {
+      setExtending(false);
     }
   };
 
@@ -135,10 +155,32 @@ export default function OrganizationDetailPage() {
               : <StatusPill status="Suspended" color="red" />}
           </div>
         </Card>
+        <Card className="p-4">
+          <p className="text-xs text-gray-500">{org.subscriptionEndsAt ? 'Paid through' : 'Trial ends'}</p>
+          <p className="text-lg font-bold mt-1">{org.freeForever ? '—' : formatDate(org.subscriptionEndsAt || org.trialEndsAt)}</p>
+        </Card>
         <Card className="p-4"><p className="text-xs text-gray-500">Staff</p><p className="text-2xl font-bold mt-1">{org.staff.length}</p></Card>
         <Card className="p-4"><p className="text-xs text-gray-500">Customers</p><p className="text-2xl font-bold mt-1">{org.customerCount}</p></Card>
         <Card className="p-4"><p className="text-xs text-gray-500">Sales Volume</p><p className="text-2xl font-bold mt-1">{formatNaira(org.revenue)}</p></Card>
       </div>
+
+      {!org.freeForever && (
+        <Card className="p-5 mb-6">
+          <h3 className="font-semibold text-sm mb-4">Extend Subscription</h3>
+          <div className="flex flex-wrap items-end gap-3">
+            <Field label="Plan">
+              <select value={extendPlan} onChange={(e) => setExtendPlan(e.target.value)} className={inputCls}>
+                <option value="monthly">Monthly ({formatNaira(org.monthlyPrice)})</option>
+                <option value="yearly">Yearly ({formatNaira(org.yearlyPrice)})</option>
+              </select>
+            </Field>
+            <button onClick={handleExtend} disabled={extending} className={btnPrimaryCls}>
+              {extending ? 'Extending...' : 'Extend Now'}
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-3">Use this when a subscriber has paid you outside Paystack (bank transfer, cash, etc). It extends from whichever is later — today, or their current paid-through date.</p>
+        </Card>
+      )}
 
       <Card className="p-5 mb-6">
         <h3 className="font-semibold text-sm mb-4">Organization Settings</h3>
@@ -173,6 +215,23 @@ export default function OrganizationDetailPage() {
               <input type="checkbox" checked={form.freeForever} onChange={(e) => setForm({ ...form, freeForever: e.target.checked })} />
               Free forever (exempt from trial/billing)
             </label>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Monthly price (₦)">
+              <input
+                type="number" min="0" value={form.monthlyPrice}
+                onChange={(e) => setForm({ ...form, monthlyPrice: e.target.value })}
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Yearly price (₦)">
+              <input
+                type="number" min="0" value={form.yearlyPrice}
+                onChange={(e) => setForm({ ...form, yearlyPrice: e.target.value })}
+                className={inputCls}
+              />
+            </Field>
           </div>
 
           <Field label="Enabled modules">

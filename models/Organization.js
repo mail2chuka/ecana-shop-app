@@ -18,6 +18,11 @@ const OrganizationSchema = new mongoose.Schema({
   // Subscription (billing phase). freeForever exempts the founding org (Ecana) from all trial/billing.
   subscriptionStatus: { type: String, enum: ['trialing', 'active', 'past_due', 'canceled'], default: 'trialing' },
   trialEndsAt: Date,
+  // When the current PAID period expires — distinct from trialEndsAt. Set (and extended) by either the
+  // super_admin manually or a successful Paystack payment. Per-org pricing for now (set by super_admin).
+  subscriptionEndsAt: Date,
+  monthlyPrice: { type: Number, default: 0 },
+  yearlyPrice: { type: Number, default: 0 },
   freeForever: { type: Boolean, default: false },
   paystackCustomerCode: String,
   paystackSubscriptionCode: String,

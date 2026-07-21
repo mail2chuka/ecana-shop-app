@@ -64,9 +64,16 @@ input[type="number"]:focus {
   --muted: #5b6b64;
   --line: #e4e9e6;
   --surface: #ffffff;
+  /* Buttons only. */
   --green: #128a4e;
   --green-deep: #0d6b3c;
-  --green-glow: rgba(18, 138, 78, 0.16);
+  /* Everything else that needs an accent — amber, slate, rust — kept out of the buttons entirely. */
+  --amber: #c8792e;
+  --amber-glow: rgba(200, 121, 46, 0.14);
+  --slate: #3a4a63;
+  --slate-glow: rgba(58, 74, 99, 0.12);
+  --rust: #a8492f;
+  --rust-glow: rgba(168, 73, 47, 0.14);
 }
 
 .landing .glow {
@@ -74,7 +81,7 @@ input[type="number"]:focus {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(60% 50% at 50% 0%, var(--green-glow), transparent 70%);
+    radial-gradient(60% 50% at 50% 0%, var(--amber-glow), transparent 70%);
 }
 
 .landing .reveal {

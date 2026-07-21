@@ -72,6 +72,16 @@ export async function PUT(request, { params }) {
     if (body.trialEndsAt !== undefined) update.trialEndsAt = body.trialEndsAt ? new Date(body.trialEndsAt) : null;
     if (typeof body.freeForever === 'boolean') update.freeForever = body.freeForever;
     if (typeof body.isActive === 'boolean') update.isActive = body.isActive;
+    if (body.monthlyPrice !== undefined) {
+      const n = Number(body.monthlyPrice);
+      if (!Number.isFinite(n) || n < 0) throw new ApiError('Invalid monthly price', 400);
+      update.monthlyPrice = n;
+    }
+    if (body.yearlyPrice !== undefined) {
+      const n = Number(body.yearlyPrice);
+      if (!Number.isFinite(n) || n < 0) throw new ApiError('Invalid yearly price', 400);
+      update.yearlyPrice = n;
+    }
 
     const result = await runWithOrg(id, async () => {
       const before = await Organization.findById(id).lean();

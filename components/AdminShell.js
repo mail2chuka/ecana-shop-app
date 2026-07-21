@@ -63,6 +63,7 @@ const menu = [
       { label: 'Truck Utilization', href: '/admin/reports/trucks' },
     ],
   },
+  { label: 'Subscription', href: '/admin/subscription', allow: ['admin'] },
   { label: 'Users', href: '/admin/users', allow: ['admin'] },
   { label: 'Audit Log', href: '/admin/audit-log', allow: ['admin'] },
 ];

@@ -8,14 +8,17 @@ const FEATURES = [
   {
     title: 'From ATC to delivery',
     body: 'Track every authorization to collect from issue to closed, so nothing sits waiting on the yard unnoticed.',
+    accent: 'var(--amber)', glow: 'var(--amber-glow)',
   },
   {
     title: 'One ledger, always right',
     body: 'Customer balances, payments, and statements reconcile automatically — no separate books to keep in sync.',
+    accent: 'var(--slate)', glow: 'var(--slate-glow)',
   },
   {
     title: 'Access that matches the job',
     body: 'Owners, managers, ATC handlers, and auditors each see exactly what their role needs, nothing more.',
+    accent: 'var(--rust)', glow: 'var(--rust-glow)',
   },
 ];
 
@@ -43,7 +46,7 @@ export default function LandingPage() {
         <div className="relative max-w-3xl mx-auto px-6 pt-20 pb-24 text-center">
           <p
             className="reveal text-xs font-semibold tracking-widest uppercase mb-5"
-            style={{ color: 'var(--green-deep)', animationDelay: '60ms' }}
+            style={{ color: 'var(--amber)', animationDelay: '60ms' }}
           >
             For building-materials distributors
           </p>
@@ -76,7 +79,9 @@ export default function LandingPage() {
         <div className="grid sm:grid-cols-3 gap-8 sm:gap-10">
           {FEATURES.map((f) => (
             <div key={f.title}>
-              <div className="h-9 w-9 rounded-lg mb-4" style={{ backgroundColor: 'var(--green-glow)' }} />
+              <div className="h-9 w-9 rounded-lg mb-4" style={{ backgroundColor: f.glow }}>
+                <div className="h-full w-full rounded-lg" style={{ border: `2px solid ${f.accent}`, opacity: 0.55 }} />
+              </div>
               <h3 className="font-bold text-lg mb-2">{f.title}</h3>
               <p className="text-sm leading-relaxed" style={{ color: 'var(--muted)' }}>{f.body}</p>
             </div>
