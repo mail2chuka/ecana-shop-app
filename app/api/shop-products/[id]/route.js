@@ -4,11 +4,12 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import ShopProduct from '@/models/ShopProduct';
 import { logAudit } from '@/lib/audit';
+import { can } from '@/lib/permissions';
 
 async function _h_PUT(request, { params }) {
   try {
     const session = await getOrgSession();
-    if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session || !can(session.user.role, 'shop.edit')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { id } = await params;
     const body = await request.json();
