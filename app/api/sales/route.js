@@ -19,18 +19,6 @@ import { ApiError } from '@/lib/apiError';
 
 const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
 
-async function nextSaleNumber() {
-  const year = new Date().getFullYear();
-  const prefix = `S-${year}-`;
-  const last = await Sale.findOne({ saleNumber: new RegExp(`^${prefix}`) }).sort({ saleNumber: -1 });
-  let n = 1;
-  if (last) {
-    const m = last.saleNumber.match(/-(\d+)$/);
-    if (m) n = parseInt(m[1]) + 1;
-  }
-  return `${prefix}${String(n).padStart(4, '0')}`;
-}
-
 async function _h_GET(request) {
   try {
     const session = await getOrgSession();
@@ -268,12 +256,13 @@ async function _h_POST(request) {
         }
       }
 
-      const saleNumber = await nextSaleNumber();
+      // saleNumber and transactionNumber are the same value: one shared reference-number scheme
+      // for every transaction type in the app, sale included — no separate per-type numbering.
       const transactionNumber = await generateTransactionNumber(mongoSession);
 
       const sale = await Sale.create([{
         _id: saleId,
-        saleNumber,
+        saleNumber: transactionNumber,
         transactionNumber,
         saleType,
         customer: customer._id,
