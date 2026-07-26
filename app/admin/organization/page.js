@@ -17,6 +17,8 @@ export default function OrganizationSettingsPage() {
     if (d.success) {
       setForm({
         name: d.data.name || '',
+        phone: d.data.phone || '',
+        email: d.data.email || '',
         logoUrl: d.data.logoUrl || '',
         address: d.data.address || '',
         invoiceFooter: d.data.invoiceFooter || '',
@@ -74,6 +76,14 @@ export default function OrganizationSettingsPage() {
           <Field label="Business name" required>
             <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} required />
           </Field>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Phone number">
+              <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputCls} />
+            </Field>
+            <Field label="Company email">
+              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputCls} />
+            </Field>
+          </div>
           <Field label="Address">
             <input type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={inputCls} placeholder="Shown on invoices and statements" />
           </Field>

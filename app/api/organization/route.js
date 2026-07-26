@@ -10,7 +10,7 @@ async function _h_GET() {
   if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   await dbConnect();
   try {
-    const org = await Organization.findById(session.user.organization).select('name slug logoUrl address invoiceFooter');
+    const org = await Organization.findById(session.user.organization).select('name slug phone email logoUrl address invoiceFooter');
     if (!org) return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     return NextResponse.json({ success: true, data: org });
   } catch (e) {
@@ -29,18 +29,20 @@ async function _h_PUT(request) {
       if (!body.name.trim()) throw new ApiError('Business name is required', 400);
       update.name = body.name.trim();
     }
+    if (typeof body.phone === 'string') update.phone = body.phone.trim() || null;
+    if (typeof body.email === 'string') update.email = body.email.trim().toLowerCase() || null;
     if (typeof body.logoUrl === 'string') update.logoUrl = body.logoUrl.trim() || null;
     if (typeof body.address === 'string') update.address = body.address.trim() || null;
     if (typeof body.invoiceFooter === 'string') update.invoiceFooter = body.invoiceFooter.trim() || null;
 
-    const before = await Organization.findById(session.user.organization).select('name logoUrl address invoiceFooter').lean();
+    const before = await Organization.findById(session.user.organization).select('name phone email logoUrl address invoiceFooter').lean();
     if (!before) throw new ApiError('Organization not found', 404);
     const updated = await Organization.findByIdAndUpdate(session.user.organization, update, { new: true, runValidators: true })
-      .select('name slug logoUrl address invoiceFooter');
+      .select('name slug phone email logoUrl address invoiceFooter');
 
     await logAudit({
       userId: session.user.id, userName: session.user.name, action: 'updated', entity: 'Organization', entityId: session.user.organization,
-      before, after: { name: updated.name, logoUrl: updated.logoUrl, address: updated.address, invoiceFooter: updated.invoiceFooter },
+      before, after: { name: updated.name, phone: updated.phone, email: updated.email, logoUrl: updated.logoUrl, address: updated.address, invoiceFooter: updated.invoiceFooter },
     });
 
     return NextResponse.json({ success: true, data: updated });
