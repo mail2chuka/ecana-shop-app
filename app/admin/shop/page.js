@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, StatusPill, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
-import { formatNaira, formatDate, formatCustomerLabel } from '@/lib/format';
+import { formatNaira, formatNumber, formatDate, formatCustomerLabel } from '@/lib/format';
 import toast from 'react-hot-toast';
 
 const blankProductForm = { name: '', unit: 'unit', price: '', stockQuantity: 0, cementBrand: '' };
@@ -224,7 +224,7 @@ export default function ShopPage() {
                   <td className="px-4 py-3 font-medium">{p.name}</td>
                   <td className="px-4 py-3 text-gray-500">{p.unit}</td>
                   <td className="px-4 py-3 text-right">{formatNaira(p.price)}</td>
-                  <td className={`px-4 py-3 text-right font-bold ${p.stockQuantity === 0 ? 'text-amber-700' : 'text-green-600'}`}>{p.stockQuantity}</td>
+                  <td className={`px-4 py-3 text-right font-bold ${p.stockQuantity === 0 ? 'text-amber-700' : 'text-green-600'}`}>{formatNumber(p.stockQuantity)}</td>
                 </tr>
               ))}
             </tbody>
@@ -396,7 +396,7 @@ export default function ShopPage() {
                     <td className="px-4 py-3 font-medium">{p.name}</td>
                     <td className="px-4 py-3 text-gray-500">{p.unit}</td>
                     <td className="px-4 py-3 text-right">{formatNaira(p.price)}</td>
-                    <td className="px-4 py-3 text-right">{p.stockQuantity}</td>
+                    <td className="px-4 py-3 text-right">{formatNumber(p.stockQuantity)}</td>
                     <td className="px-4 py-3 text-right">
                       <button onClick={() => openEditProduct(p)} className={`${tableActionCls} mr-3`}>Edit</button>
                       <button onClick={() => handleDeactivateProduct(p)} className={tableDangerActionCls}>Deactivate</button>
