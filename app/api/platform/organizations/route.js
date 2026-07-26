@@ -35,7 +35,7 @@ export async function GET() {
       const idx = (arr) => Object.fromEntries(arr.map((x) => [String(x._id), x]));
       const um = idx(users), cm = idx(custs), sm = idx(sales);
       return orgs.map((o) => ({
-        _id: o._id, name: o.name, slug: o.slug, phone: o.phone, email: o.email, businessType: o.businessType,
+        _id: o._id, name: o.name, slug: o.slug, phone: o.phone, email: o.email, businessTypes: o.businessTypes,
         subscriptionStatus: o.subscriptionStatus, freeForever: o.freeForever, trialEndsAt: o.trialEndsAt,
         enabledModules: o.enabledModules, isActive: o.isActive, createdAt: o.createdAt,
         staffCount: um[String(o._id)]?.staff || 0,
@@ -58,7 +58,7 @@ export async function POST(request) {
   const orgName = (body.orgName || '').trim();
   const orgPhone = (body.orgPhone || '').trim();
   const orgEmail = (body.orgEmail || '').trim().toLowerCase();
-  const businessType = BUSINESS_TYPES.includes(body.businessType) ? body.businessType : 'building_materials';
+  const businessTypes = Array.isArray(body.businessTypes) ? body.businessTypes.filter((t) => BUSINESS_TYPES.includes(t)) : [];
   const adminName = (body.adminName || '').trim();
   const adminUsername = (body.adminUsername || '').trim().toLowerCase();
   const adminPassword = body.adminPassword || '';
@@ -70,6 +70,7 @@ export async function POST(request) {
       throw new ApiError('Business name, phone, email, admin name, username and password are all required', 400);
     }
     if (!slug) throw new ApiError('Could not derive a valid slug from the business name', 400);
+    if (businessTypes.length === 0) throw new ApiError('At least one business type must be selected', 400);
 
     const result = await runUnscoped(async () => {
       if (await Organization.findOne({ slug })) throw new ApiError(`The slug "${slug}" is already taken`, 400);
@@ -77,7 +78,7 @@ export async function POST(request) {
 
       const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
       const org = await Organization.create({
-        name: orgName, slug, phone: orgPhone, email: orgEmail, businessType, enabledModules,
+        name: orgName, slug, phone: orgPhone, email: orgEmail, businessTypes, enabledModules,
         subscriptionStatus: 'trialing', trialEndsAt, freeForever: false, isActive: true,
       });
       // Explicit organization: this user belongs to the NEW org, not the platform admin's — and we're

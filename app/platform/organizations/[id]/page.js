@@ -47,7 +47,7 @@ export default function OrganizationDetailPage() {
         name: d.data.name,
         phone: d.data.phone || '',
         email: d.data.email || '',
-        businessType: d.data.businessType || 'building_materials',
+        businessTypes: d.data.businessTypes && d.data.businessTypes.length ? d.data.businessTypes : ['building_materials'],
         subscriptionStatus: d.data.subscriptionStatus,
         trialEndsAt: d.data.trialEndsAt ? d.data.trialEndsAt.split('T')[0] : '',
         freeForever: d.data.freeForever,
@@ -65,6 +65,13 @@ export default function OrganizationDetailPage() {
     setForm((f) => ({
       ...f,
       enabledModules: f.enabledModules.includes(mid) ? f.enabledModules.filter((m) => m !== mid) : [...f.enabledModules, mid],
+    }));
+  };
+
+  const toggleBusinessType = (tid) => {
+    setForm((f) => ({
+      ...f,
+      businessTypes: f.businessTypes.includes(tid) ? f.businessTypes.filter((t) => t !== tid) : [...f.businessTypes, tid],
     }));
   };
 
@@ -200,9 +207,14 @@ export default function OrganizationDetailPage() {
               <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} required />
             </Field>
             <Field label="Business type">
-              <select value={form.businessType} onChange={(e) => setForm({ ...form, businessType: e.target.value })} className={inputCls}>
-                {BUSINESS_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-              </select>
+              <div className="flex flex-wrap gap-3 pt-2">
+                {BUSINESS_TYPES.map((t) => (
+                  <label key={t.id} className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={form.businessTypes.includes(t.id)} onChange={() => toggleBusinessType(t.id)} />
+                    {t.label}
+                  </label>
+                ))}
+              </div>
             </Field>
           </div>
 

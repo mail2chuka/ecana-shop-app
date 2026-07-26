@@ -63,9 +63,10 @@ export async function PUT(request, { params }) {
     if (typeof body.name === 'string' && body.name.trim()) update.name = body.name.trim();
     if (typeof body.phone === 'string') update.phone = body.phone.trim() || null;
     if (typeof body.email === 'string') update.email = body.email.trim().toLowerCase() || null;
-    if (body.businessType !== undefined) {
-      if (!VALID_BUSINESS_TYPES.includes(body.businessType)) throw new ApiError('Invalid business type', 400);
-      update.businessType = body.businessType;
+    if (body.businessTypes !== undefined) {
+      const types = Array.isArray(body.businessTypes) ? body.businessTypes.filter((t) => VALID_BUSINESS_TYPES.includes(t)) : [];
+      if (types.length === 0) throw new ApiError('At least one business type must be selected', 400);
+      update.businessTypes = types;
     }
     if (Array.isArray(body.enabledModules)) {
       const mods = body.enabledModules.filter((m) => VALID_MODULES.includes(m));
@@ -96,8 +97,8 @@ export async function PUT(request, { params }) {
       const updated = await Organization.findByIdAndUpdate(id, update, { new: true, runValidators: true });
       await logAudit({
         userId: session.user.id, userName: session.user.name, action: 'updated', entity: 'Organization', entityId: id,
-        before: { subscriptionStatus: before.subscriptionStatus, isActive: before.isActive, freeForever: before.freeForever, enabledModules: before.enabledModules, name: before.name, phone: before.phone, email: before.email, businessType: before.businessType },
-        after: { subscriptionStatus: updated.subscriptionStatus, isActive: updated.isActive, freeForever: updated.freeForever, enabledModules: updated.enabledModules, name: updated.name, phone: updated.phone, email: updated.email, businessType: updated.businessType },
+        before: { subscriptionStatus: before.subscriptionStatus, isActive: before.isActive, freeForever: before.freeForever, enabledModules: before.enabledModules, name: before.name, phone: before.phone, email: before.email, businessTypes: before.businessTypes },
+        after: { subscriptionStatus: updated.subscriptionStatus, isActive: updated.isActive, freeForever: updated.freeForever, enabledModules: updated.enabledModules, name: updated.name, phone: updated.phone, email: updated.email, businessTypes: updated.businessTypes },
       });
       return updated;
     });

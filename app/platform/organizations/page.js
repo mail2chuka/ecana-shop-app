@@ -22,7 +22,7 @@ const BUSINESS_TYPES = [
 const BUSINESS_TYPE_LABELS = Object.fromEntries(BUSINESS_TYPES.map((t) => [t.id, t.label.replace(' (not yet supported)', '')]));
 
 const blankForm = {
-  orgName: '', orgPhone: '', orgEmail: '', businessType: 'building_materials',
+  orgName: '', orgPhone: '', orgEmail: '', businessTypes: ['building_materials'],
   adminName: '', adminUsername: '', adminPassword: '', enabledModules: ['cement', 'aggregate', 'shop'],
 };
 
@@ -51,6 +51,13 @@ export default function PlatformOrganizationsPage() {
     setForm((f) => ({
       ...f,
       enabledModules: f.enabledModules.includes(id) ? f.enabledModules.filter((m) => m !== id) : [...f.enabledModules, id],
+    }));
+  };
+
+  const toggleBusinessType = (id) => {
+    setForm((f) => ({
+      ...f,
+      businessTypes: f.businessTypes.includes(id) ? f.businessTypes.filter((t) => t !== id) : [...f.businessTypes, id],
     }));
   };
 
@@ -112,7 +119,7 @@ export default function PlatformOrganizationsPage() {
                       <Link href={`/platform/organizations/${o._id}`} className="font-medium hover:underline" onClick={(e) => e.stopPropagation()}>{o.name}</Link>
                       <p className="text-xs text-gray-500">{o.slug}</p>
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-600">{BUSINESS_TYPE_LABELS[o.businessType] || '—'}</td>
+                    <td className="px-4 py-3 text-xs text-gray-600">{(o.businessTypes || []).map((t) => BUSINESS_TYPE_LABELS[t] || t).join(', ') || '—'}</td>
                     <td className="px-4 py-3">
                       {!o.isActive
                         ? <StatusPill status="Suspended" color="red" />
@@ -152,9 +159,14 @@ export default function PlatformOrganizationsPage() {
             </Field>
           </div>
           <Field label="Business type" required>
-            <select value={form.businessType} onChange={(e) => setForm({ ...form, businessType: e.target.value })} className={inputCls} required>
-              {BUSINESS_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-            </select>
+            <div className="flex flex-wrap gap-3">
+              {BUSINESS_TYPES.map((t) => (
+                <label key={t.id} className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={form.businessTypes.includes(t.id)} onChange={() => toggleBusinessType(t.id)} />
+                  {t.label}
+                </label>
+              ))}
+            </div>
           </Field>
           <Field label="Modules">
             <div className="flex flex-wrap gap-3">
