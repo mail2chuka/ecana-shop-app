@@ -92,7 +92,7 @@ async function _h_POST(request) {
       if (s) supplierData = { supplier: s._id, supplierName: s.name };
     }
 
-    const transactionNumber = await generateTransactionNumber('ATC');
+    const transactionNumber = await generateTransactionNumber();
 
     const atc = await ATC.create({
       atcNumber: atcNumber.trim(),

@@ -7,6 +7,19 @@ const OrganizationSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
 
+  // Business contact info, captured at onboarding.
+  phone: String,
+  email: String,
+
+  // What kind of business this is — a classification for the super_admin's own records, separate
+  // from enabledModules (which functional modules are actually turned on). Includes types the app
+  // doesn't yet build for, so the super_admin can onboard/track them ahead of that support existing.
+  businessType: {
+    type: String,
+    enum: ['building_materials', 'vehicle_spare_parts', 'hotel_hospitality', 'supermarket'],
+    default: 'building_materials',
+  },
+
   // Branding shown on invoices / statements / login footer (replaces hardcoded "Ecana Family Limited").
   logoUrl: String,
   address: String,

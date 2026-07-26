@@ -14,6 +14,13 @@ const ALL_MODULES = [
   { id: 'shop', label: 'Shop' },
 ];
 
+const BUSINESS_TYPES = [
+  { id: 'building_materials', label: 'Building Materials Distribution' },
+  { id: 'vehicle_spare_parts', label: 'Vehicle Spare Parts (not yet supported)' },
+  { id: 'hotel_hospitality', label: 'Hotel & Hospitality (not yet supported)' },
+  { id: 'supermarket', label: 'Supermarket (not yet supported)' },
+];
+
 const statusColor = { trialing: 'blue', active: 'green', past_due: 'amber', canceled: 'gray' };
 const ROLE_LABELS = { admin: 'Admin', gsm_manager: 'GSM Manager', atc_manager: 'ATC Manager', auditor: 'Auditor' };
 
@@ -38,6 +45,9 @@ export default function OrganizationDetailPage() {
       setOrg(d.data);
       setForm({
         name: d.data.name,
+        phone: d.data.phone || '',
+        email: d.data.email || '',
+        businessType: d.data.businessType || 'building_materials',
         subscriptionStatus: d.data.subscriptionStatus,
         trialEndsAt: d.data.trialEndsAt ? d.data.trialEndsAt.split('T')[0] : '',
         freeForever: d.data.freeForever,
@@ -189,6 +199,23 @@ export default function OrganizationDetailPage() {
             <Field label="Business name" required>
               <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} required />
             </Field>
+            <Field label="Business type">
+              <select value={form.businessType} onChange={(e) => setForm({ ...form, businessType: e.target.value })} className={inputCls}>
+                {BUSINESS_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+              </select>
+            </Field>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Phone number">
+              <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputCls} />
+            </Field>
+            <Field label="Company email">
+              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputCls} />
+            </Field>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Subscription status">
               <select
                 value={form.subscriptionStatus}

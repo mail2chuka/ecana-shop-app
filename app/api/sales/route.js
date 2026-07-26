@@ -12,7 +12,6 @@ import QuarryPurchase from '@/models/QuarryPurchase';
 import ShopProduct from '@/models/ShopProduct';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
-import { generateQuarryReferenceNumber } from '@/lib/quarryReference';
 import { isShopCustomer } from '@/lib/shopStock';
 import { can } from '@/lib/permissions';
 import { ApiError } from '@/lib/apiError';
@@ -175,7 +174,7 @@ async function _h_POST(request) {
           }
 
           const costPricePerTonne = product.currentPricePerTonne || 0;
-          const referenceNumber = await generateQuarryReferenceNumber(mongoSession);
+          const referenceNumber = await generateTransactionNumber(mongoSession);
           const purchase = await QuarryPurchase.create([{
             referenceNumber,
             quarry: product.quarry,
@@ -252,7 +251,7 @@ async function _h_POST(request) {
       }
 
       const saleNumber = await nextSaleNumber();
-      const transactionNumber = await generateTransactionNumber('SAL');
+      const transactionNumber = await generateTransactionNumber(mongoSession);
 
       const sale = await Sale.create([{
         _id: saleId,

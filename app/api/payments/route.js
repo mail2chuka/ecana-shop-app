@@ -62,7 +62,7 @@ async function _h_POST(request) {
 
       const balanceBefore = customer.balance;
       const balanceAfter = balanceBefore + Number(amount);
-      const transactionNumber = await generateTransactionNumber('PAY');
+      const transactionNumber = await generateTransactionNumber(mongoSession);
 
       const payment = await CustomerPayment.create([{
         customer: customerId,

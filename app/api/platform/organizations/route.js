@@ -10,6 +10,7 @@ import { runUnscoped } from '@/lib/tenantScope';
 import { ApiError } from '@/lib/apiError';
 
 const TRIAL_DAYS = 14;
+const BUSINESS_TYPES = ['building_materials', 'vehicle_spare_parts', 'hotel_hospitality', 'supermarket'];
 
 // Platform routes are cross-tenant: they deliberately run unscoped (all queries span every org).
 // Middleware already gates /api/platform to the super_admin; we re-check here for defense in depth.
@@ -34,7 +35,7 @@ export async function GET() {
       const idx = (arr) => Object.fromEntries(arr.map((x) => [String(x._id), x]));
       const um = idx(users), cm = idx(custs), sm = idx(sales);
       return orgs.map((o) => ({
-        _id: o._id, name: o.name, slug: o.slug,
+        _id: o._id, name: o.name, slug: o.slug, phone: o.phone, email: o.email, businessType: o.businessType,
         subscriptionStatus: o.subscriptionStatus, freeForever: o.freeForever, trialEndsAt: o.trialEndsAt,
         enabledModules: o.enabledModules, isActive: o.isActive, createdAt: o.createdAt,
         staffCount: um[String(o._id)]?.staff || 0,
@@ -55,6 +56,9 @@ export async function POST(request) {
   await dbConnect();
   const body = await request.json();
   const orgName = (body.orgName || '').trim();
+  const orgPhone = (body.orgPhone || '').trim();
+  const orgEmail = (body.orgEmail || '').trim().toLowerCase();
+  const businessType = BUSINESS_TYPES.includes(body.businessType) ? body.businessType : 'building_materials';
   const adminName = (body.adminName || '').trim();
   const adminUsername = (body.adminUsername || '').trim().toLowerCase();
   const adminPassword = body.adminPassword || '';
@@ -62,7 +66,9 @@ export async function POST(request) {
   const enabledModules = Array.isArray(body.enabledModules) && body.enabledModules.length ? body.enabledModules : ['cement', 'aggregate', 'shop'];
 
   try {
-    if (!orgName || !adminName || !adminUsername || !adminPassword) throw new ApiError('Business name, admin name, username and password are all required', 400);
+    if (!orgName || !orgPhone || !orgEmail || !adminName || !adminUsername || !adminPassword) {
+      throw new ApiError('Business name, phone, email, admin name, username and password are all required', 400);
+    }
     if (!slug) throw new ApiError('Could not derive a valid slug from the business name', 400);
 
     const result = await runUnscoped(async () => {
@@ -71,7 +77,7 @@ export async function POST(request) {
 
       const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
       const org = await Organization.create({
-        name: orgName, slug, enabledModules,
+        name: orgName, slug, phone: orgPhone, email: orgEmail, businessType, enabledModules,
         subscriptionStatus: 'trialing', trialEndsAt, freeForever: false, isActive: true,
       });
       // Explicit organization: this user belongs to the NEW org, not the platform admin's — and we're

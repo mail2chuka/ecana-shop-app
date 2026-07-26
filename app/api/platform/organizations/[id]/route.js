@@ -13,6 +13,7 @@ import { ApiError } from '@/lib/apiError';
 
 const VALID_MODULES = ['cement', 'aggregate', 'shop'];
 const VALID_STATUSES = ['trialing', 'active', 'past_due', 'canceled'];
+const VALID_BUSINESS_TYPES = ['building_materials', 'vehicle_spare_parts', 'hotel_hospitality', 'supermarket'];
 
 async function requireSuperAdmin() {
   const session = await getServerSession(authOptions);
@@ -60,6 +61,12 @@ export async function PUT(request, { params }) {
 
     const update = {};
     if (typeof body.name === 'string' && body.name.trim()) update.name = body.name.trim();
+    if (typeof body.phone === 'string') update.phone = body.phone.trim() || null;
+    if (typeof body.email === 'string') update.email = body.email.trim().toLowerCase() || null;
+    if (body.businessType !== undefined) {
+      if (!VALID_BUSINESS_TYPES.includes(body.businessType)) throw new ApiError('Invalid business type', 400);
+      update.businessType = body.businessType;
+    }
     if (Array.isArray(body.enabledModules)) {
       const mods = body.enabledModules.filter((m) => VALID_MODULES.includes(m));
       if (mods.length === 0) throw new ApiError('At least one module must stay enabled', 400);
@@ -89,8 +96,8 @@ export async function PUT(request, { params }) {
       const updated = await Organization.findByIdAndUpdate(id, update, { new: true, runValidators: true });
       await logAudit({
         userId: session.user.id, userName: session.user.name, action: 'updated', entity: 'Organization', entityId: id,
-        before: { subscriptionStatus: before.subscriptionStatus, isActive: before.isActive, freeForever: before.freeForever, enabledModules: before.enabledModules, name: before.name },
-        after: { subscriptionStatus: updated.subscriptionStatus, isActive: updated.isActive, freeForever: updated.freeForever, enabledModules: updated.enabledModules, name: updated.name },
+        before: { subscriptionStatus: before.subscriptionStatus, isActive: before.isActive, freeForever: before.freeForever, enabledModules: before.enabledModules, name: before.name, phone: before.phone, email: before.email, businessType: before.businessType },
+        after: { subscriptionStatus: updated.subscriptionStatus, isActive: updated.isActive, freeForever: updated.freeForever, enabledModules: updated.enabledModules, name: updated.name, phone: updated.phone, email: updated.email, businessType: updated.businessType },
       });
       return updated;
     });

@@ -13,7 +13,18 @@ const ALL_MODULES = [
   { id: 'shop', label: 'Shop' },
 ];
 
-const blankForm = { orgName: '', adminName: '', adminUsername: '', adminPassword: '', enabledModules: ['cement', 'aggregate', 'shop'] };
+const BUSINESS_TYPES = [
+  { id: 'building_materials', label: 'Building Materials Distribution' },
+  { id: 'vehicle_spare_parts', label: 'Vehicle Spare Parts (not yet supported)' },
+  { id: 'hotel_hospitality', label: 'Hotel & Hospitality (not yet supported)' },
+  { id: 'supermarket', label: 'Supermarket (not yet supported)' },
+];
+const BUSINESS_TYPE_LABELS = Object.fromEntries(BUSINESS_TYPES.map((t) => [t.id, t.label.replace(' (not yet supported)', '')]));
+
+const blankForm = {
+  orgName: '', orgPhone: '', orgEmail: '', businessType: 'building_materials',
+  adminName: '', adminUsername: '', adminPassword: '', enabledModules: ['cement', 'aggregate', 'shop'],
+};
 
 const statusColor = { trialing: 'blue', active: 'green', past_due: 'amber', canceled: 'gray' };
 
@@ -79,10 +90,11 @@ export default function PlatformOrganizationsPage() {
       {loading ? <Loader /> : (
         <Card className="overflow-hidden">
           <div className={tableScrollCls}>
-            <table className="w-full text-sm min-w-[880px]">
+            <table className="w-full text-sm min-w-[980px]">
               <thead className={theadCls}>
                 <tr>
                   <th className="px-4 py-3 text-left font-medium">Organization</th>
+                  <th className="px-4 py-3 text-left font-medium">Type</th>
                   <th className="px-4 py-3 text-left font-medium">Plan</th>
                   <th className="px-4 py-3 text-left font-medium">Modules</th>
                   <th className="px-4 py-3 text-right font-medium">Staff</th>
@@ -93,13 +105,14 @@ export default function PlatformOrganizationsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {orgs.length === 0 && <EmptyRow colSpan={8} text="No organizations yet" />}
+                {orgs.length === 0 && <EmptyRow colSpan={9} text="No organizations yet" />}
                 {orgs.map((o) => (
                   <tr key={o._id} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/platform/organizations/${o._id}`)}>
                     <td className="px-4 py-3">
                       <Link href={`/platform/organizations/${o._id}`} className="font-medium hover:underline" onClick={(e) => e.stopPropagation()}>{o.name}</Link>
                       <p className="text-xs text-gray-500">{o.slug}</p>
                     </td>
+                    <td className="px-4 py-3 text-xs text-gray-600">{BUSINESS_TYPE_LABELS[o.businessType] || '—'}</td>
                     <td className="px-4 py-3">
                       {!o.isActive
                         ? <StatusPill status="Suspended" color="red" />
@@ -129,6 +142,19 @@ export default function PlatformOrganizationsPage() {
           <p className="text-sm text-gray-500">Creates a brand-new, isolated business workspace with its own admin login and a {14}-day trial.</p>
           <Field label="Business name" required>
             <input type="text" value={form.orgName} onChange={(e) => setForm({ ...form, orgName: e.target.value })} className={inputCls} required placeholder="e.g., Test Building Supplies" />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Phone number" required>
+              <input type="text" value={form.orgPhone} onChange={(e) => setForm({ ...form, orgPhone: e.target.value })} className={inputCls} required />
+            </Field>
+            <Field label="Company email" required>
+              <input type="email" value={form.orgEmail} onChange={(e) => setForm({ ...form, orgEmail: e.target.value })} className={inputCls} required />
+            </Field>
+          </div>
+          <Field label="Business type" required>
+            <select value={form.businessType} onChange={(e) => setForm({ ...form, businessType: e.target.value })} className={inputCls} required>
+              {BUSINESS_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+            </select>
           </Field>
           <Field label="Modules">
             <div className="flex flex-wrap gap-3">
