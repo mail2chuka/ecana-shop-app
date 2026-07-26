@@ -10,11 +10,10 @@ const CustomerPaymentSchema = new mongoose.Schema({
   method: { type: String, enum: ['cash', 'transfer', 'pos', 'cheque'], required: true },
   depositorName: { type: String, required: true },
   bankName: { type: String, required: true },
-  reference: String,
   date: { type: Date, default: Date.now },
   balanceBefore: Number,
   balanceAfter: Number,
-  notes: String,
+  description: String,
   recordedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   recordedByName: String,
 }, { timestamps: true });

@@ -44,7 +44,7 @@ async function _h_POST(request) {
   }
   await dbConnect();
   const body = await request.json();
-  const { customer: customerId, amount, method, depositorName, bankName, reference, notes, date } = body;
+  const { customer: customerId, amount, method, depositorName, bankName, description, date } = body;
   if (!customerId || !amount || amount <= 0 || !method) {
     return NextResponse.json({ error: 'Customer, amount and method required' }, { status: 400 });
   }
@@ -72,8 +72,7 @@ async function _h_POST(request) {
         method,
         depositorName,
         bankName,
-        reference,
-        notes,
+        description,
         date: date ? new Date(date) : new Date(),
         balanceBefore,
         balanceAfter,

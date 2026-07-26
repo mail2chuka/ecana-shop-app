@@ -12,8 +12,7 @@ const blankForm = {
   method: 'transfer',
   depositorName: '',
   bankName: '',
-  reference: '',
-  notes: '',
+  description: '',
   date: new Date().toISOString().split('T')[0],
 };
 
@@ -280,27 +279,16 @@ export default function PaymentsPage() {
             />
           </Field>
 
-          {/* Reference & Remark */}
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Reference">
-              <input
-                type="text"
-                value={form.reference}
-                onChange={e => setForm({ ...form, reference: e.target.value })}
-                placeholder="Transfer ref, cheque #..."
-                className={inputCls}
-              />
-            </Field>
-            <Field label="Remark">
-              <input
-                type="text"
-                value={form.notes}
-                onChange={e => setForm({ ...form, notes: e.target.value })}
-                placeholder="Additional notes..."
-                className={inputCls}
-              />
-            </Field>
-          </div>
+          {/* Remark */}
+          <Field label="Remark">
+            <input
+              type="text"
+              value={form.description}
+              onChange={e => setForm({ ...form, description: e.target.value })}
+              placeholder="Additional notes..."
+              className={inputCls}
+            />
+          </Field>
 
           <FormButtons onCancel={() => setShowModal(false)} submitting={submitting} submitLabel="Record Payment" />
         </form>

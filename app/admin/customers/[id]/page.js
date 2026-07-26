@@ -13,7 +13,7 @@ const blankPaymentForm = {
   method: 'transfer',
   depositorName: '',
   bankName: '',
-  notes: '',
+  description: '',
   date: new Date().toISOString().split('T')[0],
 };
 
@@ -335,10 +335,10 @@ export default function CustomerDetailPage() {
                 <p className="text-gray-500">Bank Name</p>
                 <p>{selectedPayment.bankName}</p>
               </div>
-              {selectedPayment.reference && (
+              {selectedPayment.description && (
                 <div>
-                  <p className="text-gray-500">Reference</p>
-                  <p>{selectedPayment.reference}</p>
+                  <p className="text-gray-500">Remark</p>
+                  <p>{selectedPayment.description}</p>
                 </div>
               )}
             </div>
@@ -402,8 +402,8 @@ export default function CustomerDetailPage() {
           <Field label="Remark">
             <input
               type="text"
-              value={paymentForm.notes}
-              onChange={e => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+              value={paymentForm.description}
+              onChange={e => setPaymentForm({ ...paymentForm, description: e.target.value })}
               placeholder="Additional notes..."
               className={inputCls}
             />
