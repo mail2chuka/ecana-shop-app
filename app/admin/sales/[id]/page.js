@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { formatNaira, formatDate, formatDateTime, formatSaleTypeLabel } from '@/lib/format';
+import { formatNaira, formatDate, formatDateTime, formatSaleTypeLabel, saleItemUnitLabel } from '@/lib/format';
 import { Modal, Field, FormButtons, inputCls, CurrencyInput } from '@/components/ui';
 
 const blankSurchargeForm = { method: 'flat_total', perUnitAmount: '', totalAmount: '', reason: '', confirmPin: '' };
@@ -304,6 +304,11 @@ export default function SaleDetailPage() {
                       <p className="font-medium">{item.cementBrandName} Cement</p>
                       <p className="text-xs text-gray-500">ATC: {formatAtcNumber(item)}</p>
                     </>
+                  ) : item.itemType === 'shop' ? (
+                    <>
+                      <p className="font-medium">{item.shopProductName}</p>
+                      {item.cementBrandName && <p className="text-xs text-gray-500">{item.cementBrandName}</p>}
+                    </>
                   ) : (
                     <>
                       <p className="font-medium">{item.quarryName} — {item.size}</p>
@@ -313,7 +318,7 @@ export default function SaleDetailPage() {
                     </>
                   )}
                 </td>
-                <td className="py-2 text-right">{item.billQuantity} {item.itemType === 'cement' ? 'bags' : 'tonnes'}</td>
+                <td className="py-2 text-right">{item.billQuantity} {saleItemUnitLabel(item)}</td>
                 <td className="py-2 text-right">{formatNaira(item.unitPrice)}</td>
                 <td className="py-2 text-right font-medium">{formatNaira(item.lineTotal)}</td>
               </tr>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { formatNaira, formatDate, formatDateTime, formatSaleTypeLabel } from '@/lib/format';
+import { formatNaira, formatDate, formatDateTime, formatSaleTypeLabel, saleItemUnitLabel } from '@/lib/format';
 
 export default function SaleInvoicePage() {
   const { id } = useParams();
@@ -103,7 +103,7 @@ export default function SaleInvoicePage() {
                     )}
                   </td>
                   <td className="px-2 py-3 text-right">
-                    {item.billQuantity} {item.itemType === 'cement' ? 'bags' : item.itemType === 'shop' ? (item.unit || 'unit') : 'tonnes'}
+                    {item.billQuantity} {saleItemUnitLabel(item)}
                   </td>
                   <td className="px-2 py-3 text-right">{formatNaira(item.unitPrice)}</td>
                   <td className="px-2 py-3 text-right font-medium">{formatNaira(item.lineTotal)}</td>

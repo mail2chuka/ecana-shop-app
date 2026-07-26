@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card } from '@/components/ui';
-import { formatNaira, formatNumber } from '@/lib/format';
+import { formatNaira, formatNumber, pluralizeUnit } from '@/lib/format';
 import toast from 'react-hot-toast';
 
 // Mirrors the `allow` lists on the matching sidebar links in components/AdminShell.js — a shortcut
@@ -80,7 +80,7 @@ export default function DashboardPage() {
         </Card>
         <Card className="p-4">
           <p className="text-xs text-gray-500">Available Cement</p>
-          <p className="text-xl font-bold mt-1">{formatNumber(stats.availableBags)} bags</p>
+          <p className="text-xl font-bold mt-1">{formatNumber(stats.availableBags)} {pluralizeUnit(stats.availableBags, 'bag')}</p>
           <p className="text-xs text-gray-500 mt-1">{stats.openATCs} open ATCs</p>
         </Card>
       </div>

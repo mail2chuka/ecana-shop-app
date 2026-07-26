@@ -16,6 +16,7 @@ import { isShopCustomer } from '@/lib/shopStock';
 import { can } from '@/lib/permissions';
 import { isSameCalendarDay } from '@/lib/dayLock';
 import { ApiError } from '@/lib/apiError';
+import { pluralizeUnit } from '@/lib/format';
 
 const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
 
@@ -202,7 +203,7 @@ async function _h_PUT(request, { params }) {
           if (!atc) throw new ApiError('ATC not found', 404);
           if (atc.status === 'closed') throw new ApiError(`ATC ${atc.atcNumber} is closed`, 400);
           if (actualQty > atc.bagsRemaining) {
-            throw new ApiError(`Only ${atc.bagsRemaining} bags remaining on ATC ${atc.atcNumber}`, 400);
+            throw new ApiError(`Only ${atc.bagsRemaining} ${pluralizeUnit(atc.bagsRemaining, 'bag')} remaining on ATC ${atc.atcNumber}`, 400);
           }
           atc.bagsRemaining -= actualQty;
           if (atc.bagsRemaining === 0) {

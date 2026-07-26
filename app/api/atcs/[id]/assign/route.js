@@ -6,6 +6,7 @@ import ATC from '@/models/ATC';
 import Truck from '@/models/Truck';
 import { logAudit } from '@/lib/audit';
 import { can } from '@/lib/permissions';
+import { pluralizeUnit } from '@/lib/format';
 
 async function _h_POST(request, { params }) {
   try {
@@ -32,7 +33,7 @@ async function _h_POST(request, { params }) {
 
     const busyOn = await ATC.findOne({ _id: { $ne: id }, assignedTruck: truck._id, status: { $ne: 'closed' } });
     if (busyOn) {
-      return NextResponse.json({ error: `Truck ${truck.plateNumber} is still tied to ATC ${busyOn.atcNumber} (${busyOn.bagsRemaining} bags remaining) — it'll be free once that one closes` }, { status: 400 });
+      return NextResponse.json({ error: `Truck ${truck.plateNumber} is still tied to ATC ${busyOn.atcNumber} (${busyOn.bagsRemaining} ${pluralizeUnit(busyOn.bagsRemaining, 'bag')} remaining) — it'll be free once that one closes` }, { status: 400 });
     }
 
     atc.assignedTruck = truck._id;

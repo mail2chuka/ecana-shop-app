@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { formatNaira, formatCustomerLabel } from '@/lib/format';
+import { formatNaira, formatCustomerLabel, pluralizeUnit } from '@/lib/format';
 import { CurrencyInput } from '@/components/ui';
 
 export default function NewCementSalePage() {
@@ -114,7 +114,7 @@ export default function NewCementSalePage() {
     const price = parseFloat(formPrice);
 
     if (qty <= 0 || qty > bagsRemaining) {
-      toast.error(`Can only distribute up to ${bagsRemaining} bags remaining`);
+      toast.error(`Can only distribute up to ${bagsRemaining} ${pluralizeUnit(bagsRemaining, 'bag')} remaining`);
       return;
     }
 
@@ -227,7 +227,7 @@ export default function NewCementSalePage() {
             <div className="relative">
               <label className="block text-sm font-medium mb-2">Truck</label>
               <button type="button" onClick={() => setShowAtcDrop(v => !v)} className="w-full px-3 py-2 border rounded text-sm text-left bg-white">
-                {selectedAtc ? `${selectedAtc.assignedTruckPlate || 'No truck'} - ${formatStatusHours(selectedAtc)} (${selectedAtc.bagsRemaining} bags)` : 'Choose truck...'}
+                {selectedAtc ? `${selectedAtc.assignedTruckPlate || 'No truck'} - ${formatStatusHours(selectedAtc)} (${selectedAtc.bagsRemaining} ${pluralizeUnit(selectedAtc.bagsRemaining, 'bag')})` : 'Choose truck...'}
               </button>
               {showAtcDrop && (
                 <div className="absolute z-10 w-full bg-white border rounded shadow-lg mt-1 max-h-64 overflow-y-auto">
@@ -239,7 +239,7 @@ export default function NewCementSalePage() {
                       onClick={() => { setSelectedAtcId(a._id); setShowAtcDrop(false); }}
                       className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-b last:border-0"
                     >
-                      <p>{a.assignedTruckPlate || 'No truck'} - {formatStatusHours(a)} · {a.bagsRemaining} bags left</p>
+                      <p>{a.assignedTruckPlate || 'No truck'} - {formatStatusHours(a)} · {a.bagsRemaining} {pluralizeUnit(a.bagsRemaining, 'bag')} left</p>
                       <p className="text-xs text-gray-500">
                         {formatAtcNumber(a)}{a.assignedDriverPhone ? ` (${a.assignedDriverPhone})` : ''}
                       </p>
@@ -261,7 +261,7 @@ export default function NewCementSalePage() {
             <div className="bg-green-50 border border-green-300 rounded p-3 space-y-1 text-sm">
               <p><span className="font-medium">Brand:</span> {selectedAtc.cementBrandName}</p>
               <p><span className="font-medium">Total Bags in ATC:</span> {selectedAtc.bagsPaidFor}</p>
-              <p className={`font-medium ${bagsRemaining <= 0 ? 'text-amber-700' : 'text-green-600'}`}>Remaining: {bagsRemaining} bags</p>
+              <p className={`font-medium ${bagsRemaining <= 0 ? 'text-amber-700' : 'text-green-600'}`}>Remaining: {bagsRemaining} {pluralizeUnit(bagsRemaining, 'bag')}</p>
             </div>
           )}
         </div>
@@ -378,7 +378,7 @@ export default function NewCementSalePage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="font-medium text-sm">{d.customerName}</p>
-                      <p className="text-xs text-gray-500">Supplied: {d.qty} bags | Billed: {d.billQty} bags</p>
+                      <p className="text-xs text-gray-500">Supplied: {d.qty} {pluralizeUnit(d.qty, 'bag')} | Billed: {d.billQty} {pluralizeUnit(d.billQty, 'bag')}</p>
                       <p className="text-xs text-gray-500">Price: {formatNaira(d.price)}/bag</p>
                     </div>
                     <div className="text-right">
@@ -399,7 +399,7 @@ export default function NewCementSalePage() {
               <p><span className="font-medium">Total bags distributed:</span> {totalBagsDistributed} / {selectedAtc?.bagsPaidFor}</p>
               <p><span className="font-medium">Total amount:</span> {formatNaira(distributions.reduce((s, d) => s + d.total, 0))}</p>
               {bagsRemaining > 0 && (
-                <p className="text-green-800"><span className="font-medium">Remaining:</span> {bagsRemaining} bags (add more customers)</p>
+                <p className="text-green-800"><span className="font-medium">Remaining:</span> {bagsRemaining} {pluralizeUnit(bagsRemaining, 'bag')} (add more customers)</p>
               )}
               {bagsRemaining === 0 && (
                 <p className="text-green-600 font-medium">✓ All bags distributed</p>
