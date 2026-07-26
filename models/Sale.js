@@ -79,6 +79,7 @@ const SaleSchema = new mongoose.Schema({
   adjustments: [{
     type: { type: String, enum: ['surcharge', 'refund'], required: true },
     method: String, // surcharge: 'per_unit' | 'flat_total' | 'transport'; refund: 'shortfall'
+    referenceNumber: { type: String, required: true }, // same shared per-org daily sequence as every other transaction
     amount: { type: Number, required: true },
     reason: { type: String, required: true },
     appliedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

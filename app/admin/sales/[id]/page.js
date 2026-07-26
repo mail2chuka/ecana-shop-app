@@ -366,7 +366,7 @@ export default function SaleDetailPage() {
             {sale.adjustments.map((adj, i) => (
               <div key={i} className="flex justify-between items-start border-b last:border-0 pb-2 last:pb-0 text-sm">
                 <div>
-                  <p className="font-medium capitalize">{adj.type}{adj.method ? ` (${adj.method.replace('_', ' ')})` : ''}</p>
+                  <p className="font-medium capitalize">{adj.type}{adj.method ? ` (${adj.method.replace('_', ' ')})` : ''}{adj.referenceNumber ? ` — Ref: ${adj.referenceNumber}` : ''}</p>
                   <p className="text-gray-500 text-xs">{adj.reason}</p>
                   <p className="text-gray-400 text-xs mt-0.5">{formatDateTime(adj.appliedAt)} by {adj.appliedByName}</p>
                 </div>

@@ -7,6 +7,7 @@ import Sale from '@/models/Sale';
 import Customer from '@/models/Customer';
 import { logAudit } from '@/lib/audit';
 import { verifyOwnPin } from '@/lib/verifyPassword';
+import { generateTransactionNumber } from '@/lib/transaction';
 import { ApiError } from '@/lib/apiError';
 
 async function _h_POST(request, { params }) {
@@ -56,9 +57,12 @@ async function _h_POST(request, { params }) {
       const balanceAfter = customer.balance;
       await customer.save({ session: mongoSession });
 
+      const referenceNumber = await generateTransactionNumber(mongoSession);
+
       sale.adjustments.push({
         type: 'surcharge',
         method,
+        referenceNumber,
         amount,
         reason,
         appliedBy: session.user.id,
@@ -70,7 +74,7 @@ async function _h_POST(request, { params }) {
 
       await logAudit({
         userId: session.user.id, userName: session.user.name, action: 'surcharge_applied', entity: 'Sale', entityId: sale._id,
-        after: { method, amount, reason, balanceBefore, balanceAfter }, session: mongoSession,
+        after: { referenceNumber, method, amount, reason, balanceBefore, balanceAfter }, session: mongoSession,
       });
 
       updatedSale = sale;

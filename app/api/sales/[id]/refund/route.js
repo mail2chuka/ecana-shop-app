@@ -7,6 +7,7 @@ import Sale from '@/models/Sale';
 import Customer from '@/models/Customer';
 import { logAudit } from '@/lib/audit';
 import { verifyOwnPin } from '@/lib/verifyPassword';
+import { generateTransactionNumber } from '@/lib/transaction';
 import { ApiError } from '@/lib/apiError';
 
 async function _h_POST(request, { params }) {
@@ -47,9 +48,12 @@ async function _h_POST(request, { params }) {
       const balanceAfter = customer.balance;
       await customer.save({ session: mongoSession });
 
+      const referenceNumber = await generateTransactionNumber(mongoSession);
+
       sale.adjustments.push({
         type: 'refund',
         method: 'shortfall',
+        referenceNumber,
         amount: refundAmount,
         reason,
         appliedBy: session.user.id,
@@ -61,7 +65,7 @@ async function _h_POST(request, { params }) {
 
       await logAudit({
         userId: session.user.id, userName: session.user.name, action: 'refund_applied', entity: 'Sale', entityId: sale._id,
-        after: { amount: refundAmount, reason, balanceBefore, balanceAfter }, session: mongoSession,
+        after: { referenceNumber, amount: refundAmount, reason, balanceBefore, balanceAfter }, session: mongoSession,
       });
 
       updatedSale = sale;
