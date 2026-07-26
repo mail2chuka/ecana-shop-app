@@ -47,7 +47,7 @@ const menu = [
       { label: 'Sales', href: '/admin/sales', allow: ['admin', 'gsm_manager'] },
       { label: 'New Cement Sale', href: '/admin/sales/new/cement', allow: ['admin', 'gsm_manager'] },
       { label: 'New Aggregate Sale', href: '/admin/sales/new/stonedust', allow: ['admin', 'gsm_manager'] },
-      { label: 'Shop', href: '/admin/shop', allow: ['admin', 'gsm_manager'] },
+      { label: 'Cement Warehouse', href: '/admin/shop', allow: ['admin', 'gsm_manager'] },
       { label: 'Customer Payments', href: '/admin/payments', allow: ['admin', 'gsm_manager'] },
     ],
   },

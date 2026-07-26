@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 const ALL_MODULES = [
   { id: 'cement', label: 'Cement (ATC)' },
   { id: 'aggregate', label: 'Aggregate (Quarry)' },
-  { id: 'shop', label: 'Shop' },
+  { id: 'shop', label: 'Cement Warehouse' },
 ];
 
 const BUSINESS_TYPES = [

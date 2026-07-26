@@ -20,7 +20,7 @@ const quickLinks = [
   { label: 'Sales', href: '/admin/sales', group: 'Link' },
   { label: 'New Cement Sale', href: '/admin/sales/new/cement', group: 'Link' },
   { label: 'New Aggregate Sale', href: '/admin/sales/new/stonedust', group: 'Link' },
-  { label: 'Shop', href: '/admin/shop', group: 'Link' },
+  { label: 'Cement Warehouse', href: '/admin/shop', group: 'Link' },
   { label: 'Customer Payments', href: '/admin/payments', group: 'Link' },
   { label: 'Sales Report', href: '/admin/reports/sales', group: 'Link' },
   { label: 'Customer Balances', href: '/admin/reports/balances', group: 'Link' },

@@ -187,7 +187,7 @@ export default function ShopPage() {
 
   return (
     <div>
-      <PageHeader title="Shop" subtitle="Retail counter — its own products, stock, and walk-in sales" />
+      <PageHeader title="Cement Warehouse" subtitle="Retail counter — its own products, stock, and walk-in sales" />
 
       <div className="mb-6 flex gap-2 border-b">
         {tabs.map(t => (

@@ -120,7 +120,7 @@ export default function SalesReportPage() {
               <p className="text-xl font-bold mt-1">{formatNaira(stoneTotal)}</p>
             </div>
             <div className="bg-white border rounded-lg p-4">
-              <p className="text-xs text-gray-500">Shop Sales</p>
+              <p className="text-xs text-gray-500">Cement Warehouse Sales</p>
               <p className="text-xl font-bold mt-1">{formatNaira(shopTotal)}</p>
             </div>
             <div className="bg-white border rounded-lg p-4">

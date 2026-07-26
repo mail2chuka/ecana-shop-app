@@ -67,7 +67,7 @@ export default function SalesPage() {
               <option value="">All types</option>
               <option value="cement">Cement</option>
               <option value="stonedust">Aggregate</option>
-              <option value="shop">Shop</option>
+              <option value="shop">Cement Warehouse</option>
               <option value="mixed">Mixed</option>
             </select>
           </div>
