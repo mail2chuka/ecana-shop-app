@@ -17,6 +17,7 @@ const SaleItemSchema = new mongoose.Schema({
   // Shop-specific
   shopProduct: { type: mongoose.Schema.Types.ObjectId, ref: 'ShopProduct' },
   shopProductName: String,
+  unit: String, // shop product's unit (bag, piece, tonne...), shown on the invoice
   // Common
   billQuantity: { type: Number, required: true },     // what customer pays for
   actualQuantity: { type: Number, required: true },   // what was loaded
@@ -46,6 +47,10 @@ const SaleSchema = new mongoose.Schema({
   subtotal: { type: Number, required: true },
   discount: { type: Number, default: 0 },
   transportFee: { type: Number, default: 0 },
+  // Who arranged transport for this sale, and how — captured even when complimentary (fee 0) so it's
+  // never just silently missing from the record.
+  transportHandledBy: { type: String, enum: ['customer', 'us'] },
+  transportMeans: String,
   grandTotal: { type: Number, required: true },
 
   paymentMethod: { type: String, enum: ['balance', 'cash', 'transfer', 'pos', 'cheque'], default: 'balance' },

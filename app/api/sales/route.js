@@ -10,6 +10,7 @@ import Truck from '@/models/Truck';
 import StoneDustProduct from '@/models/StoneDustProduct';
 import QuarryPurchase from '@/models/QuarryPurchase';
 import ShopProduct from '@/models/ShopProduct';
+import CementBrand from '@/models/CementBrand';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
 import { isShopCustomer } from '@/lib/shopStock';
@@ -70,13 +71,21 @@ async function _h_POST(request) {
   }
   await dbConnect();
   const body = await request.json();
-  const { saleType, customer: customerId, truck: truckId, date, items, discount, transportFee, notes, deliveryDeparture, deliveryReturn, paymentMethod } = body;
+  const { saleType, customer: customerId, truck: truckId, date, items, discount, transportFee, transportHandledBy, transportMeans, notes, deliveryDeparture, deliveryReturn, paymentMethod } = body;
 
   if (!saleType || !customerId || !items || items.length === 0) {
     return NextResponse.json({ error: 'Sale type, customer and at least one item required' }, { status: 400 });
   }
   if (saleType === 'shop' && !['cash', 'transfer', 'pos', 'cheque'].includes(paymentMethod)) {
     return NextResponse.json({ error: 'Payment method required for shop sales' }, { status: 400 });
+  }
+  if (saleType === 'shop') {
+    if (!['customer', 'us'].includes(transportHandledBy)) {
+      return NextResponse.json({ error: 'State who is handling transport' }, { status: 400 });
+    }
+    if (transportHandledBy === 'us' && !transportMeans?.trim()) {
+      return NextResponse.json({ error: 'State the means of transport' }, { status: 400 });
+    }
   }
 
   const mongoSession = await mongoose.startSession();
@@ -217,10 +226,19 @@ async function _h_POST(request) {
           product.stockQuantity -= billQty;
           await product.save({ session: mongoSession });
 
+          let cementBrandName;
+          if (product.cementBrand) {
+            const brand = await CementBrand.findById(product.cementBrand).session(mongoSession);
+            cementBrandName = brand?.name;
+          }
+
           processedItems.push({
             itemType: 'shop',
             shopProduct: product._id,
             shopProductName: product.name,
+            cementBrand: product.cementBrand,
+            cementBrandName,
+            unit: product.unit,
             billQuantity: billQty,
             actualQuantity: billQty,
             unitPrice,
@@ -268,6 +286,8 @@ async function _h_POST(request) {
         subtotal,
         discount: disc,
         transportFee: transport,
+        transportHandledBy: saleType === 'shop' ? transportHandledBy : undefined,
+        transportMeans: saleType === 'shop' ? transportMeans : undefined,
         grandTotal,
         paymentMethod: isShopSale ? paymentMethod : 'balance',
         balanceBefore,

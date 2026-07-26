@@ -7,7 +7,7 @@ import { ApiError } from '@/lib/apiError';
 
 async function _h_GET() {
   const session = await getOrgSession();
-  if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   await dbConnect();
   try {
     const org = await Organization.findById(session.user.organization).select('name slug phone email logoUrl address invoiceFooter');

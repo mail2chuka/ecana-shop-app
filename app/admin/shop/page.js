@@ -32,6 +32,10 @@ export default function ShopPage() {
   const [cartQty, setCartQty] = useState('');
   const [cartPrice, setCartPrice] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [transportHandledBy, setTransportHandledBy] = useState('');
+  const [transportMeans, setTransportMeans] = useState('');
+  const [transportPrice, setTransportPrice] = useState('');
+  const [showTransportWarning, setShowTransportWarning] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -125,9 +129,19 @@ export default function ShopPage() {
   const removeFromCart = (id) => setCart(prev => prev.filter(c => c.id !== id));
   const cartTotal = cart.reduce((s, c) => s + c.total, 0);
 
-  const submitSale = async () => {
+  const attemptSubmit = () => {
     if (!selectedCustomer) return toast.error('Select a customer');
     if (cart.length === 0) return toast.error('Add at least one item');
+    if (!transportHandledBy) return toast.error('State who is handling transport');
+    if (transportHandledBy === 'us') {
+      if (!transportMeans.trim()) return toast.error('State the means of transport');
+      if (transportPrice === '') { setShowTransportWarning(true); return; }
+    }
+    submitSale();
+  };
+
+  const submitSale = async () => {
+    setShowTransportWarning(false);
     setSubmitting(true);
     try {
       const items = cart.map(c => ({
@@ -145,7 +159,9 @@ export default function ShopPage() {
           date: new Date(),
           items,
           discount: 0,
-          transportFee: 0,
+          transportFee: transportHandledBy === 'us' ? (parseFloat(transportPrice) || 0) : 0,
+          transportHandledBy,
+          transportMeans: transportHandledBy === 'us' ? transportMeans.trim() : undefined,
           paymentMethod,
         }),
       });
@@ -153,6 +169,7 @@ export default function ShopPage() {
       if (d.success) {
         toast.success(`Sale ${d.data.saleNumber} recorded`);
         setCart([]); setSelectedCustomer(null); setCustomerSearch('');
+        setTransportHandledBy(''); setTransportMeans(''); setTransportPrice('');
         load();
         setTab('history');
       } else toast.error(d.error);
@@ -316,8 +333,34 @@ export default function ShopPage() {
             </Card>
           )}
 
+          <Card className="p-4 space-y-3">
+            <label className="block text-sm font-medium">Transport</label>
+            <div className="flex gap-4 text-sm">
+              <label className="flex items-center gap-2">
+                <input type="radio" name="transportHandledBy" checked={transportHandledBy === 'customer'} onChange={() => { setTransportHandledBy('customer'); setTransportMeans(''); setTransportPrice(''); }} />
+                Customer arranges their own transport
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="radio" name="transportHandledBy" checked={transportHandledBy === 'us'} onChange={() => setTransportHandledBy('us')} />
+                We handle transport
+              </label>
+            </div>
+            {transportHandledBy === 'us' && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1">Means of transport</label>
+                  <input type="text" value={transportMeans} onChange={e => setTransportMeans(e.target.value)} placeholder="e.g., Company truck, hired tricycle..." className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">Transport price (₦)</label>
+                  <CurrencyInput value={transportPrice} onChange={setTransportPrice} placeholder="0.00 if complimentary" className={inputCls} />
+                </div>
+              </div>
+            )}
+          </Card>
+
           <button
-            onClick={submitSale}
+            onClick={attemptSubmit}
             disabled={submitting || cart.length === 0}
             className={`w-full py-3 font-bold ${btnPrimaryCls}`}
           >
@@ -329,20 +372,22 @@ export default function ShopPage() {
       {/* SALES HISTORY TAB */}
       {tab === 'history' && (
         <Card className="overflow-hidden">
-          <div className={`${tableScrollCls} min-w-[700px]`}>
-            <table className="w-full text-sm min-w-[700px]">
+          <div className={`${tableScrollCls} min-w-[900px]`}>
+            <table className="w-full text-sm min-w-[900px]">
               <thead className={theadCls}>
                 <tr>
                   <th className="px-4 py-3 text-left font-medium">Sale #</th>
                   <th className="px-4 py-3 text-left font-medium">Date</th>
                   <th className="px-4 py-3 text-left font-medium">Customer</th>
+                  <th className="px-4 py-3 text-left font-medium">Brand</th>
+                  <th className="px-4 py-3 text-right font-medium">Bags Supplied</th>
                   <th className="px-4 py-3 text-right font-medium">Total</th>
                   <th className="px-4 py-3 text-left font-medium">Status</th>
                   <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {sales.length === 0 && <EmptyRow colSpan={6} text="No shop sales yet" />}
+                {sales.length === 0 && <EmptyRow colSpan={8} text="No shop sales yet" />}
                 {sales.map(s => (
                   <tr key={s._id}>
                     <td className="px-4 py-3 font-medium">
@@ -354,6 +399,16 @@ export default function ShopPage() {
                     <td className="px-4 py-3">{formatDate(s.date)}</td>
                     <td className="px-4 py-3">
                       <Link href={`/admin/customers/${s.customer}`} className="hover:underline">{s.customerName}</Link>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-600">
+                      {(s.items || []).map((it, idx) => (
+                        <p key={idx} className="whitespace-nowrap">{it.cementBrandName || it.shopProductName}</p>
+                      ))}
+                    </td>
+                    <td className="px-4 py-3 text-right text-xs text-gray-600">
+                      {(s.items || []).map((it, idx) => (
+                        <p key={idx} className="whitespace-nowrap">{formatNumber(it.billQuantity)} {it.unit || ''}</p>
+                      ))}
                     </td>
                     <td className="px-4 py-3 text-right font-medium">{formatNaira(s.grandTotal)}</td>
                     <td className="px-4 py-3"><StatusPill status={s.status} color={s.status === 'active' ? 'green' : 'red'} /></td>
@@ -432,6 +487,36 @@ export default function ShopPage() {
           <FormButtons onCancel={() => setShowProductModal(false)} submitting={submitting} />
         </form>
       </Modal>
+
+      {/* Transport Price Warning Modal */}
+      {showTransportWarning && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold mb-3 text-amber-600">⚠ Transport Price Not Entered</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              You said we're handling transport but haven't entered a price. This is fine if it's complimentary, but we want to make sure it wasn't missed by mistake.
+            </p>
+            <p className="text-sm font-medium text-gray-700 mb-6">Do you want to:</p>
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setShowTransportWarning(false)}
+                className="w-full px-4 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50 font-medium"
+              >
+                Go Back & Add Transport Price
+              </button>
+              <button
+                type="button"
+                onClick={submitSale}
+                disabled={submitting}
+                className="w-full px-4 py-2 bg-amber-700 text-neutral-100 rounded text-sm hover:bg-amber-800 font-medium disabled:opacity-50"
+              >
+                {submitting ? 'Submitting...' : 'Continue — Complimentary (₦0)'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

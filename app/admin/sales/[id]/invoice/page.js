@@ -2,18 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { formatNaira, formatDate, formatDateTime, formatSaleTypeLabel } from '@/lib/format';
 
 export default function SaleInvoicePage() {
   const { id } = useParams();
-  const { data: session } = useSession();
   const [sale, setSale] = useState(null);
+  const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/sales/${id}`).then(r => r.json()).then(d => {
-      if (d.success) setSale(d.data);
+    Promise.all([
+      fetch(`/api/sales/${id}`).then(r => r.json()),
+      fetch('/api/organization').then(r => r.json()),
+    ]).then(([s, o]) => {
+      if (s.success) setSale(s.data);
+      if (o.success) setOrg(o.data);
     }).finally(() => setLoading(false));
   }, [id]);
 
@@ -32,9 +35,16 @@ export default function SaleInvoicePage() {
       <div className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
         <div className="border-b pb-6 mb-6">
           <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-3xl font-bold">{formatSaleTypeLabel(sale.saleType)}</h2>
-              <p className="text-sm text-gray-600 mt-2">{session?.user?.organizationName || ''}</p>
+            <div className="flex items-start gap-3">
+              {org?.logoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={org.logoUrl} alt={org.name} className="h-14 w-14 object-contain rounded" />
+              )}
+              <div>
+                <h2 className="text-2xl font-bold">{org?.name || ''}</h2>
+                <p className="text-xs text-gray-500 mt-0.5">{formatSaleTypeLabel(sale.saleType)}</p>
+                {org?.address && <p className="text-xs text-gray-500 mt-1">{org.address}</p>}
+              </div>
             </div>
             <div className="text-right text-sm">
               <p className="font-bold text-xl">{sale.saleNumber}</p>
@@ -80,6 +90,11 @@ export default function SaleInvoicePage() {
                         <p className="font-medium">{item.cementBrandName} Cement</p>
                         <p className="text-xs text-gray-500">ATC: {item.atcNumber}</p>
                       </>
+                    ) : item.itemType === 'shop' ? (
+                      <>
+                        <p className="font-medium">{item.shopProductName}</p>
+                        {item.cementBrandName && <p className="text-xs text-gray-500">{item.cementBrandName}</p>}
+                      </>
                     ) : (
                       <>
                         <p className="font-medium">{item.quarryName} — {item.size}</p>
@@ -88,7 +103,7 @@ export default function SaleInvoicePage() {
                     )}
                   </td>
                   <td className="px-2 py-3 text-right">
-                    {item.billQuantity} {item.itemType === 'cement' ? 'bags' : 'tonnes'}
+                    {item.billQuantity} {item.itemType === 'cement' ? 'bags' : item.itemType === 'shop' ? (item.unit || 'unit') : 'tonnes'}
                   </td>
                   <td className="px-2 py-3 text-right">{formatNaira(item.unitPrice)}</td>
                   <td className="px-2 py-3 text-right font-medium">{formatNaira(item.lineTotal)}</td>
@@ -111,10 +126,14 @@ export default function SaleInvoicePage() {
                 <span>-{formatNaira(sale.discount)}</span>
               </div>
             )}
-            {sale.transportFee > 0 && (
+            {(sale.transportFee > 0 || sale.transportHandledBy) && (
               <div className="flex justify-between py-2 border-b border-gray-300">
-                <span className="text-gray-600">Transport Fee</span>
-                <span className="font-medium">{formatNaira(sale.transportFee)}</span>
+                <span className="text-gray-600">
+                  Transport{sale.transportHandledBy === 'customer' ? ' (by customer)' : sale.transportMeans ? ` (${sale.transportMeans})` : ''}
+                </span>
+                <span className="font-medium">
+                  {sale.transportHandledBy === 'customer' ? '—' : formatNaira(sale.transportFee)}
+                </span>
               </div>
             )}
             <div className="flex justify-between py-3 text-lg font-bold border-b-2 border-gray-900">
@@ -136,7 +155,7 @@ export default function SaleInvoicePage() {
         </div>
 
         <div className="mt-6 pt-4 text-center text-xs text-gray-400">
-          Thank you for your business.
+          {org?.invoiceFooter || 'Thank you for your business.'}
         </div>
       </div>
 
