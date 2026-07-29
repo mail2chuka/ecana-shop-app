@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { Loader, PageHeader, Card, EmptyRow, StatusPill, inputCls, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatDate } from '@/lib/format';
+import { hasModule } from '@/lib/modules';
 import toast from 'react-hot-toast';
 
 export default function SalesPage() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,8 +56,8 @@ export default function SalesPage() {
         subtitle="All sales transactions"
         action={
           <div className="flex gap-2">
-            <Link href="/admin/sales/new/cement" className={btnPrimaryCls}>New Cement Sale</Link>
-            <Link href="/admin/sales/new/stonedust" className={btnPrimaryCls}>New Aggregate Sale</Link>
+            {hasModule(session, 'cement') && <Link href="/admin/sales/new/cement" className={btnPrimaryCls}>New Cement Sale</Link>}
+            {hasModule(session, 'aggregate') && <Link href="/admin/sales/new/stonedust" className={btnPrimaryCls}>New Aggregate Sale</Link>}
           </div>
         }
       />

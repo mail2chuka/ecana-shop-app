@@ -31,4 +31,4 @@ async function _h_GET(request) {
   }
 }
 
-export const GET = withOrg(_h_GET);
+export const GET = withOrg(_h_GET, 'aggregate');

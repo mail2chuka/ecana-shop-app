@@ -47,5 +47,5 @@ async function _h_DELETE(request, { params }) {
   }
 }
 
-export const PUT = withOrg(_h_PUT);
-export const DELETE = withOrg(_h_DELETE);
+export const PUT = withOrg(_h_PUT, 'shop');
+export const DELETE = withOrg(_h_DELETE, 'shop');

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { FiMenu, FiX, FiLogOut, FiArrowLeft, FiSearch } from 'react-icons/fi';
 import { Logo } from '@/components/ui';
 import { STAFF_ROLES } from '@/lib/permissions';
+import { hasAnyModule } from '@/lib/modules';
 import toast from 'react-hot-toast';
 
 // Non-admin staff roles are restricted to these path prefixes; the dashboard ('/admin' exactly) is always allowed.
@@ -23,31 +24,48 @@ function isPathAllowed(role, pathname) {
   return prefixes.some((prefix) => pathname.startsWith(prefix));
 }
 
+// Paths that belong to a single subscribed-per-org module — same idea as ROLE_ALLOWED_PREFIXES, but
+// gating by what the organization pays for rather than by staff role. Trucks/reports are shared by
+// cement + aggregate (a truck can serve either), so they take an array meaning "any of these".
+const MODULE_PATH_PREFIXES = [
+  { prefixes: ['/admin/cement-brands', '/admin/atcs', '/admin/sales/new/cement'], modules: ['cement'] },
+  { prefixes: ['/admin/suppliers', '/admin/stonedust', '/admin/sales/new/stonedust', '/admin/reports/quarry-purchases'], modules: ['aggregate'] },
+  { prefixes: ['/admin/shop'], modules: ['shop'] },
+  { prefixes: ['/admin/trucks', '/admin/reports/trucks'], modules: ['cement', 'aggregate'] },
+];
+
+function isModuleAllowed(session, pathname) {
+  const rule = MODULE_PATH_PREFIXES.find((r) => r.prefixes.some((p) => pathname.startsWith(p)));
+  if (!rule) return true;
+  return hasAnyModule(session, rule.modules);
+}
+
 // Sidebar nav links get their own dedicated class set — distinct from table-action and page-button classes.
 const navLinkCls = 'block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors bg-amber-700 text-neutral-100 border-amber-800 hover:bg-amber-600 hover:text-white';
 const navLinkActiveCls = 'block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors bg-amber-900 text-white border-amber-950 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]';
 
-// `allow` lists which roles see the item; omitted = all staff roles (admin, gsm_manager, atc_manager).
+// `allow` lists which roles see the item (omitted = all staff roles); `modules` lists which org
+// modules must be enabled (omitted = always shown regardless of subscription).
 const menu = [
   { label: 'Dashboard', href: '/admin' },
   {
     group: 'Setup',
     items: [
-      { label: 'Quarry', href: '/admin/suppliers', allow: ['admin', 'gsm_manager'] },
-      { label: 'Cement Brands', href: '/admin/cement-brands', allow: ['admin', 'gsm_manager'] },
-      { label: 'Aggregate', href: '/admin/stonedust', allow: ['admin', 'gsm_manager'] },
-      { label: 'Trucks', href: '/admin/trucks', allow: ['admin', 'gsm_manager'] },
+      { label: 'Quarry', href: '/admin/suppliers', allow: ['admin', 'gsm_manager'], modules: ['aggregate'] },
+      { label: 'Cement Brands', href: '/admin/cement-brands', allow: ['admin', 'gsm_manager'], modules: ['cement'] },
+      { label: 'Aggregate', href: '/admin/stonedust', allow: ['admin', 'gsm_manager'], modules: ['aggregate'] },
+      { label: 'Trucks', href: '/admin/trucks', allow: ['admin', 'gsm_manager'], modules: ['cement', 'aggregate'] },
     ],
   },
   {
     group: 'Operations',
     items: [
       { label: 'Customers', href: '/admin/customers', allow: ['admin', 'gsm_manager'] },
-      { label: 'ATCs', href: '/admin/atcs', allow: ['admin', 'atc_manager'] },
+      { label: 'ATCs', href: '/admin/atcs', allow: ['admin', 'atc_manager'], modules: ['cement'] },
       { label: 'Sales', href: '/admin/sales', allow: ['admin', 'gsm_manager'] },
-      { label: 'New Cement Sale', href: '/admin/sales/new/cement', allow: ['admin', 'gsm_manager'] },
-      { label: 'New Aggregate Sale', href: '/admin/sales/new/stonedust', allow: ['admin', 'gsm_manager'] },
-      { label: 'Cement Warehouse', href: '/admin/shop', allow: ['admin', 'gsm_manager'] },
+      { label: 'New Cement Sale', href: '/admin/sales/new/cement', allow: ['admin', 'gsm_manager'], modules: ['cement'] },
+      { label: 'New Aggregate Sale', href: '/admin/sales/new/stonedust', allow: ['admin', 'gsm_manager'], modules: ['aggregate'] },
+      { label: 'Cement Warehouse', href: '/admin/shop', allow: ['admin', 'gsm_manager'], modules: ['shop'] },
       { label: 'Customer Payments', href: '/admin/payments', allow: ['admin', 'gsm_manager'] },
     ],
   },
@@ -57,10 +75,10 @@ const menu = [
     items: [
       { label: 'Sales Report', href: '/admin/reports/sales' },
       { label: 'Customer Balances', href: '/admin/reports/balances' },
-      { label: 'Quarry Purchases', href: '/admin/reports/quarry-purchases' },
+      { label: 'Quarry Purchases', href: '/admin/reports/quarry-purchases', modules: ['aggregate'] },
       { label: 'Per Customer', href: '/admin/reports/customers' },
       { label: 'Per Product', href: '/admin/reports/products' },
-      { label: 'Truck Utilization', href: '/admin/reports/trucks' },
+      { label: 'Truck Utilization', href: '/admin/reports/trucks', modules: ['cement', 'aggregate'] },
     ],
   },
   { label: 'Organization Settings', href: '/admin/organization', allow: ['admin'] },
@@ -90,6 +108,9 @@ export default function AdminShell({ children }) {
     if (status === 'loading' || !session) return;
     if (!isPathAllowed(session.user.role, pathname)) {
       toast.error('Not authorized for that page');
+      router.replace('/admin');
+    } else if (!isModuleAllowed(session, pathname)) {
+      toast.error('That feature is not enabled for your organization');
       router.replace('/admin');
     }
   }, [session, status, pathname, router]);
@@ -136,9 +157,10 @@ export default function AdminShell({ children }) {
   }
   if (!STAFF_ROLES.includes(session.user.role)) return null;
   if (!isPathAllowed(session.user.role, pathname)) return null;
+  if (!isModuleAllowed(session, pathname)) return null;
 
   const role = session.user.role;
-  const itemAllowed = (item) => !item.allow || item.allow.includes(role);
+  const itemAllowed = (item) => (!item.allow || item.allow.includes(role)) && (!item.modules || hasAnyModule(session, item.modules));
   const visibleMenu = menu
     .map((entry) => {
       if (entry.group) {

@@ -15,6 +15,7 @@ import { generateTransactionNumber } from '@/lib/transaction';
 import { isShopCustomer } from '@/lib/shopStock';
 import { can } from '@/lib/permissions';
 import { isSameCalendarDay, resolveDate } from '@/lib/dayLock';
+import { hasModule, moduleForSaleType } from '@/lib/modules';
 import { ApiError } from '@/lib/apiError';
 import { pluralizeUnit } from '@/lib/format';
 
@@ -133,6 +134,9 @@ async function _h_PUT(request, { params }) {
       if (sale.status === 'cancelled') throw new ApiError('Cannot edit a cancelled sale', 400);
       if (session.user.role !== 'admin' && !isSameCalendarDay(sale.date, new Date())) {
         throw new ApiError('Only same-day sales can be edited', 403);
+      }
+      if (!hasModule(session, moduleForSaleType(sale.saleType)) || items.some((item) => !hasModule(session, moduleForSaleType(item.itemType)))) {
+        throw new ApiError('This sale type is not enabled for your organization', 403);
       }
 
       const isShopSale = sale.saleType === 'shop';

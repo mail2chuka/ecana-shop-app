@@ -40,5 +40,5 @@ async function _h_POST(request) {
   }
 }
 
-export const GET = withOrg(_h_GET);
-export const POST = withOrg(_h_POST);
+export const GET = withOrg(_h_GET, 'aggregate');
+export const POST = withOrg(_h_POST, 'aggregate');

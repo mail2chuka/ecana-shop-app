@@ -15,6 +15,7 @@ import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
 import { isShopCustomer } from '@/lib/shopStock';
 import { resolveDate } from '@/lib/dayLock';
+import { hasModule, moduleForSaleType } from '@/lib/modules';
 import { can } from '@/lib/permissions';
 import { ApiError } from '@/lib/apiError';
 import { pluralizeUnit } from '@/lib/format';
@@ -63,6 +64,16 @@ async function _h_POST(request) {
 
   if (!saleType || !customerId || !items || items.length === 0) {
     return NextResponse.json({ error: 'Sale type, customer and at least one item required' }, { status: 400 });
+  }
+  if (!hasModule(session, moduleForSaleType(saleType))) {
+    return NextResponse.json({ error: 'This sale type is not enabled for your organization' }, { status: 403 });
+  }
+  // saleType alone isn't a hard guarantee every line matches it — items carry their own itemType —
+  // so check each line's module too rather than trusting the top-level label.
+  for (const item of items) {
+    if (!hasModule(session, moduleForSaleType(item.itemType))) {
+      return NextResponse.json({ error: 'One of the items on this sale belongs to a module not enabled for your organization' }, { status: 403 });
+    }
   }
   if (saleType === 'shop' && !['cash', 'transfer', 'pos', 'cheque'].includes(paymentMethod)) {
     return NextResponse.json({ error: 'Payment method required for shop sales' }, { status: 400 });

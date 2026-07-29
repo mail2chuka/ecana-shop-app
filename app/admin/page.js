@@ -5,23 +5,25 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card } from '@/components/ui';
 import { formatNaira, formatNumber, pluralizeUnit } from '@/lib/format';
+import { hasAnyModule } from '@/lib/modules';
 import toast from 'react-hot-toast';
 
 // Mirrors the `allow` lists on the matching sidebar links in components/AdminShell.js — a shortcut
 // here is pointless (and confusing) for a role that gets bounced back the moment they click it.
+// `modules` mirrors AdminShell's MODULE_PATH_PREFIXES the same way.
 const QUICK_ACTIONS = [
   {
-    href: '/admin/sales/new/cement', allow: ['admin', 'gsm_manager'],
+    href: '/admin/sales/new/cement', allow: ['admin', 'gsm_manager'], modules: ['cement'],
     cls: 'block bg-rose-50 border border-rose-200 rounded-lg p-4 hover:bg-rose-100', titleCls: 'font-bold text-rose-800',
     title: 'New Cement Sale', subtitle: 'Sell cement from an active ATC',
   },
   {
-    href: '/admin/sales/new/stonedust', allow: ['admin', 'gsm_manager'],
+    href: '/admin/sales/new/stonedust', allow: ['admin', 'gsm_manager'], modules: ['aggregate'],
     cls: 'block bg-amber-50 border border-amber-200 rounded-lg p-4 hover:bg-amber-100', titleCls: 'font-bold text-amber-800',
     title: 'New Aggregate Sale', subtitle: 'Record a quarry product sale',
   },
   {
-    href: '/admin/atcs', allow: ['admin', 'atc_manager'],
+    href: '/admin/atcs', allow: ['admin', 'atc_manager'], modules: ['cement'],
     cls: 'block bg-green-50 border border-green-200 rounded-lg p-4 hover:bg-green-100', titleCls: 'font-bold text-green-800',
     title: 'Record ATC', subtitle: 'Add a new authorization to collect',
   },
@@ -87,7 +89,7 @@ export default function DashboardPage() {
 
       <h2 className="text-sm font-semibold text-gray-700 mb-3">Quick Actions</h2>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {QUICK_ACTIONS.filter((a) => a.allow.includes(session?.user?.role)).map((a) => (
+        {QUICK_ACTIONS.filter((a) => a.allow.includes(session?.user?.role) && (!a.modules || hasAnyModule(session, a.modules))).map((a) => (
           <Link key={a.href} href={a.href} className={a.cls}>
             <h3 className={a.titleCls}>{a.title}</h3>
             <p className="text-sm text-gray-600 mt-1">

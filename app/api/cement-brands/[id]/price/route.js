@@ -55,4 +55,4 @@ async function _h_POST(request, { params }) {
   }
 }
 
-export const POST = withOrg(_h_POST);
+export const POST = withOrg(_h_POST, 'cement');

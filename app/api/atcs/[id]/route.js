@@ -20,4 +20,4 @@ async function _h_GET(request, { params }) {
   }
 }
 
-export const GET = withOrg(_h_GET);
+export const GET = withOrg(_h_GET, 'cement');
