@@ -99,7 +99,9 @@ export default function ATCsPage() {
     .sort((x, y) => {
       const diff = (statusSortOrder[x.status] ?? 5) - (statusSortOrder[y.status] ?? 5);
       if (diff !== 0) return diff;
-      return new Date(x.atcDate).getTime() - new Date(y.atcDate).getTime();
+      const dateDiff = new Date(y.atcDate).getTime() - new Date(x.atcDate).getTime();
+      if (dateDiff !== 0) return dateDiff;
+      return new Date(y.createdAt).getTime() - new Date(x.createdAt).getTime();
     });
   const statusCounts = allAtcs.reduce((acc, a) => { acc[a.status] = (acc[a.status] || 0) + 1; return acc; }, {});
 
