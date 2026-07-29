@@ -7,6 +7,7 @@ import Customer from '@/models/Customer';
 import CustomerPayment from '@/models/CustomerPayment';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
+import { resolveDate } from '@/lib/dayLock';
 import { can } from '@/lib/permissions';
 import { ApiError } from '@/lib/apiError';
 
@@ -73,7 +74,7 @@ async function _h_POST(request) {
         depositorName,
         bankName,
         description,
-        date: date ? new Date(date) : new Date(),
+        date: resolveDate(date),
         balanceBefore,
         balanceAfter,
         recordedBy: session.user.id,

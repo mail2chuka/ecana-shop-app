@@ -14,7 +14,7 @@ import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
 import { isShopCustomer } from '@/lib/shopStock';
 import { can } from '@/lib/permissions';
-import { isSameCalendarDay } from '@/lib/dayLock';
+import { isSameCalendarDay, resolveDate } from '@/lib/dayLock';
 import { ApiError } from '@/lib/apiError';
 import { pluralizeUnit } from '@/lib/format';
 
@@ -206,7 +206,7 @@ async function _h_PUT(request, { params }) {
           atc.bagsRemaining -= actualQty;
           if (atc.bagsRemaining === 0) {
             atc.status = 'closed';
-            atc.closedDate = date ? new Date(date) : sale.date;
+            atc.closedDate = date ? resolveDate(date) : sale.date;
           }
           await atc.save({ session: mongoSession });
 
@@ -264,7 +264,7 @@ async function _h_PUT(request, { params }) {
             costPricePerTonne,
             totalCost: actualQty * costPricePerTonne,
             sale: sale._id,
-            date: date ? new Date(date) : sale.date,
+            date: date ? resolveDate(date) : sale.date,
             createdBy: session.user.id,
             createdByName: session.user.name,
           }], { session: mongoSession });
@@ -333,7 +333,7 @@ async function _h_PUT(request, { params }) {
       sale.grandTotal = grandTotal;
       sale.balanceBefore = balanceBefore;
       sale.balanceAfter = balanceAfter;
-      sale.date = date ? new Date(date) : sale.date;
+      sale.date = date ? resolveDate(date) : sale.date;
       sale.notes = notes;
       sale.truck = truckData.truck;
       sale.truckPlate = truckData.truckPlate;

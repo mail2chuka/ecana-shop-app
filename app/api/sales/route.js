@@ -14,6 +14,7 @@ import CementBrand from '@/models/CementBrand';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
 import { isShopCustomer } from '@/lib/shopStock';
+import { resolveDate } from '@/lib/dayLock';
 import { can } from '@/lib/permissions';
 import { ApiError } from '@/lib/apiError';
 import { pluralizeUnit } from '@/lib/format';
@@ -121,7 +122,7 @@ async function _h_POST(request) {
           atc.bagsRemaining -= actualQty;
           if (atc.bagsRemaining === 0) {
             atc.status = 'closed';
-            atc.closedDate = date ? new Date(date) : new Date();
+            atc.closedDate = resolveDate(date);
           }
           await atc.save({ session: mongoSession });
 
@@ -179,7 +180,7 @@ async function _h_POST(request) {
             costPricePerTonne,
             totalCost: actualQty * costPricePerTonne,
             sale: saleId,
-            date: date ? new Date(date) : new Date(),
+            date: resolveDate(date),
             createdBy: session.user.id,
             createdByName: session.user.name,
           }], { session: mongoSession });
@@ -263,7 +264,7 @@ async function _h_POST(request) {
         customerPhone: customer.phone,
         customerAddress: customer.address,
         ...truckData,
-        date: date ? new Date(date) : new Date(),
+        date: resolveDate(date),
         items: processedItems,
         subtotal,
         discount: disc,
