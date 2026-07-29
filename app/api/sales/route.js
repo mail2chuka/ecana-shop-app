@@ -18,8 +18,6 @@ import { can } from '@/lib/permissions';
 import { ApiError } from '@/lib/apiError';
 import { pluralizeUnit } from '@/lib/format';
 
-const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
-
 async function _h_GET(request) {
   try {
     const session = await getOrgSession();
@@ -165,12 +163,6 @@ async function _h_POST(request) {
           if (truckDoc.type !== 'stonedust') {
             throw new ApiError(`${truckDoc.plateNumber} is registered for cement, not aggregates — assign an aggregate truck instead`, 400);
           }
-          const busyCutoff = new Date(Date.now() - QUARRY_TRUCK_LOCK_MS);
-          const busyOn = await QuarryPurchase.findOne({ truck: truckDoc._id, createdAt: { $gte: busyCutoff } }).session(mongoSession);
-          if (busyOn) {
-            throw new ApiError(`Truck ${truckDoc.plateNumber} is still out on an aggregate delivery (ref ${busyOn.referenceNumber}) — it'll be free 30 minutes after that sale`, 400);
-          }
-
           const costPricePerTonne = product.currentPricePerTonne || 0;
           const referenceNumber = await generateTransactionNumber(mongoSession);
           const purchase = await QuarryPurchase.create([{

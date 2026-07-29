@@ -4,20 +4,14 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Truck from '@/models/Truck';
 import ATC from '@/models/ATC';
-import QuarryPurchase from '@/models/QuarryPurchase';
 import { logAudit } from '@/lib/audit';
 import { requireObjectId } from '@/lib/validate';
 import { can } from '@/lib/permissions';
 import { pluralizeUnit } from '@/lib/format';
 
-const QUARRY_TRUCK_LOCK_MS = 30 * 60 * 1000;
-
 async function findBusyReason(truckId) {
   const busyAtc = await ATC.findOne({ assignedTruck: truckId, status: { $ne: 'closed' } });
   if (busyAtc) return `it's still tied to ATC ${busyAtc.atcNumber} (${busyAtc.bagsRemaining} ${pluralizeUnit(busyAtc.bagsRemaining, 'bag')} remaining) — it'll be free once that closes`;
-  const busyCutoff = new Date(Date.now() - QUARRY_TRUCK_LOCK_MS);
-  const busyPurchase = await QuarryPurchase.findOne({ truck: truckId, createdAt: { $gte: busyCutoff } });
-  if (busyPurchase) return `it's on an aggregate delivery (ref ${busyPurchase.referenceNumber}) — it'll be free 30 minutes after that sale`;
   return null;
 }
 
