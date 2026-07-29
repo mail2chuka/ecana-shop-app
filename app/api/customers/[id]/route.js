@@ -5,6 +5,7 @@ import dbConnect from '@/lib/db';
 import Customer from '@/models/Customer';
 import { logAudit } from '@/lib/audit';
 import { requireObjectId } from '@/lib/validate';
+import { findDuplicateCustomerName } from '@/lib/customerName';
 import { can } from '@/lib/permissions';
 
 async function _h_GET(request, { params }) {
@@ -41,6 +42,12 @@ async function _h_PUT(request, { params }) {
     Object.keys(update).forEach((key) => update[key] === undefined && delete update[key]);
     const before = await Customer.findById(id);
     if (!before) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (update.name && update.name.trim().toLowerCase() !== before.name.trim().toLowerCase()) {
+      const duplicate = await findDuplicateCustomerName(Customer, update.name, id);
+      if (duplicate) {
+        return NextResponse.json({ error: `A customer named "${duplicate.name}" already exists — use a different name, or add something to distinguish this one` }, { status: 400 });
+      }
+    }
     const updated = await Customer.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     await logAudit({ userId: session.user.id, userName: session.user.name, action: 'updated', entity: 'Customer', entityId: id, before, after: updated });
     return NextResponse.json({ success: true, data: updated });

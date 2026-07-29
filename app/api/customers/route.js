@@ -4,6 +4,7 @@ import dbConnect from '@/lib/db';
 import Customer from '@/models/Customer';
 import { logAudit } from '@/lib/audit';
 import { generateCustomerId } from '@/lib/customerId';
+import { findDuplicateCustomerName } from '@/lib/customerName';
 import { can } from '@/lib/permissions';
 
 export const GET = withOrg(async (request) => {
@@ -35,6 +36,10 @@ export const POST = withOrg(async (request) => {
     await dbConnect();
     const body = await request.json();
     if (!body.name || !body.phone) return NextResponse.json({ error: 'Name and phone required' }, { status: 400 });
+    const duplicate = await findDuplicateCustomerName(Customer, body.name);
+    if (duplicate) {
+      return NextResponse.json({ error: `A customer named "${duplicate.name}" already exists — use a different name, or add something to distinguish this one` }, { status: 400 });
+    }
     const customerId = await generateCustomerId();
     const customer = await Customer.create({
       customerId,
