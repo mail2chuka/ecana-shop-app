@@ -22,7 +22,7 @@ export const GET = withOrg(async (request) => {
       const re = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       query.$or = [{ name: re }, { phone: re }, { businessName: re }, { customerId: re }];
     }
-    const customers = await Customer.find(query).sort({ name: 1 }).limit(500);
+    const customers = await Customer.find(query).collation({ locale: 'en', strength: 2 }).sort({ name: 1 }).limit(500);
     return NextResponse.json({ success: true, data: customers });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
