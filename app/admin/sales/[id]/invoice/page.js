@@ -5,14 +5,18 @@ import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime, saleItemUnitLabel } from '@/lib/format';
 import { ReceiptHeader, ReceiptFooter, PaymentDetailsBox } from '@/components/ui';
-import { newReceiptPdf, drawReceiptHeader, drawPaymentDetailsBox, drawTwoColumnInfo, drawItemsTable, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf, CONTENT_RIGHT, PAGE_CENTER } from '@/lib/receiptPdf';
+import {
+  createPdfRenderer, createImageRenderer, drawReceiptHeader, drawPaymentDetailsBox, drawTwoColumnInfo,
+  drawItemsTable, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf, presentImage,
+  CONTENT_RIGHT, PAGE_CENTER,
+} from '@/lib/receiptRender';
 
 export default function SaleInvoicePage() {
   const { id } = useParams();
   const [sale, setSale] = useState(null);
   const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sharing, setSharing] = useState(false);
+  const [sharing, setSharing] = useState(null); // null | 'pdf' | 'jpg'
 
   useEffect(() => {
     Promise.all([
@@ -30,73 +34,91 @@ export default function SaleInvoicePage() {
     }, 100);
   };
 
-  const handleShare = async () => {
-    setSharing(true);
-    try {
-      const pdf = await newReceiptPdf();
-      let y = await drawReceiptHeader(pdf, { org, refNumber: sale.saleNumber, date: formatDate(sale.date), title: 'Sales Invoice' });
-      if (sale.status === 'cancelled') {
-        pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10); pdf.setTextColor(180, 100, 20);
-        pdf.text('CANCELLED', PAGE_CENTER, y, { align: 'center' });
-        pdf.setTextColor(20);
-        y += 18;
-      }
-      y = drawPaymentDetailsBox(pdf, y, org);
+  // One content definition, either renderer (jsPDF or Canvas 2D) — see lib/receiptRender.js.
+  const renderContent = async (ctx) => {
+    let y = await drawReceiptHeader(ctx, { org, refNumber: sale.saleNumber, date: formatDate(sale.date), title: 'Sales Invoice' });
+    if (sale.status === 'cancelled') {
+      ctx.setFont('bold'); ctx.setSize(10); ctx.setColor(180, 100, 20);
+      ctx.text('CANCELLED', PAGE_CENTER, y, { align: 'center' });
+      ctx.setColor(20);
+      y += 18;
+    }
 
-      y = drawTwoColumnInfo(pdf, y, {
-        label: 'Bill To',
-        lines: [sale.customerName, sale.customerPhone, sale.customerAddress].filter(Boolean),
-      }, {
-        label: 'Invoice Date',
-        lines: [formatDateTime(sale.date)],
-      });
+    y = drawTwoColumnInfo(ctx, y, {
+      label: 'Bill To',
+      lines: [sale.customerName, sale.customerPhone, sale.customerAddress].filter(Boolean),
+    }, {
+      label: 'Invoice Date',
+      lines: [formatDateTime(sale.date)],
+    });
 
-      const items = sale.items.map((item) => {
-        const title = item.itemType === 'cement' ? `${item.cementBrandName} Cement`
-          : item.itemType === 'shop' ? item.shopProductName
-          : `${item.quarryName} — ${item.size}`;
-        const subtitle = item.itemType === 'cement' ? `ATC: ${item.atcNumber}`
-          : item.itemType === 'shop' ? (item.cementBrandName || null)
-          : 'Aggregate';
-        return { title, subtitle, qty: `${item.billQuantity} ${saleItemUnitLabel(item)}`, price: formatNaira(item.unitPrice), amount: formatNaira(item.lineTotal) };
-      });
-      y = drawItemsTable(pdf, y, items);
+    const items = sale.items.map((item) => {
+      const title = item.itemType === 'cement' ? `${item.cementBrandName} Cement`
+        : item.itemType === 'shop' ? item.shopProductName
+        : `${item.quarryName} — ${item.size}`;
+      const subtitle = item.itemType === 'cement' ? `ATC: ${item.atcNumber}`
+        : item.itemType === 'shop' ? (item.cementBrandName || null)
+        : 'Aggregate';
+      return { title, subtitle, qty: `${item.billQuantity} ${saleItemUnitLabel(item)}`, price: formatNaira(item.unitPrice), amount: formatNaira(item.lineTotal) };
+    });
+    y = drawItemsTable(ctx, y, items);
 
-      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9.5); pdf.setTextColor(90);
-      pdf.text('Subtotal', PAGE_CENTER, y);
-      pdf.setTextColor(20);
-      pdf.text(formatNaira(sale.subtotal), CONTENT_RIGHT, y, { align: 'right' });
+    ctx.setFont('normal'); ctx.setSize(9.5); ctx.setColor(90);
+    ctx.text('Subtotal', PAGE_CENTER, y);
+    ctx.setColor(20);
+    ctx.text(formatNaira(sale.subtotal), CONTENT_RIGHT, y, { align: 'right' });
+    y += 16;
+    if (sale.discount > 0) {
+      ctx.setColor(20, 130, 20);
+      ctx.text('Discount', PAGE_CENTER, y);
+      ctx.text(`-${formatNaira(sale.discount)}`, CONTENT_RIGHT, y, { align: 'right' });
+      ctx.setColor(20);
       y += 16;
-      if (sale.discount > 0) {
-        pdf.setTextColor(20, 130, 20);
-        pdf.text('Discount', PAGE_CENTER, y);
-        pdf.text(`-${formatNaira(sale.discount)}`, CONTENT_RIGHT, y, { align: 'right' });
-        pdf.setTextColor(20);
-        y += 16;
-      }
-      if (sale.transportFee > 0 || sale.transportHandledBy) {
-        const label = `Transport${sale.transportHandledBy === 'customer' ? ' (by customer)' : sale.transportMeans ? ` (${sale.transportMeans})` : ''}`;
-        pdf.setTextColor(90);
-        pdf.text(label, PAGE_CENTER, y);
-        pdf.setTextColor(20);
-        pdf.text(sale.transportHandledBy === 'customer' ? '—' : formatNaira(sale.transportFee), CONTENT_RIGHT, y, { align: 'right' });
-        y += 16;
-      }
-      y = drawTotalRow(pdf, y, 'TOTAL', formatNaira(sale.grandTotal));
+    }
+    if (sale.transportFee > 0 || sale.transportHandledBy) {
+      const label = `Transport${sale.transportHandledBy === 'customer' ? ' (by customer)' : sale.transportMeans ? ` (${sale.transportMeans})` : ''}`;
+      ctx.setColor(90);
+      ctx.text(label, PAGE_CENTER, y);
+      ctx.setColor(20);
+      ctx.text(sale.transportHandledBy === 'customer' ? '—' : formatNaira(sale.transportFee), CONTENT_RIGHT, y, { align: 'right' });
+      y += 16;
+    }
+    y = drawTotalRow(ctx, y, 'TOTAL', formatNaira(sale.grandTotal));
 
-      const notes = [
-        sale.notes && { text: `Notes: ${sale.notes}` },
-        { text: `Recorded by: ${sale.createdByName}` },
-        sale.status === 'cancelled' && { text: `This invoice has been cancelled${sale.cancellationReason ? ` - ${sale.cancellationReason}` : ''}`, bold: true, color: [180, 100, 20] },
-      ].filter(Boolean);
-      y = drawNotesBlock(pdf, y, notes);
-      drawReceiptFooter(pdf, y, org);
+    y = drawPaymentDetailsBox(ctx, y, org);
 
+    const notes = [
+      sale.notes && { text: `Notes: ${sale.notes}` },
+      { text: `Recorded by: ${sale.createdByName}` },
+      sale.status === 'cancelled' && { text: `This invoice has been cancelled${sale.cancellationReason ? ` - ${sale.cancellationReason}` : ''}`, bold: true, color: [180, 100, 20] },
+    ].filter(Boolean);
+    y = drawNotesBlock(ctx, y, notes);
+    drawReceiptFooter(ctx, y, org);
+  };
+
+  const handleSharePdf = async () => {
+    setSharing('pdf');
+    try {
+      const { pdf, ctx } = await createPdfRenderer();
+      await renderContent(ctx);
       await presentPdf(pdf, `Invoice-${sale.saleNumber}.pdf`, `Invoice ${sale.saleNumber}`);
     } catch (err) {
       toast.error(err.message || 'Could not generate PDF');
     } finally {
-      setSharing(false);
+      setSharing(null);
+    }
+  };
+
+  const handleShareJpg = async () => {
+    setSharing('jpg');
+    try {
+      const { canvas, ctx } = await createImageRenderer();
+      await renderContent(ctx);
+      await presentImage(canvas, `Invoice-${sale.saleNumber}.jpg`, `Invoice ${sale.saleNumber}`);
+    } catch (err) {
+      toast.error(err.message || 'Could not generate image');
+    } finally {
+      setSharing(null);
     }
   };
 
@@ -111,7 +133,6 @@ export default function SaleInvoicePage() {
         {sale.status === 'cancelled' && (
           <p className="font-bold text-center text-amber-700 -mt-4 mb-6">CANCELLED</p>
         )}
-        <PaymentDetailsBox org={org} />
 
         {/* Customer Info */}
         <div className="mb-6 grid grid-cols-2 gap-6">
@@ -200,6 +221,8 @@ export default function SaleInvoicePage() {
           </div>
         </div>
 
+        <PaymentDetailsBox org={org} />
+
         {/* Notes */}
         <div className="border-t pt-4 text-xs text-gray-600 space-y-1">
           {sale.notes && <p><span className="font-medium">Notes:</span> {sale.notes}</p>}
@@ -219,8 +242,11 @@ export default function SaleInvoicePage() {
         <button onClick={handlePrint} className="px-6 py-2 bg-green-800 text-neutral-100 rounded hover:bg-green-900">
           Print Invoice
         </button>
-        <button onClick={handleShare} disabled={sharing} className="px-6 py-2 border rounded hover:bg-gray-50 disabled:opacity-50">
-          {sharing ? 'Preparing PDF...' : 'Share PDF'}
+        <button onClick={handleSharePdf} disabled={!!sharing} className="px-6 py-2 border rounded hover:bg-gray-50 disabled:opacity-50">
+          {sharing === 'pdf' ? 'Preparing...' : 'Share PDF'}
+        </button>
+        <button onClick={handleShareJpg} disabled={!!sharing} className="px-6 py-2 border rounded hover:bg-gray-50 disabled:opacity-50">
+          {sharing === 'jpg' ? 'Preparing...' : 'Share JPG'}
         </button>
         <button onClick={() => window.history.back()} className="px-6 py-2 border rounded hover:bg-gray-50">
           Back

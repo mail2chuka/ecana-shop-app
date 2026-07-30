@@ -5,7 +5,10 @@ import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
 import { ReceiptHeader, ReceiptFooter, PaymentDetailsBox } from '@/components/ui';
-import { newReceiptPdf, drawReceiptHeader, drawPaymentDetailsBox, drawTwoColumnInfo, drawKeyValueRow, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf } from '@/lib/receiptPdf';
+import {
+  createPdfRenderer, createImageRenderer, drawReceiptHeader, drawPaymentDetailsBox, drawTwoColumnInfo,
+  drawKeyValueRow, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf, presentImage,
+} from '@/lib/receiptRender';
 
 export default function AdjustmentReceiptPage() {
   const { id, adjId } = useParams();
@@ -13,7 +16,7 @@ export default function AdjustmentReceiptPage() {
   const [adj, setAdj] = useState(null);
   const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sharing, setSharing] = useState(false);
+  const [sharing, setSharing] = useState(null); // null | 'pdf' | 'jpg'
 
   useEffect(() => {
     Promise.all([
@@ -40,35 +43,51 @@ export default function AdjustmentReceiptPage() {
   const isSurcharge = adj.type === 'surcharge';
   const label = isSurcharge ? 'Surcharge' : 'Refund';
 
-  const handleShare = async () => {
-    setSharing(true);
+  const renderContent = async (ctx) => {
+    let y = await drawReceiptHeader(ctx, { org, refNumber: adj.referenceNumber, date: formatDate(adj.appliedAt), title: `${label} Receipt` });
+
+    y = drawTwoColumnInfo(ctx, y, {
+      label: isSurcharge ? 'Billed To' : 'Refunded To',
+      lines: [sale.customerName, sale.customerPhone].filter(Boolean),
+    }, {
+      label: 'Related Sale',
+      lines: [sale.saleNumber, formatDateTime(adj.appliedAt)],
+    });
+
+    if (adj.method) y = drawKeyValueRow(ctx, y, 'Method', adj.method.replace('_', ' '));
+    y = drawKeyValueRow(ctx, y, 'Reason', adj.reason);
+    y = drawKeyValueRow(ctx, y, 'Balance before', formatNaira(adj.balanceBefore));
+    y = drawKeyValueRow(ctx, y, 'Balance after', formatNaira(adj.balanceAfter));
+
+    y = drawTotalRow(ctx, y, label.toUpperCase(), `${isSurcharge ? '+' : '-'}${formatNaira(adj.amount)}`, isSurcharge ? [220, 38, 38] : [22, 163, 74]);
+    y = drawPaymentDetailsBox(ctx, y, org);
+    y = drawNotesBlock(ctx, y, [{ text: `Applied by: ${adj.appliedByName}` }]);
+    drawReceiptFooter(ctx, y, org);
+  };
+
+  const handleSharePdf = async () => {
+    setSharing('pdf');
     try {
-      const pdf = await newReceiptPdf();
-      let y = await drawReceiptHeader(pdf, { org, refNumber: adj.referenceNumber, date: formatDate(adj.appliedAt), title: `${label} Receipt` });
-      y = drawPaymentDetailsBox(pdf, y, org);
-
-      y = drawTwoColumnInfo(pdf, y, {
-        label: isSurcharge ? 'Billed To' : 'Refunded To',
-        lines: [sale.customerName, sale.customerPhone].filter(Boolean),
-      }, {
-        label: 'Related Sale',
-        lines: [sale.saleNumber, formatDateTime(adj.appliedAt)],
-      });
-
-      if (adj.method) y = drawKeyValueRow(pdf, y, 'Method', adj.method.replace('_', ' '));
-      y = drawKeyValueRow(pdf, y, 'Reason', adj.reason);
-      y = drawKeyValueRow(pdf, y, 'Balance before', formatNaira(adj.balanceBefore));
-      y = drawKeyValueRow(pdf, y, 'Balance after', formatNaira(adj.balanceAfter));
-
-      y = drawTotalRow(pdf, y, label.toUpperCase(), `${isSurcharge ? '+' : '-'}${formatNaira(adj.amount)}`, isSurcharge ? [220, 38, 38] : [22, 163, 74]);
-      y = drawNotesBlock(pdf, y, [{ text: `Applied by: ${adj.appliedByName}` }]);
-      drawReceiptFooter(pdf, y, org);
-
+      const { pdf, ctx } = await createPdfRenderer();
+      await renderContent(ctx);
       await presentPdf(pdf, `${label}-Receipt-${adj.referenceNumber}.pdf`, `${label} Receipt ${adj.referenceNumber}`);
     } catch (err) {
       toast.error(err.message || 'Could not generate PDF');
     } finally {
-      setSharing(false);
+      setSharing(null);
+    }
+  };
+
+  const handleShareJpg = async () => {
+    setSharing('jpg');
+    try {
+      const { canvas, ctx } = await createImageRenderer();
+      await renderContent(ctx);
+      await presentImage(canvas, `${label}-Receipt-${adj.referenceNumber}.jpg`, `${label} Receipt ${adj.referenceNumber}`);
+    } catch (err) {
+      toast.error(err.message || 'Could not generate image');
+    } finally {
+      setSharing(null);
     }
   };
 
@@ -76,7 +95,6 @@ export default function AdjustmentReceiptPage() {
     <div className="max-w-3xl mx-auto">
       <div className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
         <ReceiptHeader org={org} refNumber={adj.referenceNumber} date={formatDate(adj.appliedAt)} title={`${label} Receipt`} />
-        <PaymentDetailsBox org={org} />
 
         <div className="mb-6 grid grid-cols-2 gap-6">
           <div>
@@ -125,6 +143,8 @@ export default function AdjustmentReceiptPage() {
           </div>
         </div>
 
+        <PaymentDetailsBox org={org} />
+
         <div className="border-t pt-4 text-xs text-gray-600 space-y-1">
           <p><span className="font-medium">Applied by:</span> {adj.appliedByName}</p>
         </div>
@@ -136,8 +156,11 @@ export default function AdjustmentReceiptPage() {
         <button onClick={handlePrint} className="px-6 py-2 bg-green-800 text-neutral-100 rounded hover:bg-green-900">
           Print Receipt
         </button>
-        <button onClick={handleShare} disabled={sharing} className="px-6 py-2 border rounded hover:bg-gray-50 disabled:opacity-50">
-          {sharing ? 'Preparing PDF...' : 'Share PDF'}
+        <button onClick={handleSharePdf} disabled={!!sharing} className="px-6 py-2 border rounded hover:bg-gray-50 disabled:opacity-50">
+          {sharing === 'pdf' ? 'Preparing...' : 'Share PDF'}
+        </button>
+        <button onClick={handleShareJpg} disabled={!!sharing} className="px-6 py-2 border rounded hover:bg-gray-50 disabled:opacity-50">
+          {sharing === 'jpg' ? 'Preparing...' : 'Share JPG'}
         </button>
         <button onClick={() => window.history.back()} className="px-6 py-2 border rounded hover:bg-gray-50">
           Back
