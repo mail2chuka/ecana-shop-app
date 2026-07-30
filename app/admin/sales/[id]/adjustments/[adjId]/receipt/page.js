@@ -63,7 +63,7 @@ export default function AdjustmentReceiptPage() {
   };
 
   return (
-    <div className="w-[210mm] max-w-full mx-auto">
+    <div className="receipt-page mx-auto">
       <div id="receipt-content" className="bg-white border rounded-lg p-8 min-h-[297mm] print:border-0 print:p-0 print:shadow-none">
         <ReceiptHeader org={org} refNumber={adj.referenceNumber} date={formatDate(adj.appliedAt)} title={`${label} Receipt`} />
 

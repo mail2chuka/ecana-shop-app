@@ -58,7 +58,7 @@ export default function PaymentReceiptPage() {
   if (!payment) return <p className="text-gray-500 text-center py-12">Payment not found</p>;
 
   return (
-    <div className="w-[210mm] max-w-full mx-auto">
+    <div className="receipt-page mx-auto">
       <div id="receipt-content" className="bg-white border rounded-lg p-8 min-h-[297mm] print:border-0 print:p-0 print:shadow-none">
         <ReceiptHeader org={org} refNumber={payment.transactionNumber} date={formatDate(payment.date)} title="Payment Receipt" />
 

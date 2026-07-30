@@ -29,6 +29,29 @@ input[type="number"]:focus {
   .no-print { display: none !important; }
 }
 
+/* Receipt/invoice pages (sale invoice, payment receipt, surcharge/refund receipt): a fixed A4-width
+   "desktop" layout, shrunk to fit narrow screens via zoom rather than reflowing into a separate mobile
+   design — zoom scales the whole rendered box (unlike transform:scale), so it shrinks in place with no
+   leftover blank space. Printing always resets to the true, non-zoomed A4 size regardless of whatever
+   zoom was showing on screen, so the printed/exported output is never a shrunk-down mobile view. */
+.receipt-page {
+  width: 210mm;
+}
+@media screen and (max-width: 210mm) {
+  .receipt-page {
+    zoom: calc(100vw / 210mm);
+  }
+}
+@media print {
+  .receipt-page {
+    zoom: 1 !important;
+  }
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+}
+
 /* --- Landing page (marketing) — scoped so it never bleeds into the admin app's Tailwind defaults --- */
 .landing {
   --ink: #0b1210;
