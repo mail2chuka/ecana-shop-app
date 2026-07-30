@@ -28,7 +28,6 @@ export default function CustomerDetailPage() {
   const isAdmin = session?.user?.role === 'admin';
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentForm, setPaymentForm] = useState(blankPaymentForm);
   const [submitting, setSubmitting] = useState(false);
@@ -286,7 +285,7 @@ export default function CustomerDetailPage() {
                   <td className="px-4 py-2">
                     {entry.type === 'sale' || entry.type === 'surcharge' || entry.type === 'refund'
                       ? <Link href={`/admin/sales/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
-                      : <button onClick={() => setSelectedPayment(entry)} className={`${tableActionCls} hover:underline text-left`}>{entry.ref}</button>}
+                      : <Link href={`/admin/payments/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>}
                   </td>
                   <td className="px-4 py-2 text-gray-600 max-w-xs truncate">{entry.description}</td>
                   <td className="px-4 py-2 text-right">{entry.qty ?? '-'}</td>
@@ -304,53 +303,6 @@ export default function CustomerDetailPage() {
           {ledger.length === 0 && <p className="text-center text-gray-500 py-8">No transactions yet</p>}
         </div>
       </div>
-
-      {/* Payment Details Modal */}
-      {selectedPayment && selectedPayment.type === 'payment' && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 no-print">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">Payment Details</h2>
-            <div className="space-y-3 text-sm mb-6">
-              <div>
-                <p className="text-gray-500">Transaction ID</p>
-                <p className="font-mono font-bold">{selectedPayment.transactionNumber}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Date</p>
-                <p>{formatDate(selectedPayment.date)}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Amount</p>
-                <p className="text-green-600 font-medium">{formatNaira(selectedPayment.amount)}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Method</p>
-                <p className="capitalize">{selectedPayment.method}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Depositor Name</p>
-                <p>{selectedPayment.depositorName}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Bank Name</p>
-                <p>{selectedPayment.bankName}</p>
-              </div>
-              {selectedPayment.description && (
-                <div>
-                  <p className="text-gray-500">Remark</p>
-                  <p>{selectedPayment.description}</p>
-                </div>
-              )}
-            </div>
-            <button
-              onClick={() => setSelectedPayment(null)}
-              className="w-full px-4 py-2 border rounded text-sm hover:bg-gray-50"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Record Payment Modal */}
       <Modal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} title={`Record Payment — ${formatCustomerLabel(customer)}`}>
