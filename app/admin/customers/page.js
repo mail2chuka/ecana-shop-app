@@ -19,6 +19,13 @@ export default function CustomersPage() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(blankForm);
   const [submitting, setSubmitting] = useState(false);
+  const [sortField, setSortField] = useState('name');
+  const [sortDir, setSortDir] = useState('asc');
+
+  const toggleSort = (field) => {
+    if (sortField === field) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    else { setSortField(field); setSortDir('asc'); }
+  };
 
   const load = async (q = '', status = statusFilter) => {
     setLoading(true);
@@ -42,6 +49,11 @@ export default function CustomersPage() {
   const totalDebt = -customers.filter(c => c.balance < 0).reduce((s, c) => s + c.balance, 0);
   const totalSurplus = customers.filter(c => c.balance > 0).reduce((s, c) => s + c.balance, 0);
   const net = totalSurplus - totalDebt;
+
+  const sortedCustomers = [...customers].sort((a, b) => {
+    const cmp = sortField === 'balance' ? a.balance - b.balance : a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -113,13 +125,21 @@ export default function CustomersPage() {
           <table className="w-full text-sm">
             <thead className={theadCls}>
               <tr>
-                <th className="px-4 py-3 text-left font-medium">Name</th>
-                <th className="px-4 py-3 text-right font-medium">Balance</th>
+                <th className="px-4 py-3 text-left font-medium">
+                  <button onClick={() => toggleSort('name')} className="flex items-center gap-1 font-medium">
+                    Name {sortField === 'name' && (sortDir === 'asc' ? '↑' : '↓')}
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-right font-medium">
+                  <button onClick={() => toggleSort('balance')} className="flex items-center gap-1 font-medium ml-auto">
+                    Balance {sortField === 'balance' && (sortDir === 'asc' ? '↑' : '↓')}
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {customers.length === 0 && <EmptyRow colSpan={2} text="No customers found" />}
-              {customers.map(c => (
+              {sortedCustomers.length === 0 && <EmptyRow colSpan={2} text="No customers found" />}
+              {sortedCustomers.map(c => (
                 <tr key={c._id}>
                   <td className="px-4 py-3">
                     <Link href={`/admin/customers/${c._id}`} className="font-medium hover:underline">
