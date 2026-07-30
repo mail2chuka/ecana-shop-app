@@ -95,37 +95,40 @@ export function ReceiptHeader({ org, refNumber, date, title }) {
   );
 }
 
-// Shared footer — the org's bank account (per-org, set on the Receipt Settings page) above the
-// existing thank-you/invoiceFooter line, so a customer knows exactly where to pay. Boxed, one field
-// per row, so it reads as a distinct block rather than running into the paragraph above it. Omitted
-// entirely if the org hasn't set any bank details yet, rather than showing empty fields. No top
-// border of its own — every current usage already sits right below a bordered notes/recorded-by
-// block, so another border-t here would stack two divider lines back to back.
-export function ReceiptFooter({ org }) {
+// The org's bank account (per-org, set on the Receipt Settings page) — boxed, one field per row, so
+// a customer knows exactly where to pay. Placed high up (right under the header, before the rest of
+// the receipt body) rather than buried at the bottom, since it's what someone paying off a debit
+// actually needs to act on. Omitted entirely if the org hasn't set any bank details yet, rather than
+// showing empty fields.
+export function PaymentDetailsBox({ org }) {
   const rows = [
     org?.bankName && ['Bank Name', org.bankName],
     org?.accountNumber && ['Account Number', org.accountNumber],
     org?.accountName && ['Account Name', org.accountName],
   ].filter(Boolean);
+  if (rows.length === 0) return null;
   return (
-    <>
-      {rows.length > 0 && (
-        <div className="mt-3 border rounded-md p-3 text-xs text-gray-600">
-          <p className="font-medium text-gray-700 mb-2">Payment Details</p>
-          <div className="space-y-1.5">
-            {rows.map(([label, value]) => (
-              <div key={label} className="flex justify-between gap-4">
-                <span className="text-gray-500">{label}</span>
-                <span className="font-medium text-gray-800">{value}</span>
-              </div>
-            ))}
+    <div className="mb-6 border rounded-md p-3 text-xs text-gray-600">
+      <p className="font-medium text-gray-700 mb-2">Payment Details</p>
+      <div className="space-y-1.5">
+        {rows.map(([label, value]) => (
+          <div key={label} className="flex justify-between gap-4">
+            <span className="text-gray-500">{label}</span>
+            <span className="font-medium text-gray-800">{value}</span>
           </div>
-        </div>
-      )}
-      <div className="mt-6 pt-4 text-center text-xs text-gray-400">
-        {org?.invoiceFooter || 'Thank you for your business.'}
+        ))}
       </div>
-    </>
+    </div>
+  );
+}
+
+// Shared footer — just the thank-you/invoiceFooter line now; the bank account moved up into
+// PaymentDetailsBox, near the top of the receipt instead of at the very bottom.
+export function ReceiptFooter({ org }) {
+  return (
+    <div className="mt-6 pt-4 text-center text-xs text-gray-400">
+      {org?.invoiceFooter || 'Thank you for your business.'}
+    </div>
   );
 }
 

@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime, saleItemUnitLabel } from '@/lib/format';
-import { ReceiptHeader, ReceiptFooter } from '@/components/ui';
-import { newReceiptPdf, drawReceiptHeader, drawTwoColumnInfo, drawItemsTable, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf, CONTENT_RIGHT, PAGE_CENTER } from '@/lib/receiptPdf';
+import { ReceiptHeader, ReceiptFooter, PaymentDetailsBox } from '@/components/ui';
+import { newReceiptPdf, drawReceiptHeader, drawPaymentDetailsBox, drawTwoColumnInfo, drawItemsTable, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf, CONTENT_RIGHT, PAGE_CENTER } from '@/lib/receiptPdf';
 
 export default function SaleInvoicePage() {
   const { id } = useParams();
@@ -41,6 +41,7 @@ export default function SaleInvoicePage() {
         pdf.setTextColor(20);
         y += 18;
       }
+      y = drawPaymentDetailsBox(pdf, y, org);
 
       y = drawTwoColumnInfo(pdf, y, {
         label: 'Bill To',
@@ -110,6 +111,7 @@ export default function SaleInvoicePage() {
         {sale.status === 'cancelled' && (
           <p className="font-bold text-center text-amber-700 -mt-4 mb-6">CANCELLED</p>
         )}
+        <PaymentDetailsBox org={org} />
 
         {/* Customer Info */}
         <div className="mb-6 grid grid-cols-2 gap-6">

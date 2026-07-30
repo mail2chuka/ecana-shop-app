@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
-import { ReceiptHeader, ReceiptFooter } from '@/components/ui';
-import { newReceiptPdf, drawReceiptHeader, drawTwoColumnInfo, drawKeyValueRow, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf } from '@/lib/receiptPdf';
+import { ReceiptHeader, ReceiptFooter, PaymentDetailsBox } from '@/components/ui';
+import { newReceiptPdf, drawReceiptHeader, drawPaymentDetailsBox, drawTwoColumnInfo, drawKeyValueRow, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf } from '@/lib/receiptPdf';
 
 const METHOD_LABELS = { cash: 'Cash', transfer: 'Bank Transfer', pos: 'POS', cheque: 'Cheque' };
 
@@ -37,6 +37,7 @@ export default function PaymentReceiptPage() {
     try {
       const pdf = await newReceiptPdf();
       let y = await drawReceiptHeader(pdf, { org, refNumber: payment.transactionNumber, date: formatDate(payment.date), title: 'Payment Receipt' });
+      y = drawPaymentDetailsBox(pdf, y, org);
 
       y = drawTwoColumnInfo(pdf, y, {
         label: 'Received From',
@@ -71,6 +72,7 @@ export default function PaymentReceiptPage() {
     <div className="max-w-3xl mx-auto">
       <div className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
         <ReceiptHeader org={org} refNumber={payment.transactionNumber} date={formatDate(payment.date)} title="Payment Receipt" />
+        <PaymentDetailsBox org={org} />
 
         <div className="mb-6 grid grid-cols-2 gap-6">
           <div>

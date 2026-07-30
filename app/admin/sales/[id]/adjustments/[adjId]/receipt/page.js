@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
-import { ReceiptHeader, ReceiptFooter } from '@/components/ui';
-import { newReceiptPdf, drawReceiptHeader, drawTwoColumnInfo, drawKeyValueRow, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf } from '@/lib/receiptPdf';
+import { ReceiptHeader, ReceiptFooter, PaymentDetailsBox } from '@/components/ui';
+import { newReceiptPdf, drawReceiptHeader, drawPaymentDetailsBox, drawTwoColumnInfo, drawKeyValueRow, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf } from '@/lib/receiptPdf';
 
 export default function AdjustmentReceiptPage() {
   const { id, adjId } = useParams();
@@ -45,6 +45,7 @@ export default function AdjustmentReceiptPage() {
     try {
       const pdf = await newReceiptPdf();
       let y = await drawReceiptHeader(pdf, { org, refNumber: adj.referenceNumber, date: formatDate(adj.appliedAt), title: `${label} Receipt` });
+      y = drawPaymentDetailsBox(pdf, y, org);
 
       y = drawTwoColumnInfo(pdf, y, {
         label: isSurcharge ? 'Billed To' : 'Refunded To',
@@ -75,6 +76,7 @@ export default function AdjustmentReceiptPage() {
     <div className="max-w-3xl mx-auto">
       <div className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
         <ReceiptHeader org={org} refNumber={adj.referenceNumber} date={formatDate(adj.appliedAt)} title={`${label} Receipt`} />
+        <PaymentDetailsBox org={org} />
 
         <div className="mb-6 grid grid-cols-2 gap-6">
           <div>
