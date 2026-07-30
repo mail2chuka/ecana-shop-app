@@ -81,11 +81,17 @@ const menu = [
       { label: 'Truck Utilization', href: '/admin/reports/trucks', modules: ['cement', 'aggregate'] },
     ],
   },
-  { label: 'Organization Settings', href: '/admin/organization', allow: ['admin'] },
-  { label: 'Receipt Settings', href: '/admin/receipt-settings', allow: ['admin'] },
-  { label: 'Subscription', href: '/admin/subscription', allow: ['admin'] },
-  { label: 'Users', href: '/admin/users', allow: ['admin'] },
-  { label: 'Audit Log', href: '/admin/audit-log', allow: ['admin'] },
+  {
+    group: 'Settings',
+    allow: ['admin'],
+    items: [
+      { label: 'Organization Settings', href: '/admin/organization' },
+      { label: 'Receipt Settings', href: '/admin/receipt-settings' },
+      { label: 'Subscription', href: '/admin/subscription' },
+      { label: 'Users', href: '/admin/users' },
+      { label: 'Audit Log', href: '/admin/audit-log' },
+    ],
+  },
 ];
 
 export default function AdminShell({ children }) {
@@ -244,6 +250,9 @@ export default function AdminShell({ children }) {
 
         <div className="shrink-0 p-3 border-t border-emerald-800/60 bg-black/15">
           <div className="mb-2 px-3">
+            {session.user.organizationName && (
+              <p className="text-xs font-semibold text-emerald-200 break-words uppercase tracking-wide">{session.user.organizationName}</p>
+            )}
             <p className="text-sm text-emerald-50 font-medium break-words" title={session.user.name}>{session.user.name}</p>
             <p className="text-xs text-emerald-300/70 capitalize">{session.user.role}</p>
           </div>
