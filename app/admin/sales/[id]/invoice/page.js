@@ -56,9 +56,9 @@ export default function SaleInvoicePage() {
   if (!sale) return <p className="text-gray-500 text-center py-12">Sale not found</p>;
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="w-[210mm] max-w-full mx-auto">
       {/* Print Header */}
-      <div id="receipt-content" className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
+      <div id="receipt-content" className="bg-white border rounded-lg p-8 min-h-[297mm] print:border-0 print:p-0 print:shadow-none">
         <ReceiptHeader org={org} refNumber={sale.saleNumber} date={formatDate(sale.date)} title="Sales Invoice" />
         {sale.status === 'cancelled' && (
           <p className="font-bold text-center text-amber-700 -mt-4 mb-6">CANCELLED</p>

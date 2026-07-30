@@ -63,8 +63,8 @@ export default function AdjustmentReceiptPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div id="receipt-content" className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
+    <div className="w-[210mm] max-w-full mx-auto">
+      <div id="receipt-content" className="bg-white border rounded-lg p-8 min-h-[297mm] print:border-0 print:p-0 print:shadow-none">
         <ReceiptHeader org={org} refNumber={adj.referenceNumber} date={formatDate(adj.appliedAt)} title={`${label} Receipt`} />
 
         <div className="mb-6 grid grid-cols-2 gap-6">
