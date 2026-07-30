@@ -71,13 +71,14 @@ export function StatusPill({ status, color }) {
 // address, phone on the left; ref number and date on the right; the receipt's own title centered
 // beneath both, on its own line, so every receipt type reads consistently regardless of what it is.
 export function ReceiptHeader({ org, refNumber, date, title }) {
+  const logoSrc = org?.logoUrlSmall || org?.logoUrl;
   return (
     <div className="border-b pb-6 mb-6">
       <div className="flex justify-between items-start">
         <div className="flex items-start gap-3">
-          {org?.logoUrl && (
+          {logoSrc && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={org.logoUrl} alt={org.name} className="h-14 w-14 object-contain rounded" />
+            <img src={logoSrc} alt={org.name} className="h-14 w-14 object-contain rounded" />
           )}
           <div>
             <h2 className="text-2xl font-bold">{org?.name || ''}</h2>

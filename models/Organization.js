@@ -23,6 +23,11 @@ const OrganizationSchema = new mongoose.Schema({
 
   // Branding shown on invoices / statements / login footer (replaces hardcoded "Ecana Family Limited").
   logoUrl: String,
+  // A small PNG version of logoUrl, generated client-side at upload time — used anywhere a compact
+  // logo is embedded (receipts, invoices, and future outputs) instead of the full-size original,
+  // regardless of how large that original upload was. Falls back to logoUrl if unset (orgs that
+  // uploaded before this field existed haven't re-uploaded yet).
+  logoUrlSmall: String,
   address: String,
   invoiceFooter: String,
 

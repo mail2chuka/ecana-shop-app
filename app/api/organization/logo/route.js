@@ -20,29 +20,40 @@ async function _h_POST(request) {
     if (!ALLOWED_TYPES.includes(file.type)) throw new ApiError('Logo must be a PNG, JPEG, WEBP, or SVG image', 400);
     if (file.size > MAX_SIZE) throw new ApiError('Logo must be smaller than 2MB', 400);
 
-    const before = await Organization.findById(session.user.organization).select('logoUrl').lean();
+    // The small PNG variant is generated client-side (lib/imageResize.js) and sent alongside the
+    // original — optional, since resizing can fail for an unusual source image and that shouldn't
+    // block uploading the logo itself; ReceiptHeader falls back to the full-size logoUrl if unset.
+    const smallFile = formData.get('smallFile');
+    const hasSmallFile = smallFile && typeof smallFile !== 'string';
+
+    const before = await Organization.findById(session.user.organization).select('logoUrl logoUrlSmall').lean();
     if (!before) throw new ApiError('Organization not found', 404);
 
     const ext = (file.name.split('.').pop() || 'png').toLowerCase();
-    const filename = `org-logos/${session.user.organization}-${Date.now()}.${ext}`;
-    const blob = await put(filename, file, { access: 'public' });
+    const blob = await put(`org-logos/${session.user.organization}-${Date.now()}.${ext}`, file, { access: 'public' });
 
-    await Organization.findByIdAndUpdate(session.user.organization, { logoUrl: blob.url });
-
-    // Best-effort cleanup of the previous logo — awaited deliberately: on Vercel's serverless runtime,
-    // un-awaited "background" work can be killed the instant the response is sent, so a fire-and-forget
-    // call here could silently never run in production. Still swallow errors (e.g. an external URL
-    // from before this upload flow existed, which del() can't touch) rather than failing the request.
-    if (before.logoUrl) {
-      await del(before.logoUrl).catch(() => {});
+    const update = { logoUrl: blob.url };
+    let smallBlob = null;
+    if (hasSmallFile) {
+      smallBlob = await put(`org-logos/${session.user.organization}-${Date.now()}-sm.png`, smallFile, { access: 'public' });
+      update.logoUrlSmall = smallBlob.url;
     }
+
+    await Organization.findByIdAndUpdate(session.user.organization, update);
+
+    // Best-effort cleanup of the previous logo(s) — awaited deliberately: on Vercel's serverless
+    // runtime, un-awaited "background" work can be killed the instant the response is sent, so a
+    // fire-and-forget call here could silently never run in production. Still swallow errors (e.g. an
+    // external URL from before this upload flow existed, which del() can't touch) rather than failing.
+    if (before.logoUrl) await del(before.logoUrl).catch(() => {});
+    if (before.logoUrlSmall) await del(before.logoUrlSmall).catch(() => {});
 
     await logAudit({
       userId: session.user.id, userName: session.user.name, action: 'updated', entity: 'Organization', entityId: session.user.organization,
-      before: { logoUrl: before.logoUrl }, after: { logoUrl: blob.url },
+      before: { logoUrl: before.logoUrl, logoUrlSmall: before.logoUrlSmall }, after: { logoUrl: blob.url, logoUrlSmall: update.logoUrlSmall || null },
     });
 
-    return NextResponse.json({ success: true, data: { logoUrl: blob.url } });
+    return NextResponse.json({ success: true, data: { logoUrl: blob.url, logoUrlSmall: update.logoUrlSmall || null } });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: e.status || 400 });
   }

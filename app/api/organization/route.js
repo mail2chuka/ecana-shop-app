@@ -10,7 +10,7 @@ async function _h_GET() {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   await dbConnect();
   try {
-    const org = await Organization.findById(session.user.organization).select('name slug phone email logoUrl address invoiceFooter bankName accountNumber accountName');
+    const org = await Organization.findById(session.user.organization).select('name slug phone email logoUrl logoUrlSmall address invoiceFooter bankName accountNumber accountName');
     if (!org) return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     return NextResponse.json({ success: true, data: org });
   } catch (e) {
@@ -32,20 +32,21 @@ async function _h_PUT(request) {
     if (typeof body.phone === 'string') update.phone = body.phone.trim() || null;
     if (typeof body.email === 'string') update.email = body.email.trim().toLowerCase() || null;
     if (typeof body.logoUrl === 'string') update.logoUrl = body.logoUrl.trim() || null;
+    if (typeof body.logoUrlSmall === 'string') update.logoUrlSmall = body.logoUrlSmall.trim() || null;
     if (typeof body.address === 'string') update.address = body.address.trim() || null;
     if (typeof body.invoiceFooter === 'string') update.invoiceFooter = body.invoiceFooter.trim() || null;
     if (typeof body.bankName === 'string') update.bankName = body.bankName.trim() || null;
     if (typeof body.accountNumber === 'string') update.accountNumber = body.accountNumber.trim() || null;
     if (typeof body.accountName === 'string') update.accountName = body.accountName.trim() || null;
 
-    const before = await Organization.findById(session.user.organization).select('name phone email logoUrl address invoiceFooter bankName accountNumber accountName').lean();
+    const before = await Organization.findById(session.user.organization).select('name phone email logoUrl logoUrlSmall address invoiceFooter bankName accountNumber accountName').lean();
     if (!before) throw new ApiError('Organization not found', 404);
     const updated = await Organization.findByIdAndUpdate(session.user.organization, update, { new: true, runValidators: true })
-      .select('name slug phone email logoUrl address invoiceFooter bankName accountNumber accountName');
+      .select('name slug phone email logoUrl logoUrlSmall address invoiceFooter bankName accountNumber accountName');
 
     await logAudit({
       userId: session.user.id, userName: session.user.name, action: 'updated', entity: 'Organization', entityId: session.user.organization,
-      before, after: { name: updated.name, phone: updated.phone, email: updated.email, logoUrl: updated.logoUrl, address: updated.address, invoiceFooter: updated.invoiceFooter, bankName: updated.bankName, accountNumber: updated.accountNumber, accountName: updated.accountName },
+      before, after: { name: updated.name, phone: updated.phone, email: updated.email, logoUrl: updated.logoUrl, logoUrlSmall: updated.logoUrlSmall, address: updated.address, invoiceFooter: updated.invoiceFooter, bankName: updated.bankName, accountNumber: updated.accountNumber, accountName: updated.accountName },
     });
 
     return NextResponse.json({ success: true, data: updated });

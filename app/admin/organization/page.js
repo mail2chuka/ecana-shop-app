@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Loader, PageHeader, Card, Field, inputCls, btnPrimaryCls } from '@/components/ui';
+import { resizeImageToPng } from '@/lib/imageResize';
 import toast from 'react-hot-toast';
 
 export default function OrganizationSettingsPage() {
@@ -20,6 +21,7 @@ export default function OrganizationSettingsPage() {
         phone: d.data.phone || '',
         email: d.data.email || '',
         logoUrl: d.data.logoUrl || '',
+        logoUrlSmall: d.data.logoUrlSmall || '',
         address: d.data.address || '',
         invoiceFooter: d.data.invoiceFooter || '',
       });
@@ -53,9 +55,15 @@ export default function OrganizationSettingsPage() {
     try {
       const body = new FormData();
       body.append('file', file);
+      // Best-effort: if resizing fails for an unusual source image, still upload the original logo
+      // rather than blocking the whole upload — ReceiptHeader falls back to logoUrl if this is unset.
+      try {
+        body.append('smallFile', await resizeImageToPng(file, 200));
+      } catch {}
+
       const r = await fetch('/api/organization/logo', { method: 'POST', body });
       const d = await r.json();
-      if (d.success) { setForm((f) => ({ ...f, logoUrl: d.data.logoUrl })); toast.success('Logo uploaded'); }
+      if (d.success) { setForm((f) => ({ ...f, logoUrl: d.data.logoUrl, logoUrlSmall: d.data.logoUrlSmall || '' })); toast.success('Logo uploaded'); }
       else toast.error(d.error);
     } catch (err) {
       toast.error(err.message || 'Something went wrong, please try again');
