@@ -5,10 +5,7 @@ import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
 import { ReceiptHeader, ReceiptFooter, PaymentDetailsBox } from '@/components/ui';
-import {
-  createPdfRenderer, createImageRenderer, drawReceiptHeader, drawPaymentDetailsBox, drawTwoColumnInfo,
-  drawKeyValueRow, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf, presentImage,
-} from '@/lib/receiptRender';
+import { shareReceiptAsPdf, shareReceiptAsJpg } from '@/lib/receiptCapture';
 
 export default function AdjustmentReceiptPage() {
   const { id, adjId } = useParams();
@@ -43,34 +40,10 @@ export default function AdjustmentReceiptPage() {
   const isSurcharge = adj.type === 'surcharge';
   const label = isSurcharge ? 'Surcharge' : 'Refund';
 
-  const renderContent = async (ctx) => {
-    let y = await drawReceiptHeader(ctx, { org, refNumber: adj.referenceNumber, date: formatDate(adj.appliedAt), title: `${label} Receipt` });
-
-    y = drawTwoColumnInfo(ctx, y, {
-      label: isSurcharge ? 'Billed To' : 'Refunded To',
-      lines: [sale.customerName, sale.customerPhone].filter(Boolean),
-    }, {
-      label: 'Related Sale',
-      lines: [sale.saleNumber, formatDateTime(adj.appliedAt)],
-    });
-
-    if (adj.method) y = drawKeyValueRow(ctx, y, 'Method', adj.method.replace('_', ' '));
-    y = drawKeyValueRow(ctx, y, 'Reason', adj.reason);
-    y = drawKeyValueRow(ctx, y, 'Balance before', formatNaira(adj.balanceBefore));
-    y = drawKeyValueRow(ctx, y, 'Balance after', formatNaira(adj.balanceAfter));
-
-    y = drawTotalRow(ctx, y, label.toUpperCase(), `${isSurcharge ? '+' : '-'}${formatNaira(adj.amount)}`, isSurcharge ? [220, 38, 38] : [22, 163, 74]);
-    y = drawPaymentDetailsBox(ctx, y, org);
-    y = drawNotesBlock(ctx, y, [{ text: `Applied by: ${adj.appliedByName}` }]);
-    drawReceiptFooter(ctx, y, org);
-  };
-
   const handleSharePdf = async () => {
     setSharing('pdf');
     try {
-      const { pdf, ctx } = await createPdfRenderer();
-      await renderContent(ctx);
-      await presentPdf(pdf, `${label}-Receipt-${adj.referenceNumber}.pdf`, `${label} Receipt ${adj.referenceNumber}`);
+      await shareReceiptAsPdf('receipt-content', `${label}-Receipt-${adj.referenceNumber}.pdf`, `${label} Receipt ${adj.referenceNumber}`);
     } catch (err) {
       toast.error(err.message || 'Could not generate PDF');
     } finally {
@@ -81,9 +54,7 @@ export default function AdjustmentReceiptPage() {
   const handleShareJpg = async () => {
     setSharing('jpg');
     try {
-      const { canvas, ctx } = await createImageRenderer();
-      await renderContent(ctx);
-      await presentImage(canvas, `${label}-Receipt-${adj.referenceNumber}.jpg`, `${label} Receipt ${adj.referenceNumber}`);
+      await shareReceiptAsJpg('receipt-content', `${label}-Receipt-${adj.referenceNumber}.jpg`, `${label} Receipt ${adj.referenceNumber}`);
     } catch (err) {
       toast.error(err.message || 'Could not generate image');
     } finally {
@@ -93,7 +64,7 @@ export default function AdjustmentReceiptPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
+      <div id="receipt-content" className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
         <ReceiptHeader org={org} refNumber={adj.referenceNumber} date={formatDate(adj.appliedAt)} title={`${label} Receipt`} />
 
         <div className="mb-6 grid grid-cols-2 gap-6">

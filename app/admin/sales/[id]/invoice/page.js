@@ -5,11 +5,7 @@ import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime, saleItemUnitLabel } from '@/lib/format';
 import { ReceiptHeader, ReceiptFooter, PaymentDetailsBox } from '@/components/ui';
-import {
-  createPdfRenderer, createImageRenderer, drawReceiptHeader, drawPaymentDetailsBox, drawTwoColumnInfo,
-  drawItemsTable, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf, presentImage,
-  CONTENT_RIGHT, PAGE_CENTER,
-} from '@/lib/receiptRender';
+import { shareReceiptAsPdf, shareReceiptAsJpg } from '@/lib/receiptCapture';
 
 export default function SaleInvoicePage() {
   const { id } = useParams();
@@ -34,74 +30,10 @@ export default function SaleInvoicePage() {
     }, 100);
   };
 
-  // One content definition, either renderer (jsPDF or Canvas 2D) — see lib/receiptRender.js.
-  const renderContent = async (ctx) => {
-    let y = await drawReceiptHeader(ctx, { org, refNumber: sale.saleNumber, date: formatDate(sale.date), title: 'Sales Invoice' });
-    if (sale.status === 'cancelled') {
-      ctx.setFont('bold'); ctx.setSize(10); ctx.setColor(180, 100, 20);
-      ctx.text('CANCELLED', PAGE_CENTER, y, { align: 'center' });
-      ctx.setColor(20);
-      y += 18;
-    }
-
-    y = drawTwoColumnInfo(ctx, y, {
-      label: 'Bill To',
-      lines: [sale.customerName, sale.customerPhone, sale.customerAddress].filter(Boolean),
-    }, {
-      label: 'Invoice Date',
-      lines: [formatDateTime(sale.date)],
-    });
-
-    const items = sale.items.map((item) => {
-      const title = item.itemType === 'cement' ? `${item.cementBrandName} Cement`
-        : item.itemType === 'shop' ? item.shopProductName
-        : `${item.quarryName} — ${item.size}`;
-      const subtitle = item.itemType === 'cement' ? `ATC: ${item.atcNumber}`
-        : item.itemType === 'shop' ? (item.cementBrandName || null)
-        : 'Aggregate';
-      return { title, subtitle, qty: `${item.billQuantity} ${saleItemUnitLabel(item)}`, price: formatNaira(item.unitPrice), amount: formatNaira(item.lineTotal) };
-    });
-    y = drawItemsTable(ctx, y, items);
-
-    ctx.setFont('normal'); ctx.setSize(9.5); ctx.setColor(90);
-    ctx.text('Subtotal', PAGE_CENTER, y);
-    ctx.setColor(20);
-    ctx.text(formatNaira(sale.subtotal), CONTENT_RIGHT, y, { align: 'right' });
-    y += 16;
-    if (sale.discount > 0) {
-      ctx.setColor(20, 130, 20);
-      ctx.text('Discount', PAGE_CENTER, y);
-      ctx.text(`-${formatNaira(sale.discount)}`, CONTENT_RIGHT, y, { align: 'right' });
-      ctx.setColor(20);
-      y += 16;
-    }
-    if (sale.transportFee > 0 || sale.transportHandledBy) {
-      const label = `Transport${sale.transportHandledBy === 'customer' ? ' (by customer)' : sale.transportMeans ? ` (${sale.transportMeans})` : ''}`;
-      ctx.setColor(90);
-      ctx.text(label, PAGE_CENTER, y);
-      ctx.setColor(20);
-      ctx.text(sale.transportHandledBy === 'customer' ? '—' : formatNaira(sale.transportFee), CONTENT_RIGHT, y, { align: 'right' });
-      y += 16;
-    }
-    y = drawTotalRow(ctx, y, 'TOTAL', formatNaira(sale.grandTotal));
-
-    y = drawPaymentDetailsBox(ctx, y, org);
-
-    const notes = [
-      sale.notes && { text: `Notes: ${sale.notes}` },
-      { text: `Recorded by: ${sale.createdByName}` },
-      sale.status === 'cancelled' && { text: `This invoice has been cancelled${sale.cancellationReason ? ` - ${sale.cancellationReason}` : ''}`, bold: true, color: [180, 100, 20] },
-    ].filter(Boolean);
-    y = drawNotesBlock(ctx, y, notes);
-    drawReceiptFooter(ctx, y, org);
-  };
-
   const handleSharePdf = async () => {
     setSharing('pdf');
     try {
-      const { pdf, ctx } = await createPdfRenderer();
-      await renderContent(ctx);
-      await presentPdf(pdf, `Invoice-${sale.saleNumber}.pdf`, `Invoice ${sale.saleNumber}`);
+      await shareReceiptAsPdf('receipt-content', `Invoice-${sale.saleNumber}.pdf`, `Invoice ${sale.saleNumber}`);
     } catch (err) {
       toast.error(err.message || 'Could not generate PDF');
     } finally {
@@ -112,9 +44,7 @@ export default function SaleInvoicePage() {
   const handleShareJpg = async () => {
     setSharing('jpg');
     try {
-      const { canvas, ctx } = await createImageRenderer();
-      await renderContent(ctx);
-      await presentImage(canvas, `Invoice-${sale.saleNumber}.jpg`, `Invoice ${sale.saleNumber}`);
+      await shareReceiptAsJpg('receipt-content', `Invoice-${sale.saleNumber}.jpg`, `Invoice ${sale.saleNumber}`);
     } catch (err) {
       toast.error(err.message || 'Could not generate image');
     } finally {
@@ -128,7 +58,7 @@ export default function SaleInvoicePage() {
   return (
     <div className="max-w-3xl mx-auto">
       {/* Print Header */}
-      <div className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
+      <div id="receipt-content" className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
         <ReceiptHeader org={org} refNumber={sale.saleNumber} date={formatDate(sale.date)} title="Sales Invoice" />
         {sale.status === 'cancelled' && (
           <p className="font-bold text-center text-amber-700 -mt-4 mb-6">CANCELLED</p>
