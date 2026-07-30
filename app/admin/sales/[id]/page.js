@@ -32,6 +32,7 @@ export default function SaleDetailPage() {
   const [editNotes, setEditNotes] = useState('');
   const [editTruck, setEditTruck] = useState('');
   const [editPaymentMethod, setEditPaymentMethod] = useState('');
+  const [editPin, setEditPin] = useState('');
   const [saving, setSaving] = useState(false);
 
   const [showSurcharge, setShowSurcharge] = useState(false);
@@ -102,6 +103,7 @@ export default function SaleDetailPage() {
     setEditNotes(sale.notes || '');
     setEditTruck(sale.truck || '');
     setEditPaymentMethod(sale.paymentMethod && sale.paymentMethod !== 'balance' ? sale.paymentMethod : 'cash');
+    setEditPin('');
     setShowEdit(true);
   };
 
@@ -142,6 +144,7 @@ export default function SaleDetailPage() {
           notes: editNotes,
           truck: editTruck || undefined,
           paymentMethod: sale.saleType === 'shop' ? editPaymentMethod : undefined,
+          confirmPin: editPin,
         }),
       });
       const d = await r.json();
@@ -224,7 +227,7 @@ export default function SaleDetailPage() {
         <div className="flex gap-2">
           <Link href={`/admin/sales/${id}/invoice`} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">View Invoice</Link>
           <button onClick={() => window.print()} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Print Invoice</button>
-          {sale.status === 'active' && (
+          {sale.status === 'active' && isAdmin && (
             <button onClick={openEdit} className="px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm hover:bg-green-900">Edit Sale</button>
           )}
           {sale.status === 'active' && sale.saleType !== 'shop' && isAdmin && (
@@ -492,6 +495,15 @@ export default function SaleDetailPage() {
             <p className="text-gray-500">Subtotal: {formatNaira(editSubtotal)}</p>
             <p className="font-bold text-base">New Grand Total: {formatNaira(editGrandTotal)}</p>
           </div>
+
+          <Field label="4-digit PIN" required>
+            <input
+              type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
+              value={editPin}
+              onChange={e => setEditPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              className={inputCls} required
+            />
+          </Field>
 
           <FormButtons onCancel={() => setShowEdit(false)} submitting={saving} submitLabel="Save Changes" />
         </form>

@@ -13,9 +13,9 @@ import ShopProduct from '@/models/ShopProduct';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
 import { isShopCustomer } from '@/lib/shopStock';
-import { can } from '@/lib/permissions';
-import { isSameCalendarDay, resolveDate } from '@/lib/dayLock';
+import { resolveDate } from '@/lib/dayLock';
 import { hasModule, moduleForSaleType } from '@/lib/modules';
+import { verifyOwnPin } from '@/lib/verifyPassword';
 import { ApiError } from '@/lib/apiError';
 import { pluralizeUnit } from '@/lib/format';
 
@@ -112,13 +112,23 @@ async function _h_DELETE(request, { params }) {
 
 async function _h_PUT(request, { params }) {
   const session = await getOrgSession();
-  if (!session || !can(session.user.role, 'sales.edit')) {
+  // Editing a recorded transaction is admin-only and PIN-gated, same as surcharge/refund — a plain
+  // "sales.edit" permission is no longer enough on its own.
+  if (!session || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   await dbConnect();
   const { id } = await params;
   const body = await request.json();
-  const { items, discount, transportFee, date, notes, truck: truckId, paymentMethod } = body;
+  const { items, discount, transportFee, date, notes, truck: truckId, paymentMethod, confirmPin } = body;
+
+  const pinResult = await verifyOwnPin(session.user.id, confirmPin);
+  if (pinResult === 'no_pin_set') {
+    return NextResponse.json({ error: 'Set your 4-digit PIN first, under Users' }, { status: 400 });
+  }
+  if (pinResult !== 'ok') {
+    return NextResponse.json({ error: 'Incorrect PIN' }, { status: 400 });
+  }
 
   if (!items || items.length === 0) {
     return NextResponse.json({ error: 'At least one item required' }, { status: 400 });
@@ -132,9 +142,6 @@ async function _h_PUT(request, { params }) {
       const sale = await Sale.findById(id).session(mongoSession);
       if (!sale) throw new ApiError('Not found', 404);
       if (sale.status === 'cancelled') throw new ApiError('Cannot edit a cancelled sale', 400);
-      if (session.user.role !== 'admin' && !isSameCalendarDay(sale.date, new Date())) {
-        throw new ApiError('Only same-day sales can be edited', 403);
-      }
       if (!hasModule(session, moduleForSaleType(sale.saleType)) || items.some((item) => !hasModule(session, moduleForSaleType(item.itemType)))) {
         throw new ApiError('This sale type is not enabled for your organization', 403);
       }
