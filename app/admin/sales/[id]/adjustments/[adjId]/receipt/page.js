@@ -38,7 +38,7 @@ export default function AdjustmentReceiptPage() {
   if (!sale || !adj) return <p className="text-gray-500 text-center py-12">Adjustment not found</p>;
 
   const isSurcharge = adj.type === 'surcharge';
-  const label = isSurcharge ? 'Surcharge' : 'Refund';
+  const label = isSurcharge ? 'Surcharge' : 'Fund';
 
   const handleSharePdf = async () => {
     setSharing('pdf');
@@ -69,7 +69,7 @@ export default function AdjustmentReceiptPage() {
 
         <div className="mb-6 grid grid-cols-2 gap-6">
           <div>
-            <p className="text-xs text-gray-500 font-medium mb-1">{isSurcharge ? 'BILLED TO' : 'REFUNDED TO'}</p>
+            <p className="text-xs text-gray-500 font-medium mb-1">{isSurcharge ? 'BILLED TO' : 'FUNDED TO'}</p>
             <p className="font-bold text-lg">{sale.customerName}</p>
             {sale.customerPhone && <p className="text-sm text-gray-600">{sale.customerPhone}</p>}
           </div>

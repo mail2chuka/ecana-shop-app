@@ -188,7 +188,7 @@ export default function CustomerDetailPage() {
       });
       const d = await r.json();
       if (d.success) {
-        toast.success('Refund applied');
+        toast.success('Fund applied');
         setShowRefund(false);
         load();
       } else {
@@ -228,7 +228,7 @@ export default function CustomerDetailPage() {
           {isAdmin && (
             <>
               <button onClick={openSurcharge} className="px-4 py-2 bg-amber-700 text-neutral-100 rounded text-sm hover:bg-amber-800">Apply Surcharge</button>
-              <button onClick={openRefund} className="px-4 py-2 bg-amber-700 text-neutral-100 rounded text-sm hover:bg-amber-800">Refund</button>
+              <button onClick={openRefund} className="px-4 py-2 bg-amber-700 text-neutral-100 rounded text-sm hover:bg-amber-800">Fund</button>
             </>
           )}
           <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Statement</button>
@@ -447,12 +447,12 @@ export default function CustomerDetailPage() {
         )}
       </Modal>
 
-      {/* Refund Modal — pick a transaction, then enter the refund details */}
-      <Modal open={showRefund} onClose={() => setShowRefund(false)} title="Refund" size="lg">
+      {/* Fund Modal — pick a transaction, then enter the fund details */}
+      <Modal open={showRefund} onClose={() => setShowRefund(false)} title="Fund" size="lg">
         {!refundSaleId ? (
           <div className="space-y-2">
-            <p className="text-sm text-gray-500 mb-2">Select which transaction to refund:</p>
-            {adjustableSales.length === 0 && <p className="text-sm text-gray-500">No cement/aggregate sales to refund.</p>}
+            <p className="text-sm text-gray-500 mb-2">Select which transaction to fund:</p>
+            {adjustableSales.length === 0 && <p className="text-sm text-gray-500">No cement/aggregate sales to fund.</p>}
             <div className="max-h-72 overflow-y-auto divide-y border rounded">
               {adjustableSales.map(s => (
                 <button
@@ -474,9 +474,9 @@ export default function CustomerDetailPage() {
               <button type="button" onClick={() => setRefundSaleId(null)} className="text-xs text-gray-500 hover:underline">Change transaction</button>
             </div>
             <p className="text-sm text-gray-500">
-              For a billed-vs-actual quantity shortfall, open the transaction to check its Qty, then enter the refund amount below (this credits the customer's balance).
+              For a billed-vs-actual quantity shortfall, open the transaction to check its Qty, then enter the fund amount below (this credits the customer's balance).
             </p>
-            <Field label="Refund amount (₦)" required>
+            <Field label="Fund amount (₦)" required>
               <CurrencyInput value={refundForm.amount} onChange={val => setRefundForm({ ...refundForm, amount: val })} className={inputCls} required />
             </Field>
             <Field label="Reason" required>
@@ -490,7 +490,7 @@ export default function CustomerDetailPage() {
                 className={inputCls} required
               />
             </Field>
-            <FormButtons onCancel={() => setShowRefund(false)} submitting={submittingRefund} submitLabel="Apply Refund" />
+            <FormButtons onCancel={() => setShowRefund(false)} submitting={submittingRefund} submitLabel="Apply Fund" />
           </form>
         )}
       </Modal>

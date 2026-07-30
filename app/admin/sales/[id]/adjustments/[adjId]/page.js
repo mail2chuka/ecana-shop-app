@@ -74,7 +74,7 @@ export default function AdjustmentDetailPage() {
   if (!sale || !adj) return <p className="text-gray-500">Adjustment not found</p>;
 
   const isSurcharge = adj.type === 'surcharge';
-  const label = isSurcharge ? 'Surcharge' : 'Refund';
+  const label = isSurcharge ? 'Surcharge' : 'Fund';
 
   return (
     <div>

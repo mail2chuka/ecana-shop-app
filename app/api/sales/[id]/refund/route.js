@@ -28,7 +28,7 @@ async function _h_POST(request, { params }) {
   }
   if (!reason) return NextResponse.json({ error: 'A reason is required' }, { status: 400 });
   const refundAmount = Number(amount);
-  if (!refundAmount || refundAmount <= 0) return NextResponse.json({ error: 'Enter a valid refund amount' }, { status: 400 });
+  if (!refundAmount || refundAmount <= 0) return NextResponse.json({ error: 'Enter a valid fund amount' }, { status: 400 });
 
   const mongoSession = await mongoose.startSession();
   try {
@@ -38,7 +38,7 @@ async function _h_POST(request, { params }) {
       const sale = await Sale.findById(id).session(mongoSession);
       if (!sale) throw new ApiError('Not found', 404);
       if (sale.status === 'cancelled') throw new ApiError('Cannot adjust a cancelled sale', 400);
-      if (sale.saleType === 'shop') throw new ApiError('Refunds do not apply to shop sales', 400);
+      if (sale.saleType === 'shop') throw new ApiError('Funds do not apply to shop sales', 400);
 
       const customer = await Customer.findById(sale.customer).session(mongoSession);
       if (!customer) throw new ApiError('Customer not found', 404);
@@ -64,7 +64,7 @@ async function _h_POST(request, { params }) {
       await sale.save({ session: mongoSession });
 
       await logAudit({
-        userId: session.user.id, userName: session.user.name, action: 'refund_applied', entity: 'Sale', entityId: sale._id,
+        userId: session.user.id, userName: session.user.name, action: 'fund_applied', entity: 'Sale', entityId: sale._id,
         after: { referenceNumber, amount: refundAmount, reason, balanceBefore, balanceAfter }, session: mongoSession,
       });
 

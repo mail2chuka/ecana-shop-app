@@ -200,7 +200,7 @@ export default function SaleDetailPage() {
       });
       const d = await r.json();
       if (d.success) {
-        toast.success('Refund applied');
+        toast.success('Fund applied');
         setSale(d.data);
         setShowRefund(false);
       } else {
@@ -233,7 +233,7 @@ export default function SaleDetailPage() {
           {sale.status === 'active' && sale.saleType !== 'shop' && isAdmin && (
             <>
               <button onClick={openSurcharge} className="px-4 py-2 bg-amber-700 text-neutral-100 rounded text-sm hover:bg-amber-800">Apply Surcharge</button>
-              <button onClick={openRefund} className="px-4 py-2 bg-amber-700 text-neutral-100 rounded text-sm hover:bg-amber-800">Refund</button>
+              <button onClick={openRefund} className="px-4 py-2 bg-amber-700 text-neutral-100 rounded text-sm hover:bg-amber-800">Fund</button>
             </>
           )}
         </div>
@@ -543,13 +543,13 @@ export default function SaleDetailPage() {
         </form>
       </Modal>
 
-      {/* Refund Modal */}
-      <Modal open={showRefund} onClose={() => setShowRefund(false)} title="Refund">
+      {/* Fund Modal */}
+      <Modal open={showRefund} onClose={() => setShowRefund(false)} title="Fund">
         <form onSubmit={handleRefundSubmit} className="space-y-4">
           <p className="text-sm text-gray-500">
-            For a billed-vs-actual quantity shortfall, check each item's Qty above and enter the refund amount below (this credits the customer's balance).
+            For a billed-vs-actual quantity shortfall, check each item's Qty above and enter the fund amount below (this credits the customer's balance).
           </p>
-          <Field label="Refund amount (₦)" required>
+          <Field label="Fund amount (₦)" required>
             <CurrencyInput value={refundForm.amount} onChange={val => setRefundForm({ ...refundForm, amount: val })} className={inputCls} required />
           </Field>
           <Field label="Reason" required>
@@ -563,7 +563,7 @@ export default function SaleDetailPage() {
               className={inputCls} required
             />
           </Field>
-          <FormButtons onCancel={() => setShowRefund(false)} submitting={submittingRefund} submitLabel="Apply Refund" />
+          <FormButtons onCancel={() => setShowRefund(false)} submitting={submittingRefund} submitLabel="Apply Fund" />
         </form>
       </Modal>
     </div>
