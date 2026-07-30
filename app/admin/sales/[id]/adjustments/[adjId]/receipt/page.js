@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
 import { ReceiptHeader, ReceiptFooter } from '@/components/ui';
-import { sharePdf } from '@/lib/sharePdf';
+import { newReceiptPdf, drawReceiptHeader, drawTwoColumnInfo, drawKeyValueRow, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf } from '@/lib/receiptPdf';
 
 export default function AdjustmentReceiptPage() {
   const { id, adjId } = useParams();
@@ -43,7 +43,27 @@ export default function AdjustmentReceiptPage() {
   const handleShare = async () => {
     setSharing(true);
     try {
-      await sharePdf({ elementId: 'receipt-content', filename: `${label}-Receipt-${adj.referenceNumber}.pdf`, title: `${label} Receipt ${adj.referenceNumber}` });
+      const pdf = await newReceiptPdf();
+      let y = await drawReceiptHeader(pdf, { org, refNumber: adj.referenceNumber, date: formatDate(adj.appliedAt), title: `${label} Receipt` });
+
+      y = drawTwoColumnInfo(pdf, y, {
+        label: isSurcharge ? 'Billed To' : 'Refunded To',
+        lines: [sale.customerName, sale.customerPhone].filter(Boolean),
+      }, {
+        label: 'Related Sale',
+        lines: [sale.saleNumber, formatDateTime(adj.appliedAt)],
+      });
+
+      if (adj.method) y = drawKeyValueRow(pdf, y, 'Method', adj.method.replace('_', ' '));
+      y = drawKeyValueRow(pdf, y, 'Reason', adj.reason);
+      y = drawKeyValueRow(pdf, y, 'Balance before', formatNaira(adj.balanceBefore));
+      y = drawKeyValueRow(pdf, y, 'Balance after', formatNaira(adj.balanceAfter));
+
+      y = drawTotalRow(pdf, y, label.toUpperCase(), `${isSurcharge ? '+' : '-'}${formatNaira(adj.amount)}`, isSurcharge ? [220, 38, 38] : [22, 163, 74]);
+      y = drawNotesBlock(pdf, y, [{ text: `Applied by: ${adj.appliedByName}` }]);
+      drawReceiptFooter(pdf, y, org);
+
+      await presentPdf(pdf, `${label}-Receipt-${adj.referenceNumber}.pdf`, `${label} Receipt ${adj.referenceNumber}`);
     } catch (err) {
       toast.error(err.message || 'Could not generate PDF');
     } finally {
@@ -53,7 +73,7 @@ export default function AdjustmentReceiptPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div id="receipt-content" className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
+      <div className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
         <ReceiptHeader org={org} refNumber={adj.referenceNumber} date={formatDate(adj.appliedAt)} title={`${label} Receipt`} />
 
         <div className="mb-6 grid grid-cols-2 gap-6">

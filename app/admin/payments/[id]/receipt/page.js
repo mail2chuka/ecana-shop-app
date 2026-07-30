@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
 import { ReceiptHeader, ReceiptFooter } from '@/components/ui';
-import { sharePdf } from '@/lib/sharePdf';
+import { newReceiptPdf, drawReceiptHeader, drawTwoColumnInfo, drawKeyValueRow, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf } from '@/lib/receiptPdf';
 
 const METHOD_LABELS = { cash: 'Cash', transfer: 'Bank Transfer', pos: 'POS', cheque: 'Cheque' };
 
@@ -35,7 +35,28 @@ export default function PaymentReceiptPage() {
   const handleShare = async () => {
     setSharing(true);
     try {
-      await sharePdf({ elementId: 'receipt-content', filename: `Payment-Receipt-${payment.transactionNumber}.pdf`, title: `Payment Receipt ${payment.transactionNumber}` });
+      const pdf = await newReceiptPdf();
+      let y = await drawReceiptHeader(pdf, { org, refNumber: payment.transactionNumber, date: formatDate(payment.date), title: 'Payment Receipt' });
+
+      y = drawTwoColumnInfo(pdf, y, {
+        label: 'Received From',
+        lines: [payment.customerName],
+      }, {
+        label: 'Receipt Date',
+        lines: [formatDateTime(payment.date)],
+      });
+
+      y = drawKeyValueRow(pdf, y, 'Method', `${METHOD_LABELS[payment.method] || payment.method}${payment.bankName ? ` (${payment.bankName})` : ''}`);
+      y = drawKeyValueRow(pdf, y, 'Depositor', payment.depositorName || '—');
+      if (payment.description) y = drawKeyValueRow(pdf, y, 'Description', payment.description);
+      y = drawKeyValueRow(pdf, y, 'Balance before', formatNaira(payment.balanceBefore));
+      y = drawKeyValueRow(pdf, y, 'Balance after', formatNaira(payment.balanceAfter));
+
+      y = drawTotalRow(pdf, y, 'AMOUNT RECEIVED', formatNaira(payment.amount));
+      y = drawNotesBlock(pdf, y, [{ text: `Recorded by: ${payment.recordedByName}` }]);
+      drawReceiptFooter(pdf, y, org);
+
+      await presentPdf(pdf, `Payment-Receipt-${payment.transactionNumber}.pdf`, `Payment Receipt ${payment.transactionNumber}`);
     } catch (err) {
       toast.error(err.message || 'Could not generate PDF');
     } finally {
@@ -48,7 +69,7 @@ export default function PaymentReceiptPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div id="receipt-content" className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
+      <div className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
         <ReceiptHeader org={org} refNumber={payment.transactionNumber} date={formatDate(payment.date)} title="Payment Receipt" />
 
         <div className="mb-6 grid grid-cols-2 gap-6">

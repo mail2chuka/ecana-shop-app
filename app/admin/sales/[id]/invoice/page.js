@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime, saleItemUnitLabel } from '@/lib/format';
 import { ReceiptHeader, ReceiptFooter } from '@/components/ui';
-import { sharePdf } from '@/lib/sharePdf';
+import { newReceiptPdf, drawReceiptHeader, drawTwoColumnInfo, drawItemsTable, drawTotalRow, drawNotesBlock, drawReceiptFooter, presentPdf, CONTENT_RIGHT, PAGE_CENTER } from '@/lib/receiptPdf';
 
 export default function SaleInvoicePage() {
   const { id } = useParams();
@@ -33,7 +33,65 @@ export default function SaleInvoicePage() {
   const handleShare = async () => {
     setSharing(true);
     try {
-      await sharePdf({ elementId: 'receipt-content', filename: `Invoice-${sale.saleNumber}.pdf`, title: `Invoice ${sale.saleNumber}` });
+      const pdf = await newReceiptPdf();
+      let y = await drawReceiptHeader(pdf, { org, refNumber: sale.saleNumber, date: formatDate(sale.date), title: 'Sales Invoice' });
+      if (sale.status === 'cancelled') {
+        pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10); pdf.setTextColor(180, 100, 20);
+        pdf.text('CANCELLED', PAGE_CENTER, y, { align: 'center' });
+        pdf.setTextColor(20);
+        y += 18;
+      }
+
+      y = drawTwoColumnInfo(pdf, y, {
+        label: 'Bill To',
+        lines: [sale.customerName, sale.customerPhone, sale.customerAddress].filter(Boolean),
+      }, {
+        label: 'Invoice Date',
+        lines: [formatDateTime(sale.date)],
+      });
+
+      const items = sale.items.map((item) => {
+        const title = item.itemType === 'cement' ? `${item.cementBrandName} Cement`
+          : item.itemType === 'shop' ? item.shopProductName
+          : `${item.quarryName} — ${item.size}`;
+        const subtitle = item.itemType === 'cement' ? `ATC: ${item.atcNumber}`
+          : item.itemType === 'shop' ? (item.cementBrandName || null)
+          : 'Aggregate';
+        return { title, subtitle, qty: `${item.billQuantity} ${saleItemUnitLabel(item)}`, price: formatNaira(item.unitPrice), amount: formatNaira(item.lineTotal) };
+      });
+      y = drawItemsTable(pdf, y, items);
+
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9.5); pdf.setTextColor(90);
+      pdf.text('Subtotal', PAGE_CENTER, y);
+      pdf.setTextColor(20);
+      pdf.text(formatNaira(sale.subtotal), CONTENT_RIGHT, y, { align: 'right' });
+      y += 16;
+      if (sale.discount > 0) {
+        pdf.setTextColor(20, 130, 20);
+        pdf.text('Discount', PAGE_CENTER, y);
+        pdf.text(`-${formatNaira(sale.discount)}`, CONTENT_RIGHT, y, { align: 'right' });
+        pdf.setTextColor(20);
+        y += 16;
+      }
+      if (sale.transportFee > 0 || sale.transportHandledBy) {
+        const label = `Transport${sale.transportHandledBy === 'customer' ? ' (by customer)' : sale.transportMeans ? ` (${sale.transportMeans})` : ''}`;
+        pdf.setTextColor(90);
+        pdf.text(label, PAGE_CENTER, y);
+        pdf.setTextColor(20);
+        pdf.text(sale.transportHandledBy === 'customer' ? '—' : formatNaira(sale.transportFee), CONTENT_RIGHT, y, { align: 'right' });
+        y += 16;
+      }
+      y = drawTotalRow(pdf, y, 'TOTAL', formatNaira(sale.grandTotal));
+
+      const notes = [
+        sale.notes && { text: `Notes: ${sale.notes}` },
+        { text: `Recorded by: ${sale.createdByName}` },
+        sale.status === 'cancelled' && { text: `This invoice has been cancelled${sale.cancellationReason ? ` - ${sale.cancellationReason}` : ''}`, bold: true, color: [180, 100, 20] },
+      ].filter(Boolean);
+      y = drawNotesBlock(pdf, y, notes);
+      drawReceiptFooter(pdf, y, org);
+
+      await presentPdf(pdf, `Invoice-${sale.saleNumber}.pdf`, `Invoice ${sale.saleNumber}`);
     } catch (err) {
       toast.error(err.message || 'Could not generate PDF');
     } finally {
@@ -47,7 +105,7 @@ export default function SaleInvoicePage() {
   return (
     <div className="max-w-3xl mx-auto">
       {/* Print Header */}
-      <div id="receipt-content" className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
+      <div className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
         <ReceiptHeader org={org} refNumber={sale.saleNumber} date={formatDate(sale.date)} title="Sales Invoice" />
         {sale.status === 'cancelled' && (
           <p className="font-bold text-center text-amber-700 -mt-4 mb-6">CANCELLED</p>
