@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
 import { ReceiptHeader, ReceiptFooter } from '@/components/ui';
+import { sharePdf } from '@/lib/sharePdf';
 
 export default function AdjustmentReceiptPage() {
   const { id, adjId } = useParams();
@@ -11,6 +13,7 @@ export default function AdjustmentReceiptPage() {
   const [adj, setAdj] = useState(null);
   const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -37,9 +40,20 @@ export default function AdjustmentReceiptPage() {
   const isSurcharge = adj.type === 'surcharge';
   const label = isSurcharge ? 'Surcharge' : 'Refund';
 
+  const handleShare = async () => {
+    setSharing(true);
+    try {
+      await sharePdf({ elementId: 'receipt-content', filename: `${label}-Receipt-${adj.referenceNumber}.pdf`, title: `${label} Receipt ${adj.referenceNumber}` });
+    } catch (err) {
+      toast.error(err.message || 'Could not generate PDF');
+    } finally {
+      setSharing(false);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
+      <div id="receipt-content" className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
         <ReceiptHeader org={org} refNumber={adj.referenceNumber} date={formatDate(adj.appliedAt)} title={`${label} Receipt`} />
 
         <div className="mb-6 grid grid-cols-2 gap-6">
@@ -99,6 +113,9 @@ export default function AdjustmentReceiptPage() {
       <div className="mt-6 flex justify-center gap-3 no-print">
         <button onClick={handlePrint} className="px-6 py-2 bg-green-800 text-neutral-100 rounded hover:bg-green-900">
           Print Receipt
+        </button>
+        <button onClick={handleShare} disabled={sharing} className="px-6 py-2 border rounded hover:bg-gray-50 disabled:opacity-50">
+          {sharing ? 'Preparing PDF...' : 'Share PDF'}
         </button>
         <button onClick={() => window.history.back()} className="px-6 py-2 border rounded hover:bg-gray-50">
           Back

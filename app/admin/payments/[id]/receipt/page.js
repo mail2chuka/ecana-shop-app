@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
 import { ReceiptHeader, ReceiptFooter } from '@/components/ui';
+import { sharePdf } from '@/lib/sharePdf';
 
 const METHOD_LABELS = { cash: 'Cash', transfer: 'Bank Transfer', pos: 'POS', cheque: 'Cheque' };
 
@@ -12,6 +14,7 @@ export default function PaymentReceiptPage() {
   const [payment, setPayment] = useState(null);
   const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -29,12 +32,23 @@ export default function PaymentReceiptPage() {
     }, 100);
   };
 
+  const handleShare = async () => {
+    setSharing(true);
+    try {
+      await sharePdf({ elementId: 'receipt-content', filename: `Payment-Receipt-${payment.transactionNumber}.pdf`, title: `Payment Receipt ${payment.transactionNumber}` });
+    } catch (err) {
+      toast.error(err.message || 'Could not generate PDF');
+    } finally {
+      setSharing(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-gray-800 border-t-transparent rounded-full" /></div>;
   if (!payment) return <p className="text-gray-500 text-center py-12">Payment not found</p>;
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
+      <div id="receipt-content" className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
         <ReceiptHeader org={org} refNumber={payment.transactionNumber} date={formatDate(payment.date)} title="Payment Receipt" />
 
         <div className="mb-6 grid grid-cols-2 gap-6">
@@ -96,6 +110,9 @@ export default function PaymentReceiptPage() {
       <div className="mt-6 flex justify-center gap-3 no-print">
         <button onClick={handlePrint} className="px-6 py-2 bg-green-800 text-neutral-100 rounded hover:bg-green-900">
           Print Receipt
+        </button>
+        <button onClick={handleShare} disabled={sharing} className="px-6 py-2 border rounded hover:bg-gray-50 disabled:opacity-50">
+          {sharing ? 'Preparing PDF...' : 'Share PDF'}
         </button>
         <button onClick={() => window.history.back()} className="px-6 py-2 border rounded hover:bg-gray-50">
           Back
