@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, theadCls, tableScrollCls } from '@/components/ui';
+import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatDate, formatCustomerLabel } from '@/lib/format';
 import toast from 'react-hot-toast';
 
@@ -165,10 +165,11 @@ export default function PaymentsPage() {
                 <th className="px-4 py-3 text-left font-medium">Depositor</th>
                 <th className="px-4 py-3 text-right font-medium">Amount</th>
                 <th className="px-4 py-3 text-right font-medium">New Balance</th>
+                <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {payments.length === 0 && <EmptyRow colSpan={7} text="No payments yet" />}
+              {payments.length === 0 && <EmptyRow colSpan={8} text="No payments yet" />}
               {payments.map(p => (
                 <tr key={p._id}>
                   <td className="px-4 py-3">{formatDate(p.date)}</td>
@@ -180,6 +181,9 @@ export default function PaymentsPage() {
                   <td className="px-4 py-3 text-gray-600">{p.depositorName || '-'}</td>
                   <td className="px-4 py-3 text-right font-medium text-green-600">{formatNaira(p.amount)}</td>
                   <td className="px-4 py-3 text-right">{formatNaira(p.balanceAfter)}</td>
+                  <td className="px-4 py-3 text-right">
+                    <Link href={`/admin/payments/${p._id}/receipt`} className={tableActionCls}>Receipt</Link>
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -375,9 +375,12 @@ export default function SaleDetailPage() {
                   <p className="text-gray-500 text-xs">{adj.reason}</p>
                   <p className="text-gray-400 text-xs mt-0.5">{formatDateTime(adj.appliedAt)} by {adj.appliedByName}</p>
                 </div>
-                <p className={`font-bold ${adj.type === 'surcharge' ? 'text-red-600' : 'text-green-600'}`}>
-                  {adj.type === 'surcharge' ? '+' : '-'}{formatNaira(adj.amount)}
-                </p>
+                <div className="text-right">
+                  <p className={`font-bold ${adj.type === 'surcharge' ? 'text-red-600' : 'text-green-600'}`}>
+                    {adj.type === 'surcharge' ? '+' : '-'}{formatNaira(adj.amount)}
+                  </p>
+                  <Link href={`/admin/sales/${id}/adjustments/${adj._id}/receipt`} className="text-xs text-blue-600 hover:underline">Receipt</Link>
+                </div>
               </div>
             ))}
           </div>

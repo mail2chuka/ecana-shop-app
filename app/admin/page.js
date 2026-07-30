@@ -28,6 +28,11 @@ const QUICK_ACTIONS = [
     title: 'Record ATC', subtitle: 'Add a new authorization to collect',
   },
   {
+    href: '/admin/shop', allow: ['admin', 'gsm_manager'], modules: ['shop'],
+    cls: 'block bg-teal-50 border border-teal-200 rounded-lg p-4 hover:bg-teal-100', titleCls: 'font-bold text-teal-800',
+    title: 'Cement Warehouse', subtitle: 'Retail counter sales',
+  },
+  {
     href: '/admin/payments', allow: ['admin', 'gsm_manager'],
     cls: 'block bg-blue-50 border border-blue-200 rounded-lg p-4 hover:bg-blue-100', titleCls: 'font-bold text-blue-800',
     title: 'Record Payment', subtitle: 'Top up a customer balance',
