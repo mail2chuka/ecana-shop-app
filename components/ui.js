@@ -67,6 +67,56 @@ export function StatusPill({ status, color }) {
   );
 }
 
+// Shared header for every printable receipt (invoice, payment, surcharge, refund) — logo, org name,
+// address, phone on the left; ref number and date on the right; the receipt's own title centered
+// beneath both, on its own line, so every receipt type reads consistently regardless of what it is.
+export function ReceiptHeader({ org, refNumber, date, title }) {
+  return (
+    <div className="border-b pb-6 mb-6">
+      <div className="flex justify-between items-start">
+        <div className="flex items-start gap-3">
+          {org?.logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={org.logoUrl} alt={org.name} className="h-14 w-14 object-contain rounded" />
+          )}
+          <div>
+            <h2 className="text-2xl font-bold">{org?.name || ''}</h2>
+            {org?.address && <p className="text-xs text-gray-500 mt-1">{org.address}</p>}
+            {org?.phone && <p className="text-xs text-gray-500">{org.phone}</p>}
+          </div>
+        </div>
+        <div className="text-right text-sm">
+          <p className="font-bold text-xl">{refNumber}</p>
+          <p className="text-gray-600">{date}</p>
+        </div>
+      </div>
+      <p className="text-center text-sm font-bold uppercase tracking-widest mt-4">{title}</p>
+    </div>
+  );
+}
+
+// Shared footer — the org's bank account (per-org, set on the Receipt Settings page) above the
+// existing thank-you/invoiceFooter line, so a customer knows exactly where to pay. Omitted entirely
+// if the org hasn't set any bank details yet, rather than showing empty fields. No top border of its
+// own — every current usage already sits right below a bordered notes/recorded-by block, so another
+// border-t here would stack two divider lines back to back.
+export function ReceiptFooter({ org }) {
+  const hasBankInfo = org?.bankName || org?.accountNumber || org?.accountName;
+  return (
+    <>
+      {hasBankInfo && (
+        <div className="mt-3 text-xs text-gray-600">
+          <p className="font-medium text-gray-700 mb-1">Payment Details</p>
+          <p>{[org.bankName, org.accountNumber, org.accountName].filter(Boolean).join(' — ')}</p>
+        </div>
+      )}
+      <div className="mt-6 pt-4 text-center text-xs text-gray-400">
+        {org?.invoiceFooter || 'Thank you for your business.'}
+      </div>
+    </>
+  );
+}
+
 export function EmptyRow({ colSpan, text = 'No data' }) {
   return (
     <tr>

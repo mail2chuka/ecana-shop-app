@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { formatNaira, formatDate, formatDateTime, formatSaleTypeLabel, saleItemUnitLabel } from '@/lib/format';
+import { formatNaira, formatDate, formatDateTime, saleItemUnitLabel } from '@/lib/format';
+import { ReceiptHeader, ReceiptFooter } from '@/components/ui';
 
 export default function SaleInvoicePage() {
   const { id } = useParams();
@@ -33,28 +34,10 @@ export default function SaleInvoicePage() {
     <div className="max-w-3xl mx-auto">
       {/* Print Header */}
       <div className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
-        <div className="border-b pb-6 mb-6">
-          <div className="flex justify-between items-start">
-            <div className="flex items-start gap-3">
-              {org?.logoUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={org.logoUrl} alt={org.name} className="h-14 w-14 object-contain rounded" />
-              )}
-              <div>
-                <h2 className="text-2xl font-bold">{org?.name || ''}</h2>
-                <p className="text-xs text-gray-500 mt-0.5">{formatSaleTypeLabel(sale.saleType)}</p>
-                {org?.address && <p className="text-xs text-gray-500 mt-1">{org.address}</p>}
-              </div>
-            </div>
-            <div className="text-right text-sm">
-              <p className="font-bold text-xl">{sale.saleNumber}</p>
-              <p className="text-gray-600">{formatDate(sale.date)}</p>
-              {sale.status === 'cancelled' && (
-                <p className="font-bold mt-2 text-amber-700">CANCELLED</p>
-              )}
-            </div>
-          </div>
-        </div>
+        <ReceiptHeader org={org} refNumber={sale.saleNumber} date={formatDate(sale.date)} title="Sales Invoice" />
+        {sale.status === 'cancelled' && (
+          <p className="font-bold text-center text-amber-700 -mt-4 mb-6">CANCELLED</p>
+        )}
 
         {/* Customer Info */}
         <div className="mb-6 grid grid-cols-2 gap-6">
@@ -154,9 +137,7 @@ export default function SaleInvoicePage() {
           )}
         </div>
 
-        <div className="mt-6 pt-4 text-center text-xs text-gray-400">
-          {org?.invoiceFooter || 'Thank you for your business.'}
-        </div>
+        <ReceiptFooter org={org} />
       </div>
 
       {/* Print Button */}

@@ -82,6 +82,7 @@ const menu = [
     ],
   },
   { label: 'Organization Settings', href: '/admin/organization', allow: ['admin'] },
+  { label: 'Receipt Settings', href: '/admin/receipt-settings', allow: ['admin'] },
   { label: 'Subscription', href: '/admin/subscription', allow: ['admin'] },
   { label: 'Users', href: '/admin/users', allow: ['admin'] },
   { label: 'Audit Log', href: '/admin/audit-log', allow: ['admin'] },

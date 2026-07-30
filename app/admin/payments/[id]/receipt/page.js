@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
+import { ReceiptHeader, ReceiptFooter } from '@/components/ui';
 
 const METHOD_LABELS = { cash: 'Cash', transfer: 'Bank Transfer', pos: 'POS', cheque: 'Cheque' };
 
@@ -34,25 +35,7 @@ export default function PaymentReceiptPage() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="bg-white border rounded-lg p-8 print:border-0 print:p-0 print:shadow-none">
-        <div className="border-b pb-6 mb-6">
-          <div className="flex justify-between items-start">
-            <div className="flex items-start gap-3">
-              {org?.logoUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={org.logoUrl} alt={org.name} className="h-14 w-14 object-contain rounded" />
-              )}
-              <div>
-                <h2 className="text-2xl font-bold">{org?.name || ''}</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Payment Receipt</p>
-                {org?.address && <p className="text-xs text-gray-500 mt-1">{org.address}</p>}
-              </div>
-            </div>
-            <div className="text-right text-sm">
-              <p className="font-bold text-xl">{payment.transactionNumber}</p>
-              <p className="text-gray-600">{formatDate(payment.date)}</p>
-            </div>
-          </div>
-        </div>
+        <ReceiptHeader org={org} refNumber={payment.transactionNumber} date={formatDate(payment.date)} title="Payment Receipt" />
 
         <div className="mb-6 grid grid-cols-2 gap-6">
           <div>
@@ -107,9 +90,7 @@ export default function PaymentReceiptPage() {
           <p><span className="font-medium">Recorded by:</span> {payment.recordedByName}</p>
         </div>
 
-        <div className="mt-6 pt-4 text-center text-xs text-gray-400">
-          {org?.invoiceFooter || 'Thank you for your business.'}
-        </div>
+        <ReceiptFooter org={org} />
       </div>
 
       <div className="mt-6 flex justify-center gap-3 no-print">

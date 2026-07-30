@@ -26,6 +26,12 @@ const OrganizationSchema = new mongoose.Schema({
   address: String,
   invoiceFooter: String,
 
+  // Bank account shown at the bottom of every receipt (invoice, payment, surcharge, refund) — so a
+  // customer paying off a debit knows exactly where to send it. Set by the org's own admin.
+  bankName: String,
+  accountNumber: String,
+  accountName: String,
+
   // Which product modules this org uses. A pure wood/steel seller can turn cement/aggregate off.
   enabledModules: { type: [String], default: ['cement', 'aggregate', 'shop'] },
 
