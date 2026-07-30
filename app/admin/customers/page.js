@@ -27,9 +27,12 @@ export default function CustomersPage() {
     else { setSortField(field); setSortDir('asc'); }
   };
 
-  const load = async (q = '', status = statusFilter) => {
+  // Fetches everything matching the search term, unfiltered by status — active/dormant/archived
+  // are all derived and filtered client-side (same pattern as the ATC page's status tabs), so every
+  // tab's count can be shown at once without a separate request per tab.
+  const load = async (q = '') => {
     setLoading(true);
-    const params = new URLSearchParams({ status });
+    const params = new URLSearchParams();
     if (q) params.set('search', q);
     const r = await fetch(`/api/customers?${params.toString()}`);
     const d = await r.json();
@@ -37,20 +40,27 @@ export default function CustomersPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(search, statusFilter); }, [statusFilter]);
+  useEffect(() => { load(search); }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => load(search, statusFilter), 300);
+    const t = setTimeout(() => load(search), 300);
     return () => clearTimeout(t);
   }, [search]);
 
   const openCreate = () => { setForm(blankForm); setShowModal(true); };
 
-  const totalDebt = -customers.filter(c => c.balance < 0).reduce((s, c) => s + c.balance, 0);
-  const totalSurplus = customers.filter(c => c.balance > 0).reduce((s, c) => s + c.balance, 0);
+  // A dormant customer is still active, just hasn't transacted in a while — mutually exclusive with
+  // "active" and "archived" so the three categories partition the full customer list.
+  const category = (c) => (!c.isActive ? 'archived' : c.isDormant ? 'dormant' : 'active');
+  const statusCounts = customers.reduce((acc, c) => { const cat = category(c); acc[cat] = (acc[cat] || 0) + 1; return acc; }, {});
+
+  const filteredCustomers = statusFilter === 'all' ? customers : customers.filter(c => category(c) === statusFilter);
+
+  const totalDebt = -filteredCustomers.filter(c => c.balance < 0).reduce((s, c) => s + c.balance, 0);
+  const totalSurplus = filteredCustomers.filter(c => c.balance > 0).reduce((s, c) => s + c.balance, 0);
   const net = totalSurplus - totalDebt;
 
-  const sortedCustomers = [...customers].sort((a, b) => {
+  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
     const cmp = sortField === 'balance' ? a.balance - b.balance : a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
     return sortDir === 'asc' ? cmp : -cmp;
   });
@@ -66,7 +76,7 @@ export default function CustomersPage() {
       };
       const r = await fetch('/api/customers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const d = await r.json();
-      if (d.success) { toast.success('Created'); setShowModal(false); load(search, statusFilter); }
+      if (d.success) { toast.success('Created'); setShowModal(false); load(search); }
       else toast.error(d.error);
     } catch (err) {
       toast.error(err.message || 'Something went wrong, please try again');
@@ -107,13 +117,13 @@ export default function CustomersPage() {
           className={inputCls + ' max-w-md'}
         />
         <div className="flex gap-2">
-          {['all', 'active', 'archived'].map(s => (
+          {['all', 'active', 'dormant', 'archived'].map(s => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
               className={`px-3 py-1 text-sm rounded border ${statusFilter === s ? 'bg-green-800 text-neutral-100 border-green-800' : 'bg-white hover:bg-gray-50'}`}
             >
-              {s[0].toUpperCase() + s.slice(1)}
+              {s[0].toUpperCase() + s.slice(1)} ({s === 'all' ? customers.length : (statusCounts[s] || 0)})
             </button>
           ))}
         </div>
@@ -145,6 +155,7 @@ export default function CustomersPage() {
                     <Link href={`/admin/customers/${c._id}`} className="font-medium hover:underline">
                       {formatCustomerLabel(c)}
                       {!c.isActive && <span className="ml-2 text-xs text-gray-400 font-normal">(archived)</span>}
+                      {c.isActive && c.isDormant && <span className="ml-2 text-xs text-amber-600 font-normal">(dormant)</span>}
                     </Link>
                     <p className="text-xs text-gray-500">{c.phone}</p>
                   </td>
