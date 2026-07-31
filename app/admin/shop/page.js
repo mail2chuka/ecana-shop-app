@@ -39,12 +39,34 @@ export default function ShopPage() {
   const [transportPrice, setTransportPrice] = useState('');
   const [showTransportWarning, setShowTransportWarning] = useState(false);
 
+  // Sales History date filter
+  const [historyStartDate, setHistoryStartDate] = useState('');
+  const [historyEndDate, setHistoryEndDate] = useState('');
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const loadSales = async (overrides = {}) => {
+    setHistoryLoading(true);
+    const sd = overrides.startDate !== undefined ? overrides.startDate : historyStartDate;
+    const ed = overrides.endDate !== undefined ? overrides.endDate : historyEndDate;
+    const params = new URLSearchParams({ type: 'shop' });
+    if (sd) params.set('startDate', sd);
+    if (ed) params.set('endDate', ed);
+    const s = await fetch(`/api/sales?${params.toString()}`).then(r => r.json());
+    if (s.success) setSales(s.data);
+    setHistoryLoading(false);
+  };
+
+  const clearHistoryDateFilter = () => {
+    setHistoryStartDate('');
+    setHistoryEndDate('');
+    loadSales({ startDate: '', endDate: '' });
+  };
+
   const load = async () => {
     setLoading(true);
-    const [p, c, s] = await Promise.all([
+    const [p, c] = await Promise.all([
       fetch('/api/shop-products').then(r => r.json()),
       fetch('/api/customers').then(r => r.json()),
-      fetch('/api/sales?type=shop').then(r => r.json()),
     ]);
     if (p.success) setProducts(p.data);
     if (c.success) {
@@ -54,7 +76,7 @@ export default function ShopPage() {
       setCustomers(eligibleCustomers);
       setSelectedCustomer(prev => prev || eligibleCustomers.find(x => x.name.toLowerCase() === 'walk-in customer') || null);
     }
-    if (s.success) setSales(s.data);
+    await loadSales();
     setLoading(false);
   };
 
@@ -117,6 +139,8 @@ export default function ShopPage() {
     if (d.success) { toast.success('Deactivated'); load(); }
     else toast.error(d.error);
   };
+
+  const totalStock = products.reduce((s, p) => s + (p.stockQuantity || 0), 0);
 
   // --- Record Sale ---
   const addToCart = () => {
@@ -235,32 +259,37 @@ export default function ShopPage() {
 
       {/* INVENTORY TAB */}
       {tab === 'inventory' && (
-        <Card className="overflow-hidden">
-          <p className="px-4 pt-4 text-xs text-gray-500">Stock updates automatically when cement is sold to the "Shop" customer — see Cement Sale.</p>
-          <div className={tableScrollCls}>
-          <table className="w-full text-sm">
-            <thead className={theadCls}>
-              <tr>
-                <th className="px-4 py-3 text-left font-medium">Product</th>
-                <th className="px-4 py-3 text-left font-medium">Unit</th>
-                <th className="px-4 py-3 text-right font-medium">Price</th>
-                <th className="px-4 py-3 text-right font-medium">In Stock</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {products.length === 0 && <EmptyRow colSpan={4} text="No shop products yet — add one under Manage Products" />}
-              {products.map(p => (
-                <tr key={p._id} className={p.stockQuantity === 0 ? 'bg-amber-50' : ''}>
-                  <td className="px-4 py-3 font-medium">{p.name}</td>
-                  <td className="px-4 py-3 text-gray-500">{p.unit}</td>
-                  <td className="px-4 py-3 text-right">{formatNaira(p.price)}</td>
-                  <td className={`px-4 py-3 text-right font-bold ${p.stockQuantity === 0 ? 'text-amber-700' : 'text-green-600'}`}>{formatNumber(p.stockQuantity)}</td>
+        <div>
+          <Card className="p-4 mb-4 max-w-xs">
+            <p className="text-xs text-gray-500">Total Stock (bags)</p>
+            <p className="text-2xl font-bold mt-1">{formatNumber(totalStock)}</p>
+          </Card>
+
+          <Card className="overflow-hidden">
+            <p className="px-4 pt-4 text-xs text-gray-500">Stock updates automatically when cement is sold to the "Shop" customer — see Cement Sale.</p>
+            <div className={tableScrollCls}>
+            <table className="w-full text-sm">
+              <thead className={theadCls}>
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium">Brand</th>
+                  <th className="px-4 py-3 text-right font-medium">In Stock (bags)</th>
+                  <th className="px-4 py-3 text-right font-medium">Price per Bag</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        </Card>
+              </thead>
+              <tbody className="divide-y">
+                {products.length === 0 && <EmptyRow colSpan={3} text="No shop products yet — add one under Manage Products" />}
+                {products.map(p => (
+                  <tr key={p._id} className={p.stockQuantity === 0 ? 'bg-amber-50' : ''}>
+                    <td className="px-4 py-3 font-medium">{p.name}</td>
+                    <td className={`px-4 py-3 text-right font-bold ${p.stockQuantity === 0 ? 'text-amber-700' : 'text-green-600'}`}>{formatNumber(p.stockQuantity)}</td>
+                    <td className="px-4 py-3 text-right">{formatNaira(p.price)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* RECORD SALE TAB */}
@@ -414,13 +443,35 @@ export default function ShopPage() {
 
       {/* SALES HISTORY TAB */}
       {tab === 'history' && (
-        <Card className="overflow-hidden">
+        <div>
+          <div className="bg-white border rounded-lg p-4 mb-4">
+            <div className="grid sm:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
+                <input type="date" value={historyStartDate} onChange={e => setHistoryStartDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
+                <input type="date" value={historyEndDate} onChange={e => setHistoryEndDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
+              </div>
+              <div className="flex items-end gap-2">
+                <button onClick={() => loadSales()} disabled={historyLoading} className={`flex-1 ${btnPrimaryCls}`}>
+                  {historyLoading ? 'Loading...' : 'Filter'}
+                </button>
+                {(historyStartDate || historyEndDate) && (
+                  <button onClick={clearHistoryDateFilter} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Clear</button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <Card className="overflow-hidden">
           <div className={`${tableScrollCls} min-w-[900px]`}>
             <table className="w-full text-sm min-w-[900px]">
               <thead className={theadCls}>
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium">Sale #</th>
                   <th className="px-4 py-3 text-left font-medium">Date</th>
+                  <th className="px-4 py-3 text-left font-medium">Sale #</th>
                   <th className="px-4 py-3 text-left font-medium">Customer</th>
                   <th className="px-4 py-3 text-left font-medium">Brand</th>
                   <th className="px-4 py-3 text-right font-medium">Bags Supplied</th>
@@ -434,13 +485,13 @@ export default function ShopPage() {
                 {sales.length === 0 && <EmptyRow colSpan={9} text="No shop sales yet" />}
                 {sales.map(s => (
                   <tr key={s._id}>
+                    <td className="px-4 py-3">{formatDate(s.date)}</td>
                     <td className="px-4 py-3 font-medium">
                       {s.saleNumber}
                       {s.editedAt && (
                         <p className="text-xs text-amber-600 font-normal" title={formatDate(s.editedAt)}>Edited by {s.editedByName}</p>
                       )}
                     </td>
-                    <td className="px-4 py-3">{formatDate(s.date)}</td>
                     <td className="px-4 py-3">
                       <Link href={`/admin/customers/${s.customer}`} className="hover:underline">{s.customerName}</Link>
                     </td>
@@ -472,7 +523,8 @@ export default function ShopPage() {
               </tbody>
             </table>
           </div>
-        </Card>
+          </Card>
+        </div>
       )}
 
       {/* MANAGE PRODUCTS TAB */}
