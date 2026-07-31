@@ -7,6 +7,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime, formatSaleTypeLabel, saleItemUnitLabel } from '@/lib/format';
 import { Modal, Field, FormButtons, inputCls, CurrencyInput } from '@/components/ui';
+import { isWalkInCustomer } from '@/lib/shopStock';
 
 const blankSurchargeForm = { method: 'flat_total', perUnitAmount: '', totalAmount: '', reason: '', confirmPin: '' };
 const blankRefundForm = { amount: '', reason: '', confirmPin: '' };
@@ -102,7 +103,7 @@ export default function SaleDetailPage() {
     setEditDate(new Date(sale.date).toISOString().split('T')[0]);
     setEditNotes(sale.notes || '');
     setEditTruck(sale.truck || '');
-    setEditPaymentMethod(sale.paymentMethod && sale.paymentMethod !== 'balance' ? sale.paymentMethod : 'cash');
+    setEditPaymentMethod(sale.paymentMethod || 'cash');
     setEditPin('');
     setShowEdit(true);
   };
@@ -477,14 +478,37 @@ export default function SaleDetailPage() {
           </div>
 
           {sale.saleType === 'shop' && (
-            <Field label="Payment Method" required>
-              <select value={editPaymentMethod} onChange={e => setEditPaymentMethod(e.target.value)} className={inputCls}>
-                <option value="cash">Cash</option>
-                <option value="transfer">Bank Transfer</option>
-                <option value="pos">POS</option>
-                <option value="cheque">Cheque</option>
-              </select>
-            </Field>
+            isWalkInCustomer({ name: sale.customerName }) ? (
+              <Field label="Payment Method" required>
+                <select value={editPaymentMethod} onChange={e => setEditPaymentMethod(e.target.value)} className={inputCls}>
+                  <option value="cash">Cash</option>
+                  <option value="transfer">Bank Transfer</option>
+                  <option value="pos">POS</option>
+                  <option value="cheque">Cheque</option>
+                </select>
+              </Field>
+            ) : (
+              <Field label="Payment">
+                <div className="flex gap-4 text-sm mb-2">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="editPaymentMode" checked={editPaymentMethod !== 'balance'} onChange={() => setEditPaymentMethod('cash')} />
+                    Pay Now
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="editPaymentMode" checked={editPaymentMethod === 'balance'} onChange={() => setEditPaymentMethod('balance')} />
+                    Move to Account
+                  </label>
+                </div>
+                {editPaymentMethod !== 'balance' && (
+                  <select value={editPaymentMethod} onChange={e => setEditPaymentMethod(e.target.value)} className={inputCls}>
+                    <option value="cash">Cash</option>
+                    <option value="transfer">Bank Transfer</option>
+                    <option value="pos">POS</option>
+                    <option value="cheque">Cheque</option>
+                  </select>
+                )}
+              </Field>
+            )
           )}
 
           <Field label="Notes">

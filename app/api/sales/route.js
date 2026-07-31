@@ -13,7 +13,7 @@ import ShopProduct from '@/models/ShopProduct';
 import CementBrand from '@/models/CementBrand';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
-import { isShopCustomer } from '@/lib/shopStock';
+import { isShopCustomer, isWalkInCustomer } from '@/lib/shopStock';
 import { resolveDate } from '@/lib/dayLock';
 import { hasModule, moduleForSaleType } from '@/lib/modules';
 import { can } from '@/lib/permissions';
@@ -75,7 +75,7 @@ async function _h_POST(request) {
       return NextResponse.json({ error: 'One of the items on this sale belongs to a module not enabled for your organization' }, { status: 403 });
     }
   }
-  if (saleType === 'shop' && !['cash', 'transfer', 'pos', 'cheque'].includes(paymentMethod)) {
+  if (saleType === 'shop' && !['cash', 'transfer', 'pos', 'cheque', 'balance'].includes(paymentMethod)) {
     return NextResponse.json({ error: 'Payment method required for shop sales' }, { status: 400 });
   }
   if (saleType === 'shop') {
@@ -94,6 +94,10 @@ async function _h_POST(request) {
     await mongoSession.withTransaction(async () => {
       const customer = await Customer.findById(customerId).session(mongoSession);
       if (!customer) throw new ApiError('Customer not found', 404);
+
+      if (saleType === 'shop' && paymentMethod === 'balance' && isWalkInCustomer(customer)) {
+        throw new ApiError('Walk-in sales must be paid immediately — select a recorded customer to move this to their account', 400);
+      }
 
       // Generated up front so stonedust items can link their auto-created QuarryPurchase
       // back to this sale before the Sale document itself exists.
@@ -248,13 +252,15 @@ async function _h_POST(request) {
       const transport = Number(transportFee) || 0;
       const grandTotal = subtotal - disc + transport;
 
-      // Shop sales are paid for immediately (cash/transfer/pos/cheque) — no credit extended,
-      // so the customer's running balance is untouched.
+      // Shop sales are normally paid for immediately (cash/transfer/pos/cheque), so the customer's
+      // running balance is untouched — unless a recorded (non-walk-in) customer chose to move it
+      // to their account instead, in which case it behaves just like a cement/aggregate credit sale.
       const isShopSale = saleType === 'shop';
+      const isCreditSale = !isShopSale || paymentMethod === 'balance';
       const balanceBefore = customer.balance;
-      const balanceAfter = isShopSale ? balanceBefore : balanceBefore - grandTotal;
+      const balanceAfter = isCreditSale ? balanceBefore - grandTotal : balanceBefore;
 
-      if (!isShopSale && customer.creditLimit !== null && customer.creditLimit !== undefined) {
+      if (isCreditSale && customer.creditLimit !== null && customer.creditLimit !== undefined) {
         // creditLimit = max they can owe (i.e. how negative balance can go)
         if (balanceAfter < -customer.creditLimit) {
           throw new ApiError(`Credit limit exceeded. Customer can owe up to ₦${customer.creditLimit.toLocaleString()}.`, 400);
@@ -293,7 +299,7 @@ async function _h_POST(request) {
         createdByName: session.user.name,
       }], { session: mongoSession });
 
-      if (!isShopSale) {
+      if (isCreditSale) {
         customer.balance = balanceAfter;
         await customer.save({ session: mongoSession });
       }

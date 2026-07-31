@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, StatusPill, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatNumber, formatDate, formatCustomerLabel } from '@/lib/format';
+import { isWalkInCustomer } from '@/lib/shopStock';
 import toast from 'react-hot-toast';
 
 const blankProductForm = { name: '', unit: 'unit', price: '', stockQuantity: 0, cementBrand: '' };
+const PAYMENT_METHOD_LABELS = { cash: 'Cash', transfer: 'Bank Transfer', pos: 'POS', cheque: 'Cheque', balance: 'On Account' };
 
 export default function ShopPage() {
   const [tab, setTab] = useState('inventory');
@@ -54,6 +56,14 @@ export default function ShopPage() {
   };
 
   useEffect(() => { load(); }, []);
+
+  // A walk-in sale can never be moved to an account — if the customer changes back to
+  // walk-in while "Move to Account" is still selected, fall back to a cash payment.
+  useEffect(() => {
+    if (isWalkInCustomer(selectedCustomer) && paymentMethod === 'balance') {
+      setPaymentMethod('cash');
+    }
+  }, [selectedCustomer]);
 
   useEffect(() => {
     if (customerSearch) {
@@ -285,15 +295,45 @@ export default function ShopPage() {
             )}
           </Card>
 
-          <Card className="p-4">
-            <label className="block text-sm font-medium mb-2">Payment Method</label>
-            <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className={inputCls}>
-              <option value="cash">Cash</option>
-              <option value="transfer">Bank Transfer</option>
-              <option value="pos">POS</option>
-              <option value="cheque">Cheque</option>
-            </select>
-            <p className="text-xs text-gray-500 mt-1">Shop sales are paid for immediately — no balance is added to the customer's account.</p>
+          <Card className="p-4 space-y-3">
+            <label className="block text-sm font-medium">Payment</label>
+            {isWalkInCustomer(selectedCustomer) ? (
+              <>
+                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className={inputCls}>
+                  <option value="cash">Cash</option>
+                  <option value="transfer">Bank Transfer</option>
+                  <option value="pos">POS</option>
+                  <option value="cheque">Cheque</option>
+                </select>
+                <p className="text-xs text-gray-500">Walk-in sales are paid for immediately — there's no account to add a balance to.</p>
+              </>
+            ) : (
+              <>
+                <div className="flex gap-4 text-sm">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="shopPaymentMode" checked={paymentMethod !== 'balance'} onChange={() => setPaymentMethod('cash')} />
+                    Pay Now
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="shopPaymentMode" checked={paymentMethod === 'balance'} onChange={() => setPaymentMethod('balance')} />
+                    Move to Account
+                  </label>
+                </div>
+                {paymentMethod !== 'balance' ? (
+                  <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className={inputCls}>
+                    <option value="cash">Cash</option>
+                    <option value="transfer">Bank Transfer</option>
+                    <option value="pos">POS</option>
+                    <option value="cheque">Cheque</option>
+                  </select>
+                ) : (
+                  <p className="text-xs text-gray-500">
+                    This sale will be added to {selectedCustomer && formatCustomerLabel(selectedCustomer)}'s account balance
+                    {selectedCustomer && ` (current balance: ${formatNaira(selectedCustomer.balance)})`}.
+                  </p>
+                )}
+              </>
+            )}
           </Card>
 
           <Card className="p-4 space-y-3">
@@ -382,12 +422,13 @@ export default function ShopPage() {
                   <th className="px-4 py-3 text-left font-medium">Brand</th>
                   <th className="px-4 py-3 text-right font-medium">Bags Supplied</th>
                   <th className="px-4 py-3 text-right font-medium">Total</th>
+                  <th className="px-4 py-3 text-left font-medium">Payment</th>
                   <th className="px-4 py-3 text-left font-medium">Status</th>
                   <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {sales.length === 0 && <EmptyRow colSpan={8} text="No shop sales yet" />}
+                {sales.length === 0 && <EmptyRow colSpan={9} text="No shop sales yet" />}
                 {sales.map(s => (
                   <tr key={s._id}>
                     <td className="px-4 py-3 font-medium">
@@ -411,6 +452,11 @@ export default function ShopPage() {
                       ))}
                     </td>
                     <td className="px-4 py-3 text-right font-medium">{formatNaira(s.grandTotal)}</td>
+                    <td className="px-4 py-3 text-xs">
+                      {s.paymentMethod === 'balance'
+                        ? <span className="text-amber-700 font-medium">On Account</span>
+                        : (PAYMENT_METHOD_LABELS[s.paymentMethod] || s.paymentMethod)}
+                    </td>
                     <td className="px-4 py-3"><StatusPill status={s.status} color={s.status === 'active' ? 'green' : 'red'} /></td>
                     <td className="px-4 py-3 text-right">
                       <Link href={`/admin/sales/${s._id}/invoice`} className={`${tableActionCls} mr-3`}>Invoice</Link>

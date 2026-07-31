@@ -12,7 +12,7 @@ import QuarryPurchase from '@/models/QuarryPurchase';
 import ShopProduct from '@/models/ShopProduct';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
-import { isShopCustomer } from '@/lib/shopStock';
+import { isShopCustomer, isWalkInCustomer } from '@/lib/shopStock';
 import { resolveDate } from '@/lib/dayLock';
 import { hasModule, moduleForSaleType } from '@/lib/modules';
 import { verifyOwnPin } from '@/lib/verifyPassword';
@@ -53,7 +53,8 @@ async function _h_DELETE(request, { params }) {
 
       // Reverse the sale's effects on stock/balance, same as a cancellation would.
       const customer = await Customer.findById(sale.customer).session(mongoSession);
-      if (sale.saleType !== 'shop' && customer) {
+      const wasCreditSale = sale.saleType !== 'shop' || sale.paymentMethod === 'balance';
+      if (wasCreditSale && customer) {
         customer.balance += sale.grandTotal;
         // Any surcharge/refund layered on top of this sale also moved balance independently —
         // deleting the sale (and its embedded adjustments with it) must undo those too, or the
@@ -147,12 +148,22 @@ async function _h_PUT(request, { params }) {
       }
 
       const isShopSale = sale.saleType === 'shop';
-      if (isShopSale && !['cash', 'transfer', 'pos', 'cheque'].includes(paymentMethod)) {
+      if (isShopSale && !['cash', 'transfer', 'pos', 'cheque', 'balance'].includes(paymentMethod)) {
         throw new ApiError('Payment method required for shop sales', 400);
       }
 
       const customer = await Customer.findById(sale.customer).session(mongoSession);
       if (!customer) throw new ApiError('Customer not found', 404);
+
+      if (isShopSale && paymentMethod === 'balance' && isWalkInCustomer(customer)) {
+        throw new ApiError('Walk-in sales must be paid immediately — select a recorded customer to move this to their account', 400);
+      }
+
+      // Whether the sale's *current* (pre-edit) state moved balance — used below to undo it.
+      const wasCreditSale = !isShopSale || sale.paymentMethod === 'balance';
+      // Whether the sale's *edited* state will move balance — a shop sale can toggle between
+      // cash and credit on edit, same as choosing it fresh at creation time.
+      const willBeCreditSale = !isShopSale || paymentMethod === 'balance';
 
       // --- Reverse the sale's original effects on stock/balance ---
       for (const oldItem of sale.items) {
@@ -186,7 +197,7 @@ async function _h_PUT(request, { params }) {
         }
       }
 
-      if (!isShopSale) {
+      if (wasCreditSale) {
         customer.balance += sale.grandTotal;
       }
 
@@ -323,9 +334,9 @@ async function _h_PUT(request, { params }) {
       const grandTotal = subtotal - disc + transport;
 
       const balanceBefore = customer.balance;
-      const balanceAfter = isShopSale ? balanceBefore : balanceBefore - grandTotal;
+      const balanceAfter = willBeCreditSale ? balanceBefore - grandTotal : balanceBefore;
 
-      if (!isShopSale && customer.creditLimit !== null && customer.creditLimit !== undefined) {
+      if (willBeCreditSale && customer.creditLimit !== null && customer.creditLimit !== undefined) {
         if (balanceAfter < -customer.creditLimit) {
           throw new ApiError(`Credit limit exceeded. Customer can owe up to ₦${customer.creditLimit.toLocaleString()}.`, 400);
         }
@@ -355,7 +366,7 @@ async function _h_PUT(request, { params }) {
       sale.editedByName = session.user.name;
       await sale.save({ session: mongoSession });
 
-      if (!isShopSale) {
+      if (willBeCreditSale) {
         customer.balance = balanceAfter;
       }
       await customer.save({ session: mongoSession });
