@@ -6,7 +6,8 @@ import Organization from '@/models/Organization';
 import User from '@/models/User';
 import Customer from '@/models/Customer';
 import Sale from '@/models/Sale';
-import { runUnscoped } from '@/lib/tenantScope';
+import { runUnscoped, runWithOrg } from '@/lib/tenantScope';
+import { ensureShopSpecialCustomers } from '@/lib/shopProvisioning';
 import { ApiError } from '@/lib/apiError';
 
 const TRIAL_DAYS = 14;
@@ -87,6 +88,11 @@ export async function POST(request) {
         organization: org._id, name: adminName, username: adminUsername, password: adminPassword,
         role: 'admin', isActive: true,
       });
+
+      if (enabledModules.includes('shop')) {
+        await runWithOrg(org._id, () => ensureShopSpecialCustomers(admin._id));
+      }
+
       return { orgId: org._id, adminId: admin._id, slug: org.slug };
     });
 

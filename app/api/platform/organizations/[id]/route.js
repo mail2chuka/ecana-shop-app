@@ -7,6 +7,7 @@ import User from '@/models/User';
 import Customer from '@/models/Customer';
 import Sale from '@/models/Sale';
 import { runUnscoped, runWithOrg } from '@/lib/tenantScope';
+import { ensureShopSpecialCustomers } from '@/lib/shopProvisioning';
 import { logAudit } from '@/lib/audit';
 import { requireObjectId } from '@/lib/validate';
 import { ApiError } from '@/lib/apiError';
@@ -95,6 +96,12 @@ export async function PUT(request, { params }) {
       const before = await Organization.findById(id).lean();
       if (!before) throw new ApiError('Not found', 404);
       const updated = await Organization.findByIdAndUpdate(id, update, { new: true, runValidators: true });
+
+      const shopNewlyEnabled = update.enabledModules?.includes('shop') && !before.enabledModules?.includes('shop');
+      if (shopNewlyEnabled) {
+        await ensureShopSpecialCustomers(session.user.id);
+      }
+
       await logAudit({
         userId: session.user.id, userName: session.user.name, action: 'updated', entity: 'Organization', entityId: id,
         before: { subscriptionStatus: before.subscriptionStatus, isActive: before.isActive, freeForever: before.freeForever, enabledModules: before.enabledModules, name: before.name, phone: before.phone, email: before.email, businessTypes: before.businessTypes },
