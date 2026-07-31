@@ -20,6 +20,8 @@ async function _h_GET(request) {
     const status = searchParams.get('status');
     const brand = searchParams.get('brand');
     const availableForSale = searchParams.get('availableForSale');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
 
     await autoArriveDueAtcs();
 
@@ -30,6 +32,15 @@ async function _h_GET(request) {
       // 'assigned' means a truck has been sent to collect but hasn't loaded yet — not sellable until 'loaded'.
       query.status = { $in: ['loaded', 'arrived'] };
       query.bagsRemaining = { $gt: 0 };
+    }
+    if (startDate || endDate) {
+      query.atcDate = {};
+      if (startDate) query.atcDate.$gte = new Date(startDate);
+      if (endDate) {
+        const e = new Date(endDate);
+        e.setHours(23, 59, 59, 999);
+        query.atcDate.$lte = e;
+      }
     }
 
     const atcs = await ATC.find(query).sort({ atcDate: -1 }).limit(200);

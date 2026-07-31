@@ -60,6 +60,8 @@ export default function ATCsPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [brandFilter, setBrandFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState(blankForm);
@@ -71,11 +73,16 @@ export default function ATCsPage() {
   const [loadingChoice, setLoadingChoice] = useState('just_loaded');
   const [nowMs, setNowMs] = useState(Date.now());
 
-  const load = async (silent = false) => {
+  const load = async (silent = false, overrides = {}) => {
     if (!silent) setLoading(true);
-    const url = brandFilter ? `/api/atcs?brand=${brandFilter}` : '/api/atcs';
+    const sd = overrides.startDate !== undefined ? overrides.startDate : startDate;
+    const ed = overrides.endDate !== undefined ? overrides.endDate : endDate;
+    const params = new URLSearchParams();
+    if (brandFilter) params.set('brand', brandFilter);
+    if (sd) params.set('startDate', sd);
+    if (ed) params.set('endDate', ed);
     const [a, b, t] = await Promise.all([
-      fetch(url).then(r => r.json()),
+      fetch(`/api/atcs?${params.toString()}`).then(r => r.json()),
       fetch('/api/cement-brands').then(r => r.json()),
       fetch('/api/trucks').then(r => r.json()),
     ]);
@@ -93,6 +100,12 @@ export default function ATCsPage() {
     }, 60000);
     return () => clearInterval(timer);
   }, [brandFilter]);
+
+  const clearDateFilter = () => {
+    setStartDate('');
+    setEndDate('');
+    load(false, { startDate: '', endDate: '' });
+  };
 
   const atcs = (statusFilter ? allAtcs.filter(a => a.status === statusFilter) : allAtcs)
     .slice()
@@ -179,6 +192,27 @@ export default function ATCsPage() {
           <option value="">All Brands</option>
           {brands.map(b => <option key={b._id} value={b._id}>{b.name}{b.grade ? ` (${b.grade})` : ''}</option>)}
         </select>
+      </div>
+
+      <div className="bg-white border rounded-lg p-4 mb-4">
+        <div className="grid sm:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
+            <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
+            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
+          </div>
+          <div className="flex items-end gap-2">
+            <button onClick={() => load()} disabled={loading} className={`flex-1 ${btnPrimaryCls}`}>
+              {loading ? 'Loading...' : 'Filter'}
+            </button>
+            {(startDate || endDate) && (
+              <button onClick={clearDateFilter} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Clear</button>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="mb-4 flex gap-2 flex-wrap">
