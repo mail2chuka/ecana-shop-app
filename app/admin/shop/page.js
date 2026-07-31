@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, StatusPill, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatNumber, formatDate, formatCustomerLabel } from '@/lib/format';
-import { isWalkInCustomer } from '@/lib/shopStock';
+import { isWalkInCustomer, isShopCustomer } from '@/lib/shopStock';
 import toast from 'react-hot-toast';
 
 const blankProductForm = { name: '', unit: 'unit', price: '', stockQuantity: 0, cementBrand: '' };
@@ -48,8 +48,11 @@ export default function ShopPage() {
     ]);
     if (p.success) setProducts(p.data);
     if (c.success) {
-      setCustomers(c.data);
-      setSelectedCustomer(prev => prev || c.data.find(x => x.name.toLowerCase() === 'walk-in customer') || null);
+      // The "Shop" customer represents the retail counter itself (used only for cement sales
+      // that stock it) — it can't be a buyer here, so it never appears in this picker at all.
+      const eligibleCustomers = c.data.filter(cust => !isShopCustomer(cust));
+      setCustomers(eligibleCustomers);
+      setSelectedCustomer(prev => prev || eligibleCustomers.find(x => x.name.toLowerCase() === 'walk-in customer') || null);
     }
     if (s.success) setSales(s.data);
     setLoading(false);

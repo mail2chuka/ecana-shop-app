@@ -98,6 +98,9 @@ async function _h_POST(request) {
       if (saleType === 'shop' && paymentMethod === 'balance' && isWalkInCustomer(customer)) {
         throw new ApiError('Walk-in sales must be paid immediately — select a recorded customer to move this to their account', 400);
       }
+      if (saleType === 'shop' && isShopCustomer(customer)) {
+        throw new ApiError('The shop cannot sell to itself — select a different customer', 400);
+      }
 
       // Generated up front so stonedust items can link their auto-created QuarryPurchase
       // back to this sale before the Sale document itself exists.
