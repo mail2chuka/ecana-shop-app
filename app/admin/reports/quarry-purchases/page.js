@@ -35,9 +35,9 @@ export default function QuarryPurchasesReportPage() {
   const totalCost = rows.reduce((s, r) => s + r.totalCost, 0);
 
   return (
-    <div>
+    <div className="report-print">
       <h1 className="text-xl font-bold mb-6">Quarry Purchases</h1>
-      <div className="bg-white border rounded-lg p-4 mb-6">
+      <div className="bg-white border rounded-lg p-4 mb-6 no-print">
         <div className="grid sm:grid-cols-4 gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">From</label>

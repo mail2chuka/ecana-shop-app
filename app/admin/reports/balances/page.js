@@ -31,7 +31,7 @@ export default function BalancesReportPage() {
   useEffect(() => { fetchData(); }, [filter, monthFrom, monthTo]);
 
   return (
-    <div>
+    <div className="report-print">
       <h1 className="text-xl font-bold mb-6">Customer Balances</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -57,7 +57,7 @@ export default function BalancesReportPage() {
             <h2 className="font-semibold text-sm">Monthly Summary</h2>
             <p className="text-xs text-gray-500 mt-0.5">New debt incurred vs. payments received each month — not a running balance.</p>
           </div>
-          <div className="flex items-end gap-2 ml-auto">
+          <div className="flex items-end gap-2 ml-auto no-print">
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
               <input type="month" value={monthFrom} onChange={e => setMonthFrom(e.target.value)} className="px-2 py-1 border rounded text-sm" />
@@ -104,7 +104,7 @@ export default function BalancesReportPage() {
       </div>
 
       <div className="bg-white border rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b flex gap-2">
+        <div className="px-4 py-3 border-b flex gap-2 no-print">
           {['all', 'negative', 'positive'].map(f => (
             <button key={f} onClick={() => setFilter(f)}
               className={`px-3 py-1 rounded text-sm ${filter === f ? 'bg-green-800 text-neutral-100' : 'border hover:bg-gray-50'}`}>

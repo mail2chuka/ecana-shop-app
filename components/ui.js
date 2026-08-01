@@ -26,7 +26,9 @@ export const tableDangerActionCls = 'text-sm font-medium text-amber-700 hover:te
 // Table head: deep green, sticky so it acts as a frozen pane while the body scrolls.
 export const theadCls = 'bg-green-800 text-neutral-100 sticky top-0 z-10';
 // Wrap the <table> in a div with this class to make the sticky thead actually freeze on scroll.
-export const tableScrollCls = 'overflow-auto max-h-[70vh]';
+// The 70vh cap is a screen-only convenience — print doesn't scroll, so anything past it would
+// just be silently clipped rather than flowing onto further pages. Print always sees everything.
+export const tableScrollCls = 'overflow-auto max-h-[70vh] print:overflow-visible print:max-h-none';
 
 export function Loader() {
   return (

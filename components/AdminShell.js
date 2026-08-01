@@ -214,13 +214,13 @@ export default function AdminShell({ children }) {
     <div className="min-h-screen flex bg-gray-100">
       {open && (
         <div
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden no-print"
           onClick={() => setOpen(false)}
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-emerald-950 transform transition-transform lg:translate-x-0 lg:static flex flex-col ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-emerald-950 transform transition-transform lg:translate-x-0 lg:static flex flex-col no-print ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -317,7 +317,7 @@ export default function AdminShell({ children }) {
             )}
           </div>
         </div>
-        <main className="admin-main flex-1 p-4 lg:p-6 overflow-auto">{children}</main>
+        <main className="admin-main flex-1 p-4 lg:p-6 overflow-auto print:overflow-visible print:p-0">{children}</main>
       </div>
     </div>
   );

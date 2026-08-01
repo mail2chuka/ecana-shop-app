@@ -29,6 +29,20 @@ input[type="number"]:focus {
   .no-print { display: none !important; }
 }
 
+/* Reports: tighten cell padding and text size on print so wide tables fit the printable width
+   instead of running past the right edge. Scoped to .report-print so it never touches receipts
+   or any other printed page in the app. */
+@media print {
+  .report-print table {
+    font-size: 9pt;
+  }
+  .report-print th,
+  .report-print td {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+}
+
 /* Receipt/invoice pages (sale invoice, payment receipt, surcharge/refund receipt): a fixed A4-width
    "desktop" layout, shrunk to fit narrow screens via zoom rather than reflowing into a separate mobile
    design — zoom scales the whole rendered box (unlike transform:scale), so it shrinks in place with no
