@@ -27,47 +27,6 @@ input[type="number"]:focus {
 @media print {
   body { background: white; }
   .no-print { display: none !important; }
-
-  @page {
-    size: A4;
-    margin: 10mm;
-  }
-
-  html, body {
-    height: auto;
-    overflow: visible;
-  }
-
-  .statement-print-shell {
-    width: 100%;
-    max-width: 100%;
-    color: #111827;
-  }
-
-  .statement-print-shell .overflow-auto {
-    overflow: visible !important;
-    max-height: none !important;
-  }
-
-  .statement-print-shell .statement-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    font-size: 9.5pt;
-  }
-
-  .statement-print-shell .statement-table th,
-  .statement-print-shell .statement-table td {
-    padding: 2mm 1.5mm;
-    vertical-align: top;
-    white-space: normal;
-    word-break: break-word;
-  }
-
-  .statement-print-shell .statement-table th {
-    background: #f3f4f6;
-    color: #111827;
-  }
 }
 
 /* Receipt/invoice pages (sale invoice, payment receipt, surcharge/refund receipt): a fixed A4-width
