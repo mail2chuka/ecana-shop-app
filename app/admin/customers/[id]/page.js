@@ -208,7 +208,7 @@ export default function CustomerDetailPage() {
   const adjustableSales = ledger.filter(e => e.type === 'sale' && e.saleType !== 'shop');
 
   return (
-    <div>
+    <div className="statement-print-shell">
       <div className="mb-6 flex justify-between items-start no-print">
         <div>
           <h1 className="text-xl font-bold">
@@ -235,7 +235,7 @@ export default function CustomerDetailPage() {
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4 mb-6">
+      <div className="grid sm:grid-cols-2 gap-4 mb-6 print:grid-cols-2 print:gap-3 print:mb-4">
         <div className={`rounded-lg p-4 ${customer.balance < 0 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
           <p className="text-sm text-gray-600">Current Balance</p>
           <p className={`text-3xl font-bold ${customer.balance < 0 ? 'text-red-600' : 'text-green-700'}`}>{formatNaira(customer.balance)}</p>
@@ -248,7 +248,7 @@ export default function CustomerDetailPage() {
         </div>
       </div>
 
-      <div className="bg-white border rounded-lg p-4 mb-6">
+      <div className="bg-white border rounded-lg p-4 mb-6 print:border-0 print:rounded-none print:p-0 print:mb-4">
         <h3 className="font-semibold text-sm mb-3">Customer Details</h3>
         <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
           <p><span className="text-gray-500">Customer ID:</span> <span className="font-medium">{customer.customerId || '-'}</span></p>
@@ -258,13 +258,13 @@ export default function CustomerDetailPage() {
         </div>
       </div>
 
-      <div className="bg-white border rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b flex justify-between">
+      <div className="bg-white border rounded-lg overflow-hidden print:border-0 print:rounded-none print:overflow-visible">
+        <div className="px-4 py-3 border-b flex justify-between print:px-0 print:py-2 print:border-gray-300">
           <h3 className="font-semibold text-sm">Account Statement</h3>
           <span className="text-xs text-gray-500">{ledger.length} entries</span>
         </div>
         <div className={tableScrollCls}>
-          <table className="w-full text-sm">
+          <table className="w-full text-sm statement-table print:text-[9.5pt]">
             <thead className={theadCls}>
               <tr>
                 <th className="px-4 py-2 text-left">Date</th>
