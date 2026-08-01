@@ -177,6 +177,12 @@ export default function SalesReportPage() {
           </div>
         </>
       )}
+
+      <style jsx global>{`
+        @media print {
+          @page { size: A4 landscape; }
+        }
+      `}</style>
     </div>
   );
 }

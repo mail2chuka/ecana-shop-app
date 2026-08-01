@@ -110,6 +110,12 @@ export default function QuarryPurchasesReportPage() {
         </div>
         {!loading && rows.length === 0 && <p className="text-center py-8 text-gray-500">No purchases in this period</p>}
       </div>
+
+      <style jsx global>{`
+        @media print {
+          @page { size: A4 landscape; }
+        }
+      `}</style>
     </div>
   );
 }
