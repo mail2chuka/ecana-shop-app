@@ -306,6 +306,12 @@ export default function CustomerDetailPage() {
         </div>
       </div>
 
+      <style jsx global>{`
+        @media print {
+          @page { size: A4 landscape; }
+        }
+      `}</style>
+
       {/* Record Payment Modal */}
       <Modal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} title={`Record Payment — ${formatCustomerLabel(customer)}`}>
         <form onSubmit={handlePaymentSubmit} className="space-y-4">
