@@ -10,6 +10,7 @@ import Truck from '@/models/Truck';
 import StoneDustProduct from '@/models/StoneDustProduct';
 import QuarryPurchase from '@/models/QuarryPurchase';
 import ShopProduct from '@/models/ShopProduct';
+import CementBrand from '@/models/CementBrand';
 import { logAudit } from '@/lib/audit';
 import { generateTransactionNumber } from '@/lib/transaction';
 import { isShopCustomer, isWalkInCustomer } from '@/lib/shopStock';
@@ -313,10 +314,19 @@ async function _h_PUT(request, { params }) {
           product.stockQuantity -= billQty;
           await product.save({ session: mongoSession });
 
+          let cementBrandName;
+          if (product.cementBrand) {
+            const brand = await CementBrand.findById(product.cementBrand).session(mongoSession);
+            cementBrandName = brand?.name;
+          }
+
           processedItems.push({
             itemType: 'shop',
             shopProduct: product._id,
             shopProductName: product.name,
+            cementBrand: product.cementBrand,
+            cementBrandName,
+            unit: product.unit,
             billQuantity: billQty,
             actualQuantity: billQty,
             unitPrice,
