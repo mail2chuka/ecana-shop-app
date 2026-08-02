@@ -86,7 +86,6 @@ const menu = [
     allow: ['admin'],
     items: [
       { label: 'Organization Settings', href: '/admin/organization' },
-      { label: 'Receipt Settings', href: '/admin/receipt-settings' },
       { label: 'Subscription', href: '/admin/subscription' },
       { label: 'Users', href: '/admin/users' },
       { label: 'Audit Log', href: '/admin/audit-log' },

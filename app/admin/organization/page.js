@@ -24,6 +24,9 @@ export default function OrganizationSettingsPage() {
         logoUrlSmall: d.data.logoUrlSmall || '',
         address: d.data.address || '',
         invoiceFooter: d.data.invoiceFooter || '',
+        bankName: d.data.bankName || '',
+        accountNumber: d.data.accountNumber || '',
+        accountName: d.data.accountName || '',
       });
     } else toast.error(d.error || 'Failed to load');
     setLoading(false);
@@ -77,7 +80,7 @@ export default function OrganizationSettingsPage() {
 
   return (
     <div>
-      <PageHeader title="Organization Settings" subtitle="Your business name and branding" />
+      <PageHeader title="Organization Settings" subtitle="Your business name, branding, and receipt details" />
 
       <Card className="p-5 max-w-xl">
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -116,6 +119,21 @@ export default function OrganizationSettingsPage() {
               className={inputCls} rows={3} placeholder="e.g. Thank you for your business."
             />
           </Field>
+
+          <div className="pt-2 border-t">
+            <h3 className="font-semibold text-sm mt-4 mb-1">Receipt Bank Details</h3>
+            <p className="text-xs text-gray-500 mb-4">Shown at the bottom of every receipt. Leave blank to omit the bank details block entirely.</p>
+          </div>
+          <Field label="Bank name">
+            <input type="text" value={form.bankName} onChange={(e) => setForm({ ...form, bankName: e.target.value })} className={inputCls} placeholder="e.g. GTBank" />
+          </Field>
+          <Field label="Account number">
+            <input type="text" value={form.accountNumber} onChange={(e) => setForm({ ...form, accountNumber: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Account name">
+            <input type="text" value={form.accountName} onChange={(e) => setForm({ ...form, accountName: e.target.value })} className={inputCls} placeholder="Name on the account" />
+          </Field>
+
           <div className="pt-2">
             <button type="submit" disabled={saving} className={btnPrimaryCls}>{saving ? 'Saving...' : 'Save Changes'}</button>
           </div>
