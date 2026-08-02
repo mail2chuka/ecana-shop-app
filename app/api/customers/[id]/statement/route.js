@@ -11,7 +11,10 @@ async function _h_GET(request, { params }) {
     if (session.user.role === 'customer') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const { id } = await params;
-    const result = await buildCustomerStatement(id);
+    const { searchParams } = new URL(request.url);
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const result = await buildCustomerStatement(id, { startDate, endDate });
     if (!result) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ success: true, data: result });
   } catch (e) {
