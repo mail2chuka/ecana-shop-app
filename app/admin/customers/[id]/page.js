@@ -264,7 +264,18 @@ export default function CustomerDetailPage() {
           <span className="text-xs text-gray-500">{ledger.length} entries</span>
         </div>
         <div className={tableScrollCls}>
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
+            <colgroup>
+              <col style={{ width: '9%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '27%' }} />
+              <col style={{ width: '6%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '10%' }} />
+            </colgroup>
             <thead className={theadCls}>
               <tr>
                 <th className="px-2 py-2 text-left">Date</th>
@@ -281,21 +292,21 @@ export default function CustomerDetailPage() {
             <tbody className="divide-y">
               {ledger.map((entry, i) => (
                 <tr key={i}>
-                  <td className="px-2 py-2 whitespace-nowrap">{formatDate(entry.date)}</td>
-                  <td className="px-2 py-2 whitespace-nowrap w-px">
+                  <td className="px-2 py-2">{formatDate(entry.date)}</td>
+                  <td className="px-2 py-2 truncate">
                     {entry.type === 'sale'
                       ? <Link href={`/admin/sales/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
                       : entry.type === 'surcharge' || entry.type === 'refund'
                       ? <Link href={`/admin/sales/${entry.id}/adjustments/${entry.adjId}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
                       : <Link href={`/admin/payments/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>}
                   </td>
-                  <td className="px-2 py-2 text-gray-600 max-w-[160px] break-words">{entry.description}</td>
+                  <td className="px-2 py-2 text-gray-600 break-words">{entry.description}</td>
                   <td className="px-2 py-2 text-right">{entry.qty ?? '-'}</td>
-                  <td className="px-2 py-2 text-right">{entry.unitPrice ? formatNaira(entry.unitPrice) : '-'}</td>
-                  <td className="px-2 py-2 text-right">{entry.transport ? formatNaira(entry.transport) : '-'}</td>
-                  <td className="px-2 py-2 text-right text-red-600">{entry.debit > 0 ? formatNaira(entry.debit) : '-'}</td>
-                  <td className="px-2 py-2 text-right text-green-600">{entry.credit > 0 ? formatNaira(entry.credit) : '-'}</td>
-                  <td className={`px-2 py-2 text-right font-medium ${(entry.balance ?? 0) < 0 ? 'text-red-600' : ''}`}>
+                  <td className="px-2 py-2 text-right break-words">{entry.unitPrice ? formatNaira(entry.unitPrice) : '-'}</td>
+                  <td className="px-2 py-2 text-right break-words">{entry.transport ? formatNaira(entry.transport) : '-'}</td>
+                  <td className="px-2 py-2 text-right text-red-600 break-words">{entry.debit > 0 ? formatNaira(entry.debit) : '-'}</td>
+                  <td className="px-2 py-2 text-right text-green-600 break-words">{entry.credit > 0 ? formatNaira(entry.credit) : '-'}</td>
+                  <td className={`px-2 py-2 text-right font-medium break-words ${(entry.balance ?? 0) < 0 ? 'text-red-600' : ''}`}>
                     {entry.balance !== undefined ? formatNaira(entry.balance) : '-'}
                   </td>
                 </tr>
