@@ -289,7 +289,7 @@ export default function CustomerDetailPage() {
                       ? <Link href={`/admin/sales/${entry.id}/adjustments/${entry.adjId}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
                       : <Link href={`/admin/payments/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>}
                   </td>
-                  <td className="px-2 py-2 text-gray-600 max-w-[160px] truncate">{entry.description}</td>
+                  <td className="px-2 py-2 text-gray-600 max-w-[160px] break-words">{entry.description}</td>
                   <td className="px-2 py-2 text-right">{entry.qty ?? '-'}</td>
                   <td className="px-2 py-2 text-right">{entry.unitPrice ? formatNaira(entry.unitPrice) : '-'}</td>
                   <td className="px-2 py-2 text-right">{entry.transport ? formatNaira(entry.transport) : '-'}</td>
