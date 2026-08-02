@@ -122,7 +122,6 @@ export default function BalancesReportPage() {
                 <th className="px-4 py-2 text-left font-medium">Customer</th>
                 <th className="px-4 py-2 text-left font-medium">Phone</th>
                 <th className="px-4 py-2 text-right font-medium">Balance</th>
-                <th className="px-4 py-2 text-right font-medium">Credit Limit</th>
                 <th className="px-4 py-2"></th>
               </tr>
             </thead>
@@ -136,9 +135,6 @@ export default function BalancesReportPage() {
                   <td className="px-4 py-2 text-gray-500">{c.phone}</td>
                   <td className={`px-4 py-2 text-right font-medium ${c.balance < 0 ? 'text-red-600' : 'text-green-600'}`}>
                     {formatNaira(c.balance)}
-                  </td>
-                  <td className="px-4 py-2 text-right text-gray-500">
-                    {c.creditLimit ? formatNaira(c.creditLimit) : 'No limit'}
                   </td>
                   <td className="px-4 py-2 text-right">
                     <Link href={`/admin/customers/${c._id}`} className={`${tableActionCls} text-xs hover:underline`}>Statement</Link>
