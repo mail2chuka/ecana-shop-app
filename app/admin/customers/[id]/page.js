@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { formatNaira, formatDate, formatCustomerLabel } from '@/lib/format';
+import { formatNaira, formatDate, formatDateTime, formatCustomerLabel } from '@/lib/format';
 import { Modal, Field, FormButtons, inputCls, CurrencyInput, btnPrimaryCls, btnDangerCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
+import { shareReceiptAsPdf, shareReceiptAsJpg } from '@/lib/receiptCapture';
 import toast from 'react-hot-toast';
 
 const blankPaymentForm = {
@@ -69,6 +70,35 @@ export default function CustomerDetailPage() {
     setStatementStartDate('');
     setStatementEndDate('');
     load(true, { startDate: '', endDate: '' });
+  };
+
+  const [sharing, setSharing] = useState(null); // null | 'pdf' | 'jpg'
+
+  const shareStatement = async (format) => {
+    setSharing(format);
+    // The ledger table scrolls on screen (tableScrollCls) — neutralize that for the capture so a
+    // long statement isn't cut off at the same 70vh cap that's fine for on-screen browsing.
+    const scrollEl = document.getElementById('statement-table-scroll');
+    const prevOverflow = scrollEl?.style.overflow;
+    const prevMaxHeight = scrollEl?.style.maxHeight;
+    if (scrollEl) { scrollEl.style.overflow = 'visible'; scrollEl.style.maxHeight = 'none'; }
+    try {
+      const rangeSuffix = statementStartDate || statementEndDate
+        ? `-${statementStartDate || 'start'}_to_${statementEndDate || 'now'}`
+        : '';
+      const base = `Statement-${customer.name.replace(/\s+/g, '_')}${rangeSuffix}`;
+      const title = `Account Statement — ${formatCustomerLabel(customer)}`;
+      if (format === 'pdf') {
+        await shareReceiptAsPdf('statement-content', `${base}.pdf`, title, { orientation: 'landscape' });
+      } else {
+        await shareReceiptAsJpg('statement-content', `${base}.jpg`, title, { orientation: 'landscape' });
+      }
+    } catch (err) {
+      toast.error(err.message || 'Could not generate file');
+    } finally {
+      if (scrollEl) { scrollEl.style.overflow = prevOverflow || ''; scrollEl.style.maxHeight = prevMaxHeight || ''; }
+      setSharing(null);
+    }
   };
 
   useEffect(() => { load(); }, [id]);
@@ -249,29 +279,12 @@ export default function CustomerDetailPage() {
             </>
           )}
           <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Statement</button>
-        </div>
-      </div>
-
-      <div className="grid sm:grid-cols-2 gap-4 mb-6">
-        <div className={`rounded-lg p-4 ${customer.balance < 0 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
-          <p className="text-sm text-gray-600">Current Balance</p>
-          <p className={`text-3xl font-bold ${customer.balance < 0 ? 'text-red-600' : 'text-green-700'}`}>{formatNaira(customer.balance)}</p>
-          {customer.balance < 0 && <p className="text-sm text-red-600 mt-1">Customer owes this amount</p>}
-        </div>
-        <div className="rounded-lg p-4 bg-gray-50 border border-gray-200">
-          <p className="text-sm text-gray-600">Credit Limit</p>
-          <p className="text-3xl font-bold text-gray-800">{customer.creditLimit ? formatNaira(customer.creditLimit) : 'None'}</p>
-          <p className="text-xs text-gray-500 mt-1">Maximum amount this customer can owe</p>
-        </div>
-      </div>
-
-      <div className="bg-white border rounded-lg p-4 mb-6">
-        <h3 className="font-semibold text-sm mb-3">Customer Details</h3>
-        <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-          <p><span className="text-gray-500">Customer ID:</span> <span className="font-medium">{customer.customerId || '-'}</span></p>
-          <p><span className="text-gray-500">Phone:</span> <span className="font-medium">{customer.phone}</span></p>
-          <p><span className="text-gray-500">Business Name:</span> <span className="font-medium">{customer.businessName || '-'}</span></p>
-          <p><span className="text-gray-500">Address:</span> <span className="font-medium">{customer.address || '-'}</span></p>
+          <button onClick={() => shareStatement('pdf')} disabled={!!sharing} className="px-4 py-2 border rounded text-sm hover:bg-gray-50 disabled:opacity-50">
+            {sharing === 'pdf' ? 'Preparing...' : 'Share PDF'}
+          </button>
+          <button onClick={() => shareStatement('jpg')} disabled={!!sharing} className="px-4 py-2 border rounded text-sm hover:bg-gray-50 disabled:opacity-50">
+            {sharing === 'jpg' ? 'Preparing...' : 'Share JPG'}
+          </button>
         </div>
       </div>
 
@@ -296,12 +309,47 @@ export default function CustomerDetailPage() {
         </div>
       </div>
 
-      <div className="bg-white border rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b flex justify-between">
-          <h3 className="font-semibold text-sm">Account Statement</h3>
-          <span className="text-xs text-gray-500">{ledger.length} entries</span>
+      <div id="statement-content">
+        <div className="mb-4 hidden print:block">
+          <h2 className="text-lg font-bold">
+            {formatCustomerLabel(customer)}
+            {!customer.isActive && <span className="ml-2 text-xs font-medium text-amber-700">(Archived)</span>}
+          </h2>
+          <p className="text-xs text-gray-500">
+            Account Statement{(statementStartDate || statementEndDate) && ` — ${statementStartDate ? formatDate(statementStartDate) : 'start'} to ${statementEndDate ? formatDate(statementEndDate) : 'now'}`}
+            {' · '}Generated {formatDateTime(new Date())}
+          </p>
         </div>
-        <div className={tableScrollCls}>
+
+        <div className="grid sm:grid-cols-2 gap-4 mb-6">
+          <div className={`rounded-lg p-4 ${customer.balance < 0 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+            <p className="text-sm text-gray-600">Current Balance</p>
+            <p className={`text-3xl font-bold ${customer.balance < 0 ? 'text-red-600' : 'text-green-700'}`}>{formatNaira(customer.balance)}</p>
+            {customer.balance < 0 && <p className="text-sm text-red-600 mt-1">Customer owes this amount</p>}
+          </div>
+          <div className="rounded-lg p-4 bg-gray-50 border border-gray-200">
+            <p className="text-sm text-gray-600">Credit Limit</p>
+            <p className="text-3xl font-bold text-gray-800">{customer.creditLimit ? formatNaira(customer.creditLimit) : 'None'}</p>
+            <p className="text-xs text-gray-500 mt-1">Maximum amount this customer can owe</p>
+          </div>
+        </div>
+
+        <div className="bg-white border rounded-lg p-4 mb-6">
+          <h3 className="font-semibold text-sm mb-3">Customer Details</h3>
+          <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            <p><span className="text-gray-500">Customer ID:</span> <span className="font-medium">{customer.customerId || '-'}</span></p>
+            <p><span className="text-gray-500">Phone:</span> <span className="font-medium">{customer.phone}</span></p>
+            <p><span className="text-gray-500">Business Name:</span> <span className="font-medium">{customer.businessName || '-'}</span></p>
+            <p><span className="text-gray-500">Address:</span> <span className="font-medium">{customer.address || '-'}</span></p>
+          </div>
+        </div>
+
+        <div className="bg-white border rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b flex justify-between">
+            <h3 className="font-semibold text-sm">Account Statement</h3>
+            <span className="text-xs text-gray-500">{ledger.length} entries</span>
+          </div>
+          <div id="statement-table-scroll" className={tableScrollCls}>
           <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
             <colgroup>
               <col style={{ width: '8%' }} />
@@ -328,30 +376,60 @@ export default function CustomerDetailPage() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {ledger.map((entry, i) => (
-                <tr key={i}>
-                  <td className="px-1.5 py-1">{formatDate(entry.date)}</td>
-                  <td className="px-1.5 py-1 whitespace-nowrap">
-                    {entry.type === 'sale'
-                      ? <Link href={`/admin/sales/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
-                      : entry.type === 'surcharge' || entry.type === 'refund'
-                      ? <Link href={`/admin/sales/${entry.id}/adjustments/${entry.adjId}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
-                      : <Link href={`/admin/payments/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>}
-                  </td>
-                  <td className="px-1.5 py-1 text-gray-600 break-words">{entry.description}</td>
-                  <td className="px-1.5 py-1 text-right">{entry.qty ?? '-'}</td>
-                  <td className="px-1.5 py-1 text-right break-words">{entry.unitPrice ? formatNaira(entry.unitPrice) : '-'}</td>
-                  <td className="px-1.5 py-1 text-right break-words">{entry.transport ? formatNaira(entry.transport) : '-'}</td>
-                  <td className="px-1.5 py-1 text-right text-red-600 break-words">{entry.debit > 0 ? formatNaira(entry.debit) : '-'}</td>
-                  <td className="px-1.5 py-1 text-right text-green-600 break-words">{entry.credit > 0 ? formatNaira(entry.credit) : '-'}</td>
-                  <td className={`px-1.5 py-1 text-right font-medium break-words ${(entry.balance ?? 0) < 0 ? 'text-red-600' : ''}`}>
-                    {entry.balance !== undefined ? formatNaira(entry.balance) : '-'}
-                  </td>
-                </tr>
-              ))}
+              {ledger.map((entry, i) => {
+                const refLink = entry.type === 'sale'
+                  ? <Link href={`/admin/sales/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
+                  : entry.type === 'surcharge' || entry.type === 'refund'
+                  ? <Link href={`/admin/sales/${entry.id}/adjustments/${entry.adjId}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
+                  : <Link href={`/admin/payments/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>;
+
+                // A multi-product sale (e.g. two cement brands in one transaction) gets one mini-row
+                // per item instead of a single row summing/averaging different products together —
+                // each mini-row carries its own real qty and unit price. Date/Ref/Transport/Debit/
+                // Credit/Balance describe the transaction as a whole, so they span every mini-row
+                // instead of repeating (or being blank) on each one.
+                const items = entry.type === 'sale' && entry.items && entry.items.length > 1 ? entry.items : null;
+
+                if (items) {
+                  return items.map((li, j) => (
+                    <tr key={`${i}-${j}`}>
+                      {j === 0 && <td className="px-1.5 py-1 align-top" rowSpan={items.length}>{formatDate(entry.date)}</td>}
+                      {j === 0 && <td className="px-1.5 py-1 whitespace-nowrap align-top" rowSpan={items.length}>{refLink}</td>}
+                      <td className="px-1.5 py-1 text-gray-600 break-words">{li.qty} {li.unit} {li.name}</td>
+                      <td className="px-1.5 py-1 text-right">{li.qty}</td>
+                      <td className="px-1.5 py-1 text-right break-words">{formatNaira(li.unitPrice)}</td>
+                      {j === 0 && <td className="px-1.5 py-1 text-right break-words align-top" rowSpan={items.length}>{entry.transport ? formatNaira(entry.transport) : '-'}</td>}
+                      {j === 0 && <td className="px-1.5 py-1 text-right text-red-600 break-words align-top" rowSpan={items.length}>{entry.debit > 0 ? formatNaira(entry.debit) : '-'}</td>}
+                      {j === 0 && <td className="px-1.5 py-1 text-right text-green-600 break-words align-top" rowSpan={items.length}>{entry.credit > 0 ? formatNaira(entry.credit) : '-'}</td>}
+                      {j === 0 && (
+                        <td className={`px-1.5 py-1 text-right font-medium break-words align-top ${(entry.balance ?? 0) < 0 ? 'text-red-600' : ''}`} rowSpan={items.length}>
+                          {entry.balance !== undefined ? formatNaira(entry.balance) : '-'}
+                        </td>
+                      )}
+                    </tr>
+                  ));
+                }
+
+                return (
+                  <tr key={i}>
+                    <td className="px-1.5 py-1">{formatDate(entry.date)}</td>
+                    <td className="px-1.5 py-1 whitespace-nowrap">{refLink}</td>
+                    <td className="px-1.5 py-1 text-gray-600 break-words">{entry.description}</td>
+                    <td className="px-1.5 py-1 text-right">{entry.qty ?? '-'}</td>
+                    <td className="px-1.5 py-1 text-right break-words">{entry.unitPrice ? formatNaira(entry.unitPrice) : '-'}</td>
+                    <td className="px-1.5 py-1 text-right break-words">{entry.transport ? formatNaira(entry.transport) : '-'}</td>
+                    <td className="px-1.5 py-1 text-right text-red-600 break-words">{entry.debit > 0 ? formatNaira(entry.debit) : '-'}</td>
+                    <td className="px-1.5 py-1 text-right text-green-600 break-words">{entry.credit > 0 ? formatNaira(entry.credit) : '-'}</td>
+                    <td className={`px-1.5 py-1 text-right font-medium break-words ${(entry.balance ?? 0) < 0 ? 'text-red-600' : ''}`}>
+                      {entry.balance !== undefined ? formatNaira(entry.balance) : '-'}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           {ledger.length === 0 && <p className="text-center text-gray-500 py-8">No transactions yet</p>}
+          </div>
         </div>
       </div>
 
