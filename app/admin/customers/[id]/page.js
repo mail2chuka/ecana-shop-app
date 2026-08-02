@@ -282,7 +282,7 @@ export default function CustomerDetailPage() {
               {ledger.map((entry, i) => (
                 <tr key={i}>
                   <td className="px-2 py-2 whitespace-nowrap">{formatDate(entry.date)}</td>
-                  <td className="px-2 py-2 whitespace-nowrap">
+                  <td className="px-2 py-2 whitespace-nowrap w-px">
                     {entry.type === 'sale'
                       ? <Link href={`/admin/sales/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
                       : entry.type === 'surcharge' || entry.type === 'refund'
