@@ -47,11 +47,28 @@ export default function CustomerDetailPage() {
   const [refundForm, setRefundForm] = useState(blankRefundForm);
   const [submittingRefund, setSubmittingRefund] = useState(false);
 
-  const load = () => {
-    fetch(`/api/customers/${id}/statement`)
+  const [statementStartDate, setStatementStartDate] = useState('');
+  const [statementEndDate, setStatementEndDate] = useState('');
+  const [statementLoading, setStatementLoading] = useState(false);
+
+  const load = (silent = false, overrides = {}) => {
+    if (!silent) setLoading(true);
+    const sd = overrides.startDate !== undefined ? overrides.startDate : statementStartDate;
+    const ed = overrides.endDate !== undefined ? overrides.endDate : statementEndDate;
+    const params = new URLSearchParams();
+    if (sd) params.set('startDate', sd);
+    if (ed) params.set('endDate', ed);
+    setStatementLoading(true);
+    fetch(`/api/customers/${id}/statement?${params.toString()}`)
       .then(r => r.json())
       .then(d => { if (d.success) setData(d.data); else toast.error(d.error); })
-      .finally(() => setLoading(false));
+      .finally(() => { setLoading(false); setStatementLoading(false); });
+  };
+
+  const clearStatementDateFilter = () => {
+    setStatementStartDate('');
+    setStatementEndDate('');
+    load(true, { startDate: '', endDate: '' });
   };
 
   useEffect(() => { load(); }, [id]);
@@ -258,6 +275,27 @@ export default function CustomerDetailPage() {
         </div>
       </div>
 
+      <div className="bg-white border rounded-lg p-4 mb-6 no-print">
+        <div className="grid sm:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
+            <input type="date" value={statementStartDate} onChange={e => setStatementStartDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
+            <input type="date" value={statementEndDate} onChange={e => setStatementEndDate(e.target.value)} className="w-full px-3 py-2 border rounded text-sm" />
+          </div>
+          <div className="flex items-end gap-2">
+            <button onClick={() => load(true)} disabled={statementLoading} className={`flex-1 ${btnPrimaryCls}`}>
+              {statementLoading ? 'Loading...' : 'Filter'}
+            </button>
+            {(statementStartDate || statementEndDate) && (
+              <button onClick={clearStatementDateFilter} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Clear</button>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white border rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b flex justify-between">
           <h3 className="font-semibold text-sm">Account Statement</h3>
@@ -266,15 +304,15 @@ export default function CustomerDetailPage() {
         <div className={tableScrollCls}>
           <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
             <colgroup>
+              <col style={{ width: '8%' }} />
               <col style={{ width: '9%' }} />
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '25%' }} />
+              <col style={{ width: '15%' }} />
               <col style={{ width: '6%' }} />
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '10%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '14%' }} />
             </colgroup>
             <thead className={theadCls}>
               <tr>
