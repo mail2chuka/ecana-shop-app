@@ -82,6 +82,11 @@ export default function CustomerDetailPage() {
     const prevOverflow = scrollEl?.style.overflow;
     const prevMaxHeight = scrollEl?.style.maxHeight;
     if (scrollEl) { scrollEl.style.overflow = 'visible'; scrollEl.style.maxHeight = 'none'; }
+    // The customer-name header is print:block (hidden on screen) — html2canvas captures the DOM as
+    // currently shown on screen, not simulated print media, so it never sees this unless we force it.
+    const headerEl = document.getElementById('statement-print-header');
+    const prevHeaderDisplay = headerEl?.style.display;
+    if (headerEl) headerEl.style.display = 'block';
     try {
       const rangeSuffix = statementStartDate || statementEndDate
         ? `-${statementStartDate || 'start'}_to_${statementEndDate || 'now'}`
@@ -97,6 +102,7 @@ export default function CustomerDetailPage() {
       toast.error(err.message || 'Could not generate file');
     } finally {
       if (scrollEl) { scrollEl.style.overflow = prevOverflow || ''; scrollEl.style.maxHeight = prevMaxHeight || ''; }
+      if (headerEl) headerEl.style.display = prevHeaderDisplay || '';
       setSharing(null);
     }
   };
@@ -310,7 +316,7 @@ export default function CustomerDetailPage() {
       </div>
 
       <div id="statement-content">
-        <div className="mb-4 hidden print:block">
+        <div id="statement-print-header" className="mb-4 hidden print:block">
           <h2 className="text-lg font-bold">
             {formatCustomerLabel(customer)}
             {!customer.isActive && <span className="ml-2 text-xs font-medium text-amber-700">(Archived)</span>}
@@ -427,12 +433,6 @@ export default function CustomerDetailPage() {
           </div>
         </div>
       </div>
-
-      <style jsx global>{`
-        @media print {
-          @page { size: A4 landscape; }
-        }
-      `}</style>
 
       {/* Record Payment Modal */}
       <Modal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} title={`Record Payment — ${formatCustomerLabel(customer)}`}>
