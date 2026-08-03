@@ -348,8 +348,8 @@ export default function CustomerDetailPage() {
           <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
             <colgroup>
               <col style={{ width: '8%' }} />
-              <col style={{ width: '9%' }} />
-              <col style={{ width: '15%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '13%' }} />
               <col style={{ width: '6%' }} />
               <col style={{ width: '12%' }} />
               <col style={{ width: '12%' }} />
@@ -389,7 +389,7 @@ export default function CustomerDetailPage() {
                   return items.map((li, j) => (
                     <tr key={`${i}-${j}`}>
                       {j === 0 && <td className="px-1.5 py-1 align-top" rowSpan={items.length}>{formatDate(entry.date)}</td>}
-                      {j === 0 && <td className="px-1.5 py-1 whitespace-nowrap align-top" rowSpan={items.length}>{refLink}</td>}
+                      {j === 0 && <td className="px-1.5 py-1 whitespace-nowrap overflow-hidden text-ellipsis align-top" rowSpan={items.length}>{refLink}</td>}
                       <td className="px-1.5 py-1 text-gray-600 break-words">{li.qty} {li.unit} {li.name}</td>
                       <td className="px-1.5 py-1 text-right">{li.qty}</td>
                       <td className="px-1.5 py-1 text-right break-words">{formatNaira(li.unitPrice)}</td>
@@ -408,7 +408,7 @@ export default function CustomerDetailPage() {
                 return (
                   <tr key={i}>
                     <td className="px-1.5 py-1">{formatDate(entry.date)}</td>
-                    <td className="px-1.5 py-1 whitespace-nowrap">{refLink}</td>
+                    <td className="px-1.5 py-1 whitespace-nowrap overflow-hidden text-ellipsis">{refLink}</td>
                     <td className="px-1.5 py-1 text-gray-600 break-words">{entry.description}</td>
                     <td className="px-1.5 py-1 text-right">{entry.qty ?? '-'}</td>
                     <td className="px-1.5 py-1 text-right break-words">{entry.unitPrice ? formatNaira(entry.unitPrice) : '-'}</td>
