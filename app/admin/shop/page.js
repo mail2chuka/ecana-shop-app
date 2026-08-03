@@ -32,6 +32,7 @@ export default function ShopPage() {
   const [cart, setCart] = useState([]);
   const [cartProduct, setCartProduct] = useState('');
   const [cartQty, setCartQty] = useState('');
+  const [cartBillQty, setCartBillQty] = useState('');
   const [cartPrice, setCartPrice] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [transportHandledBy, setTransportHandledBy] = useState('');
@@ -149,6 +150,8 @@ export default function ShopPage() {
     const qty = parseFloat(cartQty);
     if (!qty || qty <= 0) return toast.error('Enter a valid quantity');
     if (qty > product.stockQuantity) return toast.error(`Only ${product.stockQuantity} ${product.unit}(s) in stock`);
+    const billQty = cartBillQty ? parseFloat(cartBillQty) : qty;
+    if (!billQty || billQty <= 0) return toast.error('Enter a valid bill quantity');
     const price = parseFloat(cartPrice) || product.price;
 
     setCart(prev => [...prev, {
@@ -157,10 +160,11 @@ export default function ShopPage() {
       name: product.name,
       unit: product.unit,
       qty,
+      billQty,
       price,
-      total: qty * price,
+      total: billQty * price,
     }]);
-    setCartProduct(''); setCartQty(''); setCartPrice('');
+    setCartProduct(''); setCartQty(''); setCartBillQty(''); setCartPrice('');
   };
 
   const removeFromCart = (id) => setCart(prev => prev.filter(c => c.id !== id));
@@ -184,7 +188,8 @@ export default function ShopPage() {
       const items = cart.map(c => ({
         itemType: 'shop',
         shopProduct: c.productId,
-        billQuantity: c.qty,
+        billQuantity: c.billQty,
+        actualQuantity: c.qty,
         unitPrice: c.price,
       }));
       const r = await fetch('/api/sales', {
@@ -370,19 +375,29 @@ export default function ShopPage() {
 
           <Card className="p-4 space-y-3">
             <h3 className="font-medium text-sm">Add Item</h3>
+            <select value={cartProduct} onChange={e => {
+              setCartProduct(e.target.value);
+              const p = products.find(x => x._id === e.target.value);
+              if (p) setCartPrice(String(p.price));
+            }} className={inputCls}>
+              <option value="">Choose product...</option>
+              {products.filter(p => p.stockQuantity > 0).map(p => (
+                <option key={p._id} value={p._id}>{p.name} ({p.stockQuantity} {p.unit} left)</option>
+              ))}
+            </select>
             <div className="grid grid-cols-3 gap-3">
-              <select value={cartProduct} onChange={e => {
-                setCartProduct(e.target.value);
-                const p = products.find(x => x._id === e.target.value);
-                if (p) setCartPrice(String(p.price));
-              }} className={inputCls}>
-                <option value="">Choose product...</option>
-                {products.filter(p => p.stockQuantity > 0).map(p => (
-                  <option key={p._id} value={p._id}>{p.name} ({p.stockQuantity} {p.unit} left)</option>
-                ))}
-              </select>
-              <input type="number" min="0.01" step="0.01" placeholder="Qty" value={cartQty} onChange={e => setCartQty(e.target.value)} className={inputCls} />
-              <CurrencyInput value={cartPrice} onChange={setCartPrice} placeholder="Price" className={inputCls} />
+              <div>
+                <label className="block text-xs font-medium mb-1">Qty (Supplied)</label>
+                <input type="number" min="0.01" step="0.01" placeholder="Qty" value={cartQty} onChange={e => setCartQty(e.target.value)} className={inputCls} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1">Bill Qty (optional)</label>
+                <input type="number" min="0.01" step="0.01" placeholder="Defaults to Qty" value={cartBillQty} onChange={e => setCartBillQty(e.target.value)} className={inputCls} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1">Price</label>
+                <CurrencyInput value={cartPrice} onChange={setCartPrice} placeholder="Price" className={inputCls} />
+              </div>
             </div>
             <button type="button" onClick={addToCart} className={`w-full ${btnPrimaryCls}`}>
               Add to Sale
@@ -396,7 +411,8 @@ export default function ShopPage() {
                 <div key={c.id} className="flex justify-between items-center bg-gray-50 p-2 rounded text-sm">
                   <div>
                     <p className="font-medium">{c.name}</p>
-                    <p className="text-xs text-gray-500">{c.qty} {c.unit} × {formatNaira(c.price)} = {formatNaira(c.total)}</p>
+                    <p className="text-xs text-gray-500">Supplied: {c.qty} {c.unit} | Billed: {c.billQty} {c.unit}</p>
+                    <p className="text-xs text-gray-500">{formatNaira(c.price)}/{c.unit} = {formatNaira(c.total)}</p>
                   </div>
                   <button onClick={() => removeFromCart(c.id)} className="text-amber-700 text-xs hover:underline">Remove</button>
                 </div>
@@ -502,7 +518,12 @@ export default function ShopPage() {
                     </td>
                     <td className="px-4 py-3 text-right text-xs text-gray-600">
                       {(s.items || []).map((it, idx) => (
-                        <p key={idx} className="whitespace-nowrap">{formatNumber(it.billQuantity)} {it.unit || ''}</p>
+                        <p key={idx} className="whitespace-nowrap">
+                          {formatNumber(it.actualQuantity)} {it.unit || ''}
+                          {it.billQuantity !== it.actualQuantity && (
+                            <span className="text-gray-400"> (billed {formatNumber(it.billQuantity)})</span>
+                          )}
+                        </p>
                       ))}
                     </td>
                     <td className="px-4 py-3 text-right font-medium">{formatNaira(s.grandTotal)}</td>

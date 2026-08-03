@@ -219,11 +219,13 @@ async function _h_POST(request) {
           if (!item.shopProduct) throw new ApiError('Shop item must reference a product', 400);
           const product = await ShopProduct.findById(item.shopProduct).session(mongoSession);
           if (!product) throw new ApiError('Shop product not found', 404);
-          if (billQty > product.stockQuantity) {
+          if (actualQty > product.stockQuantity) {
             throw new ApiError(`Only ${product.stockQuantity} ${product.unit}(s) of ${product.name} in stock`, 400);
           }
 
-          product.stockQuantity -= billQty;
+          // Stock leaves inventory by the actual (supplied) quantity, same as a cement ATC's bags —
+          // billing is a separate figure that can differ (a billed-vs-actual shortfall/overage).
+          product.stockQuantity -= actualQty;
           await product.save({ session: mongoSession });
 
           let cementBrandName;
@@ -240,7 +242,7 @@ async function _h_POST(request) {
             cementBrandName,
             unit: product.unit,
             billQuantity: billQty,
-            actualQuantity: billQty,
+            actualQuantity: actualQty,
             unitPrice,
             lineTotal,
           });

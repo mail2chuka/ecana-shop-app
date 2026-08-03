@@ -90,7 +90,7 @@ async function _h_DELETE(request, { params }) {
         } else if (item.itemType === 'shop' && item.shopProduct) {
           const product = await ShopProduct.findById(item.shopProduct).session(mongoSession);
           if (product) {
-            product.stockQuantity += item.billQuantity;
+            product.stockQuantity += item.actualQuantity;
             await product.save({ session: mongoSession });
           }
         }
@@ -192,7 +192,7 @@ async function _h_PUT(request, { params }) {
         } else if (oldItem.itemType === 'shop' && oldItem.shopProduct) {
           const product = await ShopProduct.findById(oldItem.shopProduct).session(mongoSession);
           if (product) {
-            product.stockQuantity += oldItem.billQuantity;
+            product.stockQuantity += oldItem.actualQuantity;
             await product.save({ session: mongoSession });
           }
         }
@@ -308,10 +308,10 @@ async function _h_PUT(request, { params }) {
           if (!item.shopProduct) throw new ApiError('Shop item must reference a product', 400);
           const product = await ShopProduct.findById(item.shopProduct).session(mongoSession);
           if (!product) throw new ApiError('Shop product not found', 404);
-          if (billQty > product.stockQuantity) {
+          if (actualQty > product.stockQuantity) {
             throw new ApiError(`Only ${product.stockQuantity} ${product.unit}(s) of ${product.name} in stock`, 400);
           }
-          product.stockQuantity -= billQty;
+          product.stockQuantity -= actualQty;
           await product.save({ session: mongoSession });
 
           let cementBrandName;
@@ -328,7 +328,7 @@ async function _h_PUT(request, { params }) {
             cementBrandName,
             unit: product.unit,
             billQuantity: billQty,
-            actualQuantity: billQty,
+            actualQuantity: actualQty,
             unitPrice,
             lineTotal,
           });

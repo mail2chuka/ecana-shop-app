@@ -442,12 +442,10 @@ export default function SaleDetailPage() {
                     <input type="number" step="0.01" min="0.01" value={item.billQuantity}
                       onChange={e => updateEditItem(i, 'billQuantity', e.target.value)} className={inputCls} />
                   </Field>
-                  {item.itemType !== 'shop' && (
-                    <Field label="Actual Qty">
-                      <input type="number" step="0.01" min="0.01" value={item.actualQuantity}
-                        onChange={e => updateEditItem(i, 'actualQuantity', e.target.value)} className={inputCls} />
-                    </Field>
-                  )}
+                  <Field label="Actual Qty">
+                    <input type="number" step="0.01" min="0.01" value={item.actualQuantity}
+                      onChange={e => updateEditItem(i, 'actualQuantity', e.target.value)} className={inputCls} />
+                  </Field>
                   <Field label="Unit Price (₦)">
                     <CurrencyInput value={item.unitPrice} onChange={val => updateEditItem(i, 'unitPrice', val)} className={inputCls} />
                   </Field>
