@@ -9,6 +9,7 @@ import { verifyOwnPin } from '@/lib/verifyPassword';
 import { resolveDate } from '@/lib/dayLock';
 import { requireObjectId } from '@/lib/validate';
 import { ApiError } from '@/lib/apiError';
+import { readJsonBody } from '@/lib/requestBody';
 
 const ALLOWED_METHODS = ['cash', 'transfer', 'pos', 'cheque'];
 
@@ -37,7 +38,7 @@ async function _h_PUT(request, { params }) {
   try {
     const { id } = await params;
     requireObjectId(id, 'payment id');
-    const body = await request.json();
+    const body = await readJsonBody(request);
     const { amount, method, depositorName, bankName, description, date, confirmPin } = body;
 
     const pinResult = await verifyOwnPin(session.user.id, confirmPin);

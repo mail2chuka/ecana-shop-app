@@ -8,6 +8,7 @@ import { logAudit } from '@/lib/audit';
 import { verifyOwnPin } from '@/lib/verifyPassword';
 import { requireObjectId } from '@/lib/validate';
 import { ApiError } from '@/lib/apiError';
+import { readJsonBody } from '@/lib/requestBody';
 
 // Editing a surcharge/refund is admin-only and PIN-gated, same as editing a sale or a payment.
 async function _h_PUT(request, { params }) {
@@ -20,7 +21,7 @@ async function _h_PUT(request, { params }) {
     const { id, adjId } = await params;
     requireObjectId(id, 'sale id');
     requireObjectId(adjId, 'adjustment id');
-    const body = await request.json();
+    const body = await readJsonBody(request);
     const { amount, reason, method, confirmPin } = body;
 
     const pinResult = await verifyOwnPin(session.user.id, confirmPin);

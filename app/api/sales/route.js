@@ -19,6 +19,7 @@ import { hasModule, moduleForSaleType } from '@/lib/modules';
 import { can } from '@/lib/permissions';
 import { ApiError } from '@/lib/apiError';
 import { pluralizeUnit } from '@/lib/format';
+import { readJsonBody } from '@/lib/requestBody';
 
 async function _h_GET(request) {
   try {
@@ -59,7 +60,7 @@ async function _h_POST(request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   await dbConnect();
-  const body = await request.json();
+  const body = await readJsonBody(request);
   const { saleType, customer: customerId, truck: truckId, date, items, discount, transportFee, transportHandledBy, transportMeans, notes, deliveryDeparture, deliveryReturn, paymentMethod } = body;
 
   if (!saleType || !customerId || !items || items.length === 0) {

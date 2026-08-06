@@ -9,6 +9,7 @@ import { logAudit } from '@/lib/audit';
 import { verifyOwnPin } from '@/lib/verifyPassword';
 import { generateTransactionNumber } from '@/lib/transaction';
 import { ApiError } from '@/lib/apiError';
+import { readJsonBody } from '@/lib/requestBody';
 
 async function _h_POST(request, { params }) {
   const session = await getOrgSession();
@@ -17,7 +18,7 @@ async function _h_POST(request, { params }) {
   }
   await dbConnect();
   const { id } = await params;
-  const { method, perUnitAmount, totalAmount, reason, confirmPin } = await request.json();
+  const { method, perUnitAmount, totalAmount, reason, confirmPin } = await readJsonBody(request);
 
   const pinResult = await verifyOwnPin(session.user.id, confirmPin);
   if (pinResult === 'no_pin_set') {

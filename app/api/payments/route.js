@@ -10,6 +10,7 @@ import { generateTransactionNumber } from '@/lib/transaction';
 import { resolveDate } from '@/lib/dayLock';
 import { can } from '@/lib/permissions';
 import { ApiError } from '@/lib/apiError';
+import { readJsonBody } from '@/lib/requestBody';
 
 async function _h_GET(request) {
   try {
@@ -44,7 +45,7 @@ async function _h_POST(request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   await dbConnect();
-  const body = await request.json();
+  const body = await readJsonBody(request);
   const { customer: customerId, amount, method, depositorName, bankName, description, date } = body;
   if (!customerId || !amount || amount <= 0 || !method) {
     return NextResponse.json({ error: 'Customer, amount and method required' }, { status: 400 });

@@ -19,6 +19,7 @@ import { hasModule, moduleForSaleType } from '@/lib/modules';
 import { verifyOwnPin } from '@/lib/verifyPassword';
 import { ApiError } from '@/lib/apiError';
 import { pluralizeUnit } from '@/lib/format';
+import { readJsonBody } from '@/lib/requestBody';
 
 async function _h_GET(request, { params }) {
   try {
@@ -121,7 +122,7 @@ async function _h_PUT(request, { params }) {
   }
   await dbConnect();
   const { id } = await params;
-  const body = await request.json();
+  const body = await readJsonBody(request);
   const { items, discount, transportFee, date, notes, truck: truckId, paymentMethod, confirmPin } = body;
 
   const pinResult = await verifyOwnPin(session.user.id, confirmPin);
