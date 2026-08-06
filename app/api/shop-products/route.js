@@ -26,12 +26,12 @@ async function _h_POST(request) {
     if (!session || !can(session.user.role, 'shop.create')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
     const body = await request.json();
-    if (!body.name || body.price === undefined) return NextResponse.json({ error: 'Name and price required' }, { status: 400 });
+    if (!body.name) return NextResponse.json({ error: 'Name required' }, { status: 400 });
 
     const product = await ShopProduct.create({
       name: body.name,
       unit: body.unit || 'unit',
-      price: Number(body.price),
+      price: Number(body.price) || 0,
       stockQuantity: Number(body.stockQuantity) || 0,
       cementBrand: body.cementBrand || undefined,
       createdBy: session.user.id,

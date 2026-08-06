@@ -7,7 +7,7 @@ import { formatNaira, formatNumber, formatDate, formatCustomerLabel } from '@/li
 import { isWalkInCustomer, isShopCustomer } from '@/lib/shopStock';
 import toast from 'react-hot-toast';
 
-const blankProductForm = { name: '', unit: 'unit', price: '', stockQuantity: 0, cementBrand: '' };
+const blankProductForm = { name: '', unit: '', price: '', cementBrand: '' };
 const PAYMENT_METHOD_LABELS = { cash: 'Cash', transfer: 'Bank Transfer', pos: 'POS', cheque: 'Cheque', balance: 'On Account' };
 
 export default function ShopPage() {
@@ -23,6 +23,11 @@ export default function ShopPage() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [productForm, setProductForm] = useState(blankProductForm);
   const [submitting, setSubmitting] = useState(false);
+
+  // Stock-in modal (Inventory)
+  const [showStockInModal, setShowStockInModal] = useState(false);
+  const [stockInForm, setStockInForm] = useState({ product: '', quantity: '', description: '' });
+  const [stockInSubmitting, setStockInSubmitting] = useState(false);
 
   // Record Sale state
   const [customerSearch, setCustomerSearch] = useState('');
@@ -111,7 +116,7 @@ export default function ShopPage() {
   const openCreateProduct = () => { setEditingProduct(null); setProductForm(blankProductForm); setShowProductModal(true); };
   const openEditProduct = (p) => {
     setEditingProduct(p);
-    setProductForm({ name: p.name, unit: p.unit, price: p.price, stockQuantity: p.stockQuantity, cementBrand: p.cementBrand || '' });
+    setProductForm({ name: p.name, unit: p.unit || '', price: p.price || '', cementBrand: p.cementBrand || '' });
     setShowProductModal(true);
   };
 
@@ -121,7 +126,7 @@ export default function ShopPage() {
     try {
       const url = editingProduct ? `/api/shop-products/${editingProduct._id}` : '/api/shop-products';
       const method = editingProduct ? 'PUT' : 'POST';
-      const body = { ...productForm, price: Number(productForm.price), stockQuantity: Number(productForm.stockQuantity) || 0 };
+      const body = { ...productForm, price: productForm.price === '' ? undefined : Number(productForm.price) };
       const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const d = await r.json();
       if (d.success) { toast.success(editingProduct ? 'Updated' : 'Product added'); setShowProductModal(false); load(); }
@@ -140,6 +145,25 @@ export default function ShopPage() {
     if (d.success) { toast.success('Deactivated'); load(); }
     else toast.error(d.error);
   };
+
+  const openStockIn = () => { setStockInForm({ product: '', quantity: '', description: '' }); setShowStockInModal(true); };
+
+  const handleStockInSubmit = async (e) => {
+    e.preventDefault();
+    setStockInSubmitting(true);
+    try {
+      const body = { product: stockInForm.product, quantity: Number(stockInForm.quantity), description: stockInForm.description };
+      const r = await fetch('/api/shop-products/stock-in', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const d = await r.json();
+      if (d.success) { toast.success('Stock added'); setShowStockInModal(false); load(); }
+      else toast.error(d.error);
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong');
+    } finally {
+      setStockInSubmitting(false);
+    }
+  };
+
 
   const totalStock = products.reduce((s, p) => s + (p.stockQuantity || 0), 0);
 
@@ -265,10 +289,15 @@ export default function ShopPage() {
       {/* INVENTORY TAB */}
       {tab === 'inventory' && (
         <div>
-          <Card className="p-4 mb-4 max-w-xs">
-            <p className="text-xs text-gray-500">Total Stock (bags)</p>
-            <p className="text-2xl font-bold mt-1">{formatNumber(totalStock)}</p>
-          </Card>
+          <div className="flex items-start gap-4 mb-4">
+            <Card className="p-4 max-w-xs">
+              <p className="text-xs text-gray-500">Total Stock (bags)</p>
+              <p className="text-2xl font-bold mt-1">{formatNumber(totalStock)}</p>
+            </Card>
+            <div className="flex items-center">
+              <button onClick={openStockIn} className={`${btnPrimaryCls}`}>Add Stock In</button>
+            </div>
+          </div>
 
           <Card className="overflow-hidden">
             <p className="px-4 pt-4 text-xs text-gray-500">Stock updates automatically when cement is sold to the "Shop" customer — see Cement Sale.</p>
@@ -594,19 +623,37 @@ export default function ShopPage() {
             <input type="text" value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} className={inputCls} required />
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Unit" required>
-              <input type="text" value={productForm.unit} onChange={e => setProductForm({ ...productForm, unit: e.target.value })} className={inputCls} placeholder="bag, piece, tonne..." required />
+            <Field label="Unit">
+              <input type="text" value={productForm.unit} onChange={e => setProductForm({ ...productForm, unit: e.target.value })} className={inputCls} placeholder="bag, piece, tonne..." />
             </Field>
-            <Field label="Price (₦)" required>
-              <CurrencyInput value={productForm.price} onChange={val => setProductForm({ ...productForm, price: val })} className={inputCls} required />
+            <Field label="Price (₦)">
+              <CurrencyInput value={productForm.price} onChange={val => setProductForm({ ...productForm, price: val })} className={inputCls} />
             </Field>
           </div>
-          {!editingProduct && (
-            <Field label="Opening Stock">
-              <input type="number" min="0" value={productForm.stockQuantity} onChange={e => setProductForm({ ...productForm, stockQuantity: e.target.value })} className={inputCls} />
-            </Field>
-          )}
           <FormButtons onCancel={() => setShowProductModal(false)} submitting={submitting} />
+        </form>
+      </Modal>
+
+      {/* Stock-in Modal */}
+      <Modal open={showStockInModal} onClose={() => setShowStockInModal(false)} title="Add Stock In">
+        <form onSubmit={handleStockInSubmit} className="space-y-4">
+          <Field label="Product" required>
+            <select value={stockInForm.product} onChange={e => setStockInForm({ ...stockInForm, product: e.target.value })} className={inputCls} required>
+              <option value="">Choose product...</option>
+              {products.map(p => (
+                <option key={p._id} value={p._id}>{p.name} ({p.unit})</option>
+              ))}
+            </select>
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Quantity (bags)" required>
+              <input type="number" min="0.01" step="0.01" value={stockInForm.quantity} onChange={e => setStockInForm({ ...stockInForm, quantity: e.target.value })} className={inputCls} required />
+            </Field>
+            <Field label="Description">
+              <input type="text" value={stockInForm.description} onChange={e => setStockInForm({ ...stockInForm, description: e.target.value })} className={inputCls} />
+            </Field>
+          </div>
+          <FormButtons onCancel={() => setShowStockInModal(false)} submitting={stockInSubmitting} />
         </form>
       </Modal>
 
