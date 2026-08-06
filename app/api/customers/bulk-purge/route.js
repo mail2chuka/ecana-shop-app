@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Customer from '@/models/Customer';
 import { logAudit } from '@/lib/audit';
+import { verifyOwnPin } from '@/lib/verifyPassword';
 import { ApiError } from '@/lib/apiError';
 
 async function _h_POST(request) {
@@ -11,8 +12,12 @@ async function _h_POST(request) {
     const session = await getOrgSession();
     if (!session || session.user.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     await dbConnect();
-    const { ids } = await request.json();
+    const { ids, confirmPin } = await request.json();
     if (!Array.isArray(ids) || ids.length === 0) return NextResponse.json({ error: 'No customers selected' }, { status: 400 });
+
+    const pinResult = await verifyOwnPin(session.user.id, confirmPin);
+    if (pinResult === 'no_pin_set') return NextResponse.json({ error: 'Set your 4-digit PIN first, under Users' }, { status: 400 });
+    if (pinResult !== 'ok') return NextResponse.json({ error: 'Incorrect PIN' }, { status: 400 });
 
     const customers = await Customer.find({ _id: { $in: ids } });
     if (customers.length !== ids.length) throw new ApiError('One or more customers not found', 404);

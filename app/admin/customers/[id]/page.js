@@ -37,6 +37,8 @@ export default function CustomerDetailPage() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [togglingActive, setTogglingActive] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showPurgeModal, setShowPurgeModal] = useState(false);
+  const [purgePin, setPurgePin] = useState('');
 
   const [showSurcharge, setShowSurcharge] = useState(false);
   const [surchargeSaleId, setSurchargeSaleId] = useState(null);
@@ -161,12 +163,14 @@ export default function CustomerDetailPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm(`PERMANENTLY delete ${data.customer.name}? This cannot be undone. Their past sales/payments will remain in reports but will no longer link to a customer profile.`)) return;
+  const openPurgeModal = () => { setPurgePin(''); setShowPurgeModal(true); };
+
+  const handleDelete = async (e) => {
+    e.preventDefault();
     setDeleting(true);
     try {
       const r = await fetch('/api/customers/bulk-purge', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [id] }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [id], confirmPin: purgePin }),
       });
       const d = await r.json();
       if (d.success) { toast.success('Customer deleted'); router.push('/admin/customers'); }
@@ -276,7 +280,7 @@ export default function CustomerDetailPage() {
             {customer.isActive ? 'Deactivate' : 'Reactivate'}
           </button>
           {!customer.isActive && (
-            <button onClick={handleDelete} disabled={deleting} className={btnDangerCls}>Delete Permanently</button>
+            <button onClick={openPurgeModal} disabled={deleting} className={btnDangerCls}>Delete Permanently</button>
           )}
           {isAdmin && (
             <>
@@ -514,6 +518,24 @@ export default function CustomerDetailPage() {
             <p className="text-xs text-gray-500 mt-1">Maximum amount this customer can owe.</p>
           </Field>
           <FormButtons onCancel={() => setShowEditModal(false)} submitting={savingEdit} />
+        </form>
+      </Modal>
+
+      {/* Delete Permanently Modal */}
+      <Modal open={showPurgeModal} onClose={() => setShowPurgeModal(false)} title="Delete Customer Permanently">
+        <form onSubmit={handleDelete} className="space-y-4">
+          <p className="text-sm text-gray-500">
+            PERMANENTLY delete {data.customer.name}? This cannot be undone. Their past sales/payments will remain in reports but will no longer link to a customer profile.
+          </p>
+          <Field label="4-digit PIN" required>
+            <input
+              type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
+              value={purgePin}
+              onChange={e => setPurgePin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              className={inputCls} required autoFocus
+            />
+          </Field>
+          <FormButtons onCancel={() => setShowPurgeModal(false)} submitting={deleting} submitLabel="Delete Permanently" />
         </form>
       </Modal>
 
