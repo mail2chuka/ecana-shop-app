@@ -15,16 +15,16 @@ export function Logo({ className = 'h-8 w-8' }) {
   );
 }
 
-// Buttons OUTSIDE tables: solid deep green (primary) or solid gold (destructive), light neutral text.
-export const btnPrimaryCls = 'px-4 py-2 bg-green-800 text-neutral-100 rounded text-sm font-medium hover:bg-green-900 disabled:opacity-50';
-export const btnDangerCls = 'px-4 py-2 bg-amber-700 text-neutral-100 rounded text-sm font-medium hover:bg-amber-800 disabled:opacity-50';
+// Buttons OUTSIDE tables: solid brand green (primary) or solid red (destructive), light neutral text.
+export const btnPrimaryCls = 'px-4 py-2 bg-brand-800 text-neutral-100 rounded text-sm font-medium hover:bg-brand-900 disabled:opacity-50';
+export const btnDangerCls = 'px-4 py-2 bg-danger-700 text-neutral-100 rounded text-sm font-medium hover:bg-danger-800 disabled:opacity-50';
 
 // Buttons/links INSIDE table rows: no background of their own, just colored text on the table's own background.
-export const tableActionCls = 'text-sm font-medium text-green-800 hover:text-green-900';
-export const tableDangerActionCls = 'text-sm font-medium text-amber-700 hover:text-amber-800';
+export const tableActionCls = 'text-sm font-medium text-brand-800 hover:text-brand-900';
+export const tableDangerActionCls = 'text-sm font-medium text-danger-700 hover:text-danger-800';
 
-// Table head: deep green, sticky so it acts as a frozen pane while the body scrolls.
-export const theadCls = 'bg-green-800 text-neutral-100 sticky top-0 z-10';
+// Table head: brand green, sticky so it acts as a frozen pane while the body scrolls.
+export const theadCls = 'bg-brand-800 text-neutral-100 sticky top-0 z-10';
 // Wrap the <table> in a div with this class to make the sticky thead actually freeze on scroll.
 // The 70vh cap is a screen-only convenience — print doesn't scroll, so anything past it would
 // just be silently clipped rather than flowing onto further pages. Print always sees everything.
@@ -57,8 +57,8 @@ export function Card({ children, className = '' }) {
 export function StatusPill({ status, color }) {
   const colors = {
     green: 'bg-green-100 text-green-700',
-    red: 'bg-amber-100 text-amber-800',
-    yellow: 'bg-yellow-100 text-yellow-700',
+    red: 'bg-danger-100 text-danger-800',
+    amber: 'bg-warning-100 text-warning-800',
     blue: 'bg-blue-100 text-blue-700',
     gray: 'bg-gray-100 text-gray-700',
   };

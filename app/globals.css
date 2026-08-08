@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Design-convergence skill's binding platform colors — single source of truth for both tiers. */
+:root {
+  --brand: #0B4F3A;
+  --danger: #B3261E;
+  --warning: #B26B00;
+}
+
 body { background-color: #f5f5f5; }
 
 .admin-main button:disabled {
@@ -72,9 +79,9 @@ input[type="number"]:focus {
   --muted: #5b6b64;
   --line: #e4e9e6;
   --surface: #ffffff;
-  /* Buttons only. */
-  --green: #128a4e;
-  --green-deep: #0d6b3c;
+  /* Buttons only. Shares the platform brand token so marketing and admin agree on one green. */
+  --green: var(--brand);
+  --green-deep: #093F2E;
   /* Everything else that needs an accent — amber, slate, rust — kept out of the buttons entirely. */
   --amber: #c8792e;
   --amber-glow: rgba(200, 121, 46, 0.14);

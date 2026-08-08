@@ -41,8 +41,8 @@ function isModuleAllowed(session, pathname) {
 }
 
 // Sidebar nav links get their own dedicated class set — distinct from table-action and page-button classes.
-const navLinkCls = 'block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors bg-amber-700 text-neutral-100 border-amber-800 hover:bg-amber-600 hover:text-white';
-const navLinkActiveCls = 'block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors bg-amber-900 text-white border-amber-950 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]';
+const navLinkCls = 'block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors bg-brand-700 text-neutral-100 border-brand-800 hover:bg-brand-600 hover:text-white';
+const navLinkActiveCls = 'block px-3 py-2 rounded-md border text-sm leading-snug whitespace-normal break-words transition-colors bg-brand-900 text-white border-brand-950 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]';
 
 // `allow` lists which roles see the item (omitted = all staff roles); `modules` lists which org
 // modules must be enabled (omitted = always shown regardless of subscription).
@@ -219,16 +219,16 @@ export default function AdminShell({ children }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-emerald-950 transform transition-transform lg:translate-x-0 lg:static flex flex-col no-print ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-brand-950 transform transition-transform lg:translate-x-0 lg:static flex flex-col no-print ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between min-h-14 px-4 border-b border-emerald-800/60 bg-black/10 shrink-0">
-          <span className="flex items-center gap-2 font-bold tracking-wide text-emerald-100">
+        <div className="flex items-center justify-between min-h-14 px-4 border-b border-brand-800/60 bg-black/10 shrink-0">
+          <span className="flex items-center gap-2 font-bold tracking-wide text-brand-100">
             <Logo className="h-7 w-7" />
             GS&amp;M
           </span>
-          <button className="lg:hidden text-emerald-200/80 hover:text-white" onClick={() => setOpen(false)}>
+          <button className="lg:hidden text-brand-200/80 hover:text-white" onClick={() => setOpen(false)}>
             <FiX size={20} />
           </button>
         </div>
@@ -238,7 +238,7 @@ export default function AdminShell({ children }) {
             if (entry.group) {
               return (
                 <div key={entry.group} className="pt-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-300/95 px-2 mb-2 whitespace-normal break-words">{entry.group}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-300/95 px-2 mb-2 whitespace-normal break-words">{entry.group}</p>
                   {entry.items.map(renderItem)}
                 </div>
               );
@@ -247,17 +247,17 @@ export default function AdminShell({ children }) {
           })}
         </nav>
 
-        <div className="shrink-0 p-3 border-t border-emerald-800/60 bg-black/15">
+        <div className="shrink-0 p-3 border-t border-brand-800/60 bg-black/15">
           <div className="mb-2 px-3">
             {session.user.organizationName && (
-              <p className="text-xs font-semibold text-emerald-200 break-words uppercase tracking-wide">{session.user.organizationName}</p>
+              <p className="text-xs font-semibold text-brand-200 break-words uppercase tracking-wide">{session.user.organizationName}</p>
             )}
-            <p className="text-sm text-emerald-50 font-medium break-words" title={session.user.name}>{session.user.name}</p>
-            <p className="text-xs text-emerald-300/70 capitalize">{session.user.role}</p>
+            <p className="text-sm text-brand-50 font-medium break-words" title={session.user.name}>{session.user.name}</p>
+            <p className="text-xs text-brand-300/70 capitalize">{session.user.role}</p>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: '/' })}
-            className="flex items-center w-full px-3 py-2 text-sm text-white bg-green-800 border border-green-950 hover:bg-green-900 rounded-md"
+            className="flex items-center w-full px-3 py-2 text-sm text-white bg-brand-800 border border-brand-950 hover:bg-brand-900 rounded-md"
           >
             <FiLogOut className="mr-2 shrink-0" /> Sign Out
           </button>
@@ -269,7 +269,7 @@ export default function AdminShell({ children }) {
           <button onClick={() => setOpen(true)} className="p-2 -ml-2 text-gray-600 shrink-0">
             <FiMenu size={20} />
           </button>
-          <span className="ml-2 shrink-0 bg-emerald-950 rounded p-1 flex items-center justify-center">
+          <span className="ml-2 shrink-0 bg-brand-950 rounded p-1 flex items-center justify-center">
             <Logo className="h-5 w-5" />
           </span>
           <span className="ml-2 font-semibold text-sm truncate">

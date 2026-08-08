@@ -69,7 +69,7 @@ export default function DashboardPage() {
     <div>
       <PageHeader title="Dashboard" subtitle="Overview of your business" />
 
-      <div className="grid h hidden grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card className="p-4">
           <p className="text-xs text-gray-500">Today's Sales</p>
           <p className="text-xl font-bold mt-1">{formatNaira(stats.todaySales)}</p>
