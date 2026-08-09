@@ -14,6 +14,7 @@ export default function QuarryPurchasesReportPage() {
     const d = new Date(); d.setDate(1); return d.toISOString().split('T')[0];
   });
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [orientation, setOrientation] = useState('portrait');
 
   useEffect(() => {
     fetch('/api/suppliers?type=quarry').then(r => r.json()).then(d => { if (d.success) setQuarries(d.data); });
@@ -54,11 +55,18 @@ export default function QuarryPurchasesReportPage() {
               {quarries.map(q => <option key={q._id} value={q._id}>{q.name}</option>)}
             </select>
           </div>
-          <div className="flex items-end">
-            <button onClick={fetchData} disabled={loading} className={`w-full ${btnPrimaryCls}`}>
+          <div className="flex items-end gap-2">
+            <button onClick={fetchData} disabled={loading} className={`flex-1 ${btnPrimaryCls}`}>
               {loading ? 'Loading...' : 'Run'}
             </button>
           </div>
+        </div>
+        <div className="mt-4">
+          <label className="block text-xs font-medium text-gray-500 mb-1">Print Orientation</label>
+          <select value={orientation} onChange={e => setOrientation(e.target.value)} className="px-3 py-2 border rounded text-sm">
+            <option value="portrait">Portrait</option>
+            <option value="landscape">Landscape</option>
+          </select>
         </div>
       </div>
 
@@ -113,7 +121,7 @@ export default function QuarryPurchasesReportPage() {
 
       <style jsx global>{`
         @media print {
-          @page { size: A4 landscape; }
+          @page { size: A4 ${orientation}; }
         }
       `}</style>
     </div>

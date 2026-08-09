@@ -57,6 +57,7 @@ export default function CustomerDetailPage() {
   const [statementStartDate, setStatementStartDate] = useState('');
   const [statementEndDate, setStatementEndDate] = useState('');
   const [statementLoading, setStatementLoading] = useState(false);
+  const [statementOrientation, setStatementOrientation] = useState('portrait');
 
   const load = (silent = false, overrides = {}) => {
     if (!silent) setLoading(true);
@@ -100,9 +101,9 @@ export default function CustomerDetailPage() {
       const base = `Statement-${customer.name.replace(/\s+/g, '_')}${rangeSuffix}`;
       const title = `Account Statement — ${formatCustomerLabel(customer)}`;
       if (format === 'pdf') {
-        await shareReceiptAsPdf('statement-content', `${base}.pdf`, title, { orientation: 'landscape' });
+        await shareReceiptAsPdf('statement-content', `${base}.pdf`, title, { orientation: statementOrientation });
       } else {
-        await shareReceiptAsJpg('statement-content', `${base}.jpg`, title, { orientation: 'landscape' });
+        await shareReceiptAsJpg('statement-content', `${base}.jpg`, title, { orientation: statementOrientation });
       }
     } catch (err) {
       toast.error(err.message || 'Could not generate file');
@@ -309,6 +310,15 @@ export default function CustomerDetailPage() {
               <button onClick={openRefund} className="px-4 py-2 bg-amber-700 text-neutral-100 rounded text-sm hover:bg-amber-800">Fund</button>
             </>
           )}
+          <select
+            value={statementOrientation}
+            onChange={e => setStatementOrientation(e.target.value)}
+            className="px-3 py-2 border rounded text-sm"
+            title="Page orientation for Print / Share"
+          >
+            <option value="portrait">Portrait</option>
+            <option value="landscape">Landscape</option>
+          </select>
           <button onClick={() => window.print()} className="px-4 py-2 border rounded text-sm hover:bg-gray-50">Print Statement</button>
           <button onClick={() => shareStatement('pdf')} disabled={!!sharing} className="px-4 py-2 border rounded text-sm hover:bg-gray-50 disabled:opacity-50">
             {sharing === 'pdf' ? 'Preparing...' : 'Share PDF'}
@@ -318,6 +328,12 @@ export default function CustomerDetailPage() {
           </button>
         </div>
       </div>
+
+      <style jsx global>{`
+        @media print {
+          @page { size: A4 ${statementOrientation}; }
+        }
+      `}</style>
 
       <div className="bg-white border rounded-lg p-4 mb-6 no-print">
         <div className="grid sm:grid-cols-4 gap-4">

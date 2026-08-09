@@ -28,6 +28,7 @@ export default function SalesReportPage() {
   const [groupBy, setGroupBy] = useState('day');
   const [brandId, setBrandId] = useState('');
   const [sortDir, setSortDir] = useState('desc');
+  const [orientation, setOrientation] = useState('portrait');
 
   useEffect(() => {
     Promise.all([
@@ -101,10 +102,17 @@ export default function SalesReportPage() {
             </select>
           </div>
         </div>
-        <div className="mt-4">
+        <div className="mt-4 flex items-end gap-3">
           <button onClick={fetchReport} disabled={loading} className={btnPrimaryCls}>
             {loading ? 'Loading...' : 'Run Report'}
           </button>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Print Orientation</label>
+            <select value={orientation} onChange={e => setOrientation(e.target.value)} className="px-3 py-2 border rounded text-sm">
+              <option value="portrait">Portrait</option>
+              <option value="landscape">Landscape</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -180,7 +188,7 @@ export default function SalesReportPage() {
 
       <style jsx global>{`
         @media print {
-          @page { size: A4 landscape; }
+          @page { size: A4 ${orientation}; }
         }
       `}</style>
     </div>
