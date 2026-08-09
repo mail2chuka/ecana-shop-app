@@ -46,7 +46,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 to-gray-800">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-brand-950 to-brand-800">
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm">
           {/* Logo & Branding */}
@@ -99,7 +99,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2 bg-[#128a4e] text-white rounded hover:bg-[#0d6b3c] disabled:opacity-50 font-medium"
+                className="w-full py-2 bg-brand-800 text-white rounded hover:bg-brand-900 disabled:opacity-50 font-medium"
               >
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
