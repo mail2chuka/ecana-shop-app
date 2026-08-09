@@ -571,8 +571,8 @@ export default function CustomerDetailPage() {
             <Field label="Total amount (₦)" required>
               <CurrencyInput value={surchargeForm.totalAmount} onChange={val => setSurchargeForm({ ...surchargeForm, totalAmount: val })} className={inputCls} required />
             </Field>
-            <Field label="Comment" required>
-              <textarea value={surchargeForm.reason} onChange={e => setSurchargeForm({ ...surchargeForm, reason: e.target.value })} rows={2} className={inputCls} required placeholder="Why this surcharge is being applied" />
+            <Field label="Reason" required>
+              <textarea value={surchargeForm.reason} onChange={e => setSurchargeForm({ ...surchargeForm, reason: e.target.value })} rows={2} className={inputCls} required />
             </Field>
             <Field label="4-digit PIN" required>
               <input
@@ -619,7 +619,7 @@ export default function CustomerDetailPage() {
             <button
               type="button"
               onClick={() => setSurchargeStandalone(true)}
-              className="w-full px-4 py-2 border border-dashed rounded text-sm text-gray-600 hover:bg-gray-50"
+              className="w-full px-4 py-2 border rounded text-sm hover:bg-gray-50"
             >
               Surcharge not tied to a transaction
             </button>
@@ -673,8 +673,8 @@ export default function CustomerDetailPage() {
             <Field label="Fund amount (₦)" required>
               <CurrencyInput value={refundForm.amount} onChange={val => setRefundForm({ ...refundForm, amount: val })} className={inputCls} required />
             </Field>
-            <Field label="Comment" required>
-              <textarea value={refundForm.reason} onChange={e => setRefundForm({ ...refundForm, reason: e.target.value })} rows={2} className={inputCls} required placeholder="Why this fund is being credited" />
+            <Field label="Reason" required>
+              <textarea value={refundForm.reason} onChange={e => setRefundForm({ ...refundForm, reason: e.target.value })} rows={2} className={inputCls} required />
             </Field>
             <Field label="4-digit PIN" required>
               <input
@@ -721,7 +721,7 @@ export default function CustomerDetailPage() {
             <button
               type="button"
               onClick={() => setRefundStandalone(true)}
-              className="w-full px-4 py-2 border border-dashed rounded text-sm text-gray-600 hover:bg-gray-50"
+              className="w-full px-4 py-2 border rounded text-sm hover:bg-gray-50"
             >
               Fund not tied to a transaction
             </button>

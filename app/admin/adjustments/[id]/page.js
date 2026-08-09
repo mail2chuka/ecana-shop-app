@@ -115,7 +115,7 @@ export default function StandaloneAdjustmentDetailPage() {
           <Field label="Amount (₦)" required>
             <CurrencyInput value={editForm.amount} onChange={val => setEditForm({ ...editForm, amount: val })} className={inputCls} required />
           </Field>
-          <Field label="Comment" required>
+          <Field label="Reason" required>
             <textarea value={editForm.reason} onChange={e => setEditForm({ ...editForm, reason: e.target.value })} rows={2} className={inputCls} required />
           </Field>
           <Field label="4-digit PIN" required>
