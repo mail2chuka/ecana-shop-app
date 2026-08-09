@@ -165,7 +165,7 @@ export default function LandingPage() {
           </div>
 
           {/* Illustrative product mockup — generic placeholder content, not a real customer's data. */}
-          <div className="reveal relative h-[360px] sm:h-[420px]" style={{ animationDelay: '420ms' }}>
+          <div className="reveal relative h-[400px] sm:h-[420px]" style={{ animationDelay: '420ms' }}>
             <div
               className="absolute top-6 right-2 w-[78%] rounded-2xl border p-4"
               style={{ backgroundColor: 'var(--surface-card)', borderColor: 'var(--line)', transform: 'rotate(4deg)', boxShadow: '0 20px 45px -20px rgba(11,79,58,0.28)' }}
