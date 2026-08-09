@@ -5,6 +5,7 @@ import dbConnect from '@/lib/db';
 import Customer from '@/models/Customer';
 import Sale from '@/models/Sale';
 import CustomerPayment from '@/models/CustomerPayment';
+import CustomerAdjustment from '@/models/CustomerAdjustment';
 
 async function _h_GET(request) {
   try {
@@ -59,7 +60,7 @@ async function _h_GET(request) {
       paymentMatch.date = dateRange;
     }
 
-    const [debtByMonth, surplusByMonth, adjustmentsByMonth] = await Promise.all([
+    const [debtByMonth, surplusByMonth, adjustmentsByMonth, standaloneAdjustmentsByMonth] = await Promise.all([
       Sale.aggregate([
         { $match: saleMatch },
         { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$date' } }, total: { $sum: '$grandTotal' } } },
@@ -76,6 +77,11 @@ async function _h_GET(request) {
         ...(dateRange ? [{ $match: { 'adjustments.appliedAt': dateRange } }] : []),
         { $group: { _id: { month: { $dateToString: { format: '%Y-%m', date: '$adjustments.appliedAt' } }, type: '$adjustments.type' }, total: { $sum: '$adjustments.amount' } } },
       ]),
+      // Same as above, for surcharges/funds that aren't tied to any sale (models/CustomerAdjustment.js).
+      CustomerAdjustment.aggregate([
+        ...(dateRange ? [{ $match: { appliedAt: dateRange } }] : []),
+        { $group: { _id: { month: { $dateToString: { format: '%Y-%m', date: '$appliedAt' } }, type: '$type' }, total: { $sum: '$amount' } } },
+      ]),
     ]);
 
     const monthMap = new Map();
@@ -87,7 +93,7 @@ async function _h_GET(request) {
       if (existing) existing.surplusAdded = row.total;
       else monthMap.set(row._id, { month: row._id, debtAdded: 0, surplusAdded: row.total });
     }
-    for (const row of adjustmentsByMonth) {
+    for (const row of [...adjustmentsByMonth, ...standaloneAdjustmentsByMonth]) {
       const month = row._id.month;
       if (!monthMap.has(month)) monthMap.set(month, { month, debtAdded: 0, surplusAdded: 0 });
       const entry = monthMap.get(month);

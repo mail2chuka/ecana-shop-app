@@ -42,11 +42,15 @@ export default function CustomerDetailPage() {
 
   const [showSurcharge, setShowSurcharge] = useState(false);
   const [surchargeSaleId, setSurchargeSaleId] = useState(null);
+  const [surchargeStandalone, setSurchargeStandalone] = useState(false);
+  const [surchargeSearch, setSurchargeSearch] = useState('');
   const [surchargeForm, setSurchargeForm] = useState(blankSurchargeForm);
   const [submittingSurcharge, setSubmittingSurcharge] = useState(false);
 
   const [showRefund, setShowRefund] = useState(false);
   const [refundSaleId, setRefundSaleId] = useState(null);
+  const [refundStandalone, setRefundStandalone] = useState(false);
+  const [refundSearch, setRefundSearch] = useState('');
   const [refundForm, setRefundForm] = useState(blankRefundForm);
   const [submittingRefund, setSubmittingRefund] = useState(false);
 
@@ -207,17 +211,33 @@ export default function CustomerDetailPage() {
     }
   };
 
-  const openSurcharge = () => { setSurchargeSaleId(null); setSurchargeForm(blankSurchargeForm); setShowSurcharge(true); };
-  const openRefund = () => { setRefundSaleId(null); setRefundForm(blankRefundForm); setShowRefund(true); };
+  const openSurcharge = () => {
+    setSurchargeSaleId(null);
+    setSurchargeStandalone(false);
+    setSurchargeSearch('');
+    setSurchargeForm(blankSurchargeForm);
+    setShowSurcharge(true);
+  };
+  const openRefund = () => {
+    setRefundSaleId(null);
+    setRefundStandalone(false);
+    setRefundSearch('');
+    setRefundForm(blankRefundForm);
+    setShowRefund(true);
+  };
 
   const handleSurchargeSubmit = async (e) => {
     e.preventDefault();
     setSubmittingSurcharge(true);
     try {
-      const r = await fetch(`/api/sales/${surchargeSaleId}/surcharge`, {
+      const url = surchargeStandalone ? `/api/customers/${id}/surcharge` : `/api/sales/${surchargeSaleId}/surcharge`;
+      const body = surchargeStandalone
+        ? { amount: surchargeForm.totalAmount, reason: surchargeForm.reason, confirmPin: surchargeForm.confirmPin }
+        : surchargeForm;
+      const r = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(surchargeForm),
+        body: JSON.stringify(body),
       });
       const d = await r.json();
       if (d.success) {
@@ -238,7 +258,8 @@ export default function CustomerDetailPage() {
     e.preventDefault();
     setSubmittingRefund(true);
     try {
-      const r = await fetch(`/api/sales/${refundSaleId}/refund`, {
+      const url = refundStandalone ? `/api/customers/${id}/refund` : `/api/sales/${refundSaleId}/refund`;
+      const r = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(refundForm),
@@ -384,8 +405,8 @@ export default function CustomerDetailPage() {
               {ledger.map((entry, i) => {
                 const refLink = entry.type === 'sale'
                   ? <Link href={`/admin/sales/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
-                  : entry.type === 'surcharge' || entry.type === 'refund'
-                  ? <Link href={`/admin/sales/${entry.id}/adjustments/${entry.adjId}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
+                  : (entry.type === 'surcharge' || entry.type === 'refund')
+                  ? <Link href={entry.standalone ? `/admin/adjustments/${entry.id}` : `/admin/sales/${entry.id}/adjustments/${entry.adjId}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>
                   : <Link href={`/admin/payments/${entry.id}`} className={`${tableActionCls} hover:underline`}>{entry.ref}</Link>;
 
                 // A multi-product sale (e.g. two cement brands in one transaction) gets one mini-row
@@ -539,25 +560,69 @@ export default function CustomerDetailPage() {
         </form>
       </Modal>
 
-      {/* Apply Surcharge Modal — pick a transaction, then enter the surcharge details */}
+      {/* Apply Surcharge Modal — search/pick a transaction, enter surcharge details, or go standalone */}
       <Modal open={showSurcharge} onClose={() => setShowSurcharge(false)} title="Apply Surcharge" size="lg">
-        {!surchargeSaleId ? (
-          <div className="space-y-2">
-            <p className="text-sm text-gray-500 mb-2">Select which transaction to surcharge:</p>
-            {adjustableSales.length === 0 && <p className="text-sm text-gray-500">No cement/aggregate sales to surcharge.</p>}
-            <div className="max-h-72 overflow-y-auto divide-y border rounded">
-              {adjustableSales.map(s => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setSurchargeSaleId(s.id)}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
-                >
-                  <p className="font-medium">{s.ref} — {formatDate(s.date)}</p>
-                  <p className="text-xs text-gray-500 truncate">{s.description} · {formatNaira(s.debit)}</p>
-                </button>
-              ))}
+        {surchargeStandalone ? (
+          <form onSubmit={handleSurchargeSubmit} className="space-y-4">
+            <div className="bg-gray-50 rounded p-3 text-sm flex justify-between items-center">
+              <span>Not tied to a transaction</span>
+              <button type="button" onClick={() => setSurchargeStandalone(false)} className="text-xs text-gray-500 hover:underline">Pick a transaction instead</button>
             </div>
+            <Field label="Total amount (₦)" required>
+              <CurrencyInput value={surchargeForm.totalAmount} onChange={val => setSurchargeForm({ ...surchargeForm, totalAmount: val })} className={inputCls} required />
+            </Field>
+            <Field label="Comment" required>
+              <textarea value={surchargeForm.reason} onChange={e => setSurchargeForm({ ...surchargeForm, reason: e.target.value })} rows={2} className={inputCls} required placeholder="Why this surcharge is being applied" />
+            </Field>
+            <Field label="4-digit PIN" required>
+              <input
+                type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
+                value={surchargeForm.confirmPin}
+                onChange={e => setSurchargeForm({ ...surchargeForm, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                className={inputCls} required
+              />
+            </Field>
+            <FormButtons onCancel={() => setShowSurcharge(false)} submitting={submittingSurcharge} submitLabel="Apply Surcharge" />
+          </form>
+        ) : !surchargeSaleId ? (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">Search by transaction ID</label>
+              <input
+                type="text"
+                value={surchargeSearch}
+                onChange={e => setSurchargeSearch(e.target.value)}
+                placeholder="Enter a transaction ref..."
+                className={inputCls}
+                autoFocus
+              />
+            </div>
+            <div className="max-h-72 overflow-y-auto divide-y border rounded">
+              {adjustableSales
+                .filter(s => !surchargeSearch.trim() || s.ref.toLowerCase().includes(surchargeSearch.trim().toLowerCase()))
+                .map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setSurchargeSaleId(s.id)}
+                    className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                  >
+                    <p className="font-medium">{s.ref} — {formatDate(s.date)}</p>
+                    <p className="text-xs text-gray-500 truncate">{s.description} · {formatNaira(s.debit)}</p>
+                  </button>
+                ))}
+              {adjustableSales.length === 0 && <p className="text-sm text-gray-500 px-3 py-2">No cement/aggregate sales to surcharge.</p>}
+              {adjustableSales.length > 0 && adjustableSales.filter(s => !surchargeSearch.trim() || s.ref.toLowerCase().includes(surchargeSearch.trim().toLowerCase())).length === 0 && (
+                <p className="text-sm text-gray-500 px-3 py-2">No transaction matches that ID.</p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setSurchargeStandalone(true)}
+              className="w-full px-4 py-2 border border-dashed rounded text-sm text-gray-600 hover:bg-gray-50"
+            >
+              Surcharge not tied to a transaction
+            </button>
           </div>
         ) : (
           <form onSubmit={handleSurchargeSubmit} className="space-y-4">
@@ -597,25 +662,69 @@ export default function CustomerDetailPage() {
         )}
       </Modal>
 
-      {/* Fund Modal — pick a transaction, then enter the fund details */}
+      {/* Fund Modal — search/pick a transaction, enter fund details, or go standalone */}
       <Modal open={showRefund} onClose={() => setShowRefund(false)} title="Fund" size="lg">
-        {!refundSaleId ? (
-          <div className="space-y-2">
-            <p className="text-sm text-gray-500 mb-2">Select which transaction to fund:</p>
-            {adjustableSales.length === 0 && <p className="text-sm text-gray-500">No cement/aggregate sales to fund.</p>}
-            <div className="max-h-72 overflow-y-auto divide-y border rounded">
-              {adjustableSales.map(s => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setRefundSaleId(s.id)}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
-                >
-                  <p className="font-medium">{s.ref} — {formatDate(s.date)}</p>
-                  <p className="text-xs text-gray-500 truncate">{s.description} · {formatNaira(s.debit)}</p>
-                </button>
-              ))}
+        {refundStandalone ? (
+          <form onSubmit={handleRefundSubmit} className="space-y-4">
+            <div className="bg-gray-50 rounded p-3 text-sm flex justify-between items-center">
+              <span>Not tied to a transaction</span>
+              <button type="button" onClick={() => setRefundStandalone(false)} className="text-xs text-gray-500 hover:underline">Pick a transaction instead</button>
             </div>
+            <Field label="Fund amount (₦)" required>
+              <CurrencyInput value={refundForm.amount} onChange={val => setRefundForm({ ...refundForm, amount: val })} className={inputCls} required />
+            </Field>
+            <Field label="Comment" required>
+              <textarea value={refundForm.reason} onChange={e => setRefundForm({ ...refundForm, reason: e.target.value })} rows={2} className={inputCls} required placeholder="Why this fund is being credited" />
+            </Field>
+            <Field label="4-digit PIN" required>
+              <input
+                type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
+                value={refundForm.confirmPin}
+                onChange={e => setRefundForm({ ...refundForm, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                className={inputCls} required
+              />
+            </Field>
+            <FormButtons onCancel={() => setShowRefund(false)} submitting={submittingRefund} submitLabel="Apply Fund" />
+          </form>
+        ) : !refundSaleId ? (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">Search by transaction ID</label>
+              <input
+                type="text"
+                value={refundSearch}
+                onChange={e => setRefundSearch(e.target.value)}
+                placeholder="Enter a transaction ref..."
+                className={inputCls}
+                autoFocus
+              />
+            </div>
+            <div className="max-h-72 overflow-y-auto divide-y border rounded">
+              {adjustableSales
+                .filter(s => !refundSearch.trim() || s.ref.toLowerCase().includes(refundSearch.trim().toLowerCase()))
+                .map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setRefundSaleId(s.id)}
+                    className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                  >
+                    <p className="font-medium">{s.ref} — {formatDate(s.date)}</p>
+                    <p className="text-xs text-gray-500 truncate">{s.description} · {formatNaira(s.debit)}</p>
+                  </button>
+                ))}
+              {adjustableSales.length === 0 && <p className="text-sm text-gray-500 px-3 py-2">No cement/aggregate sales to fund.</p>}
+              {adjustableSales.length > 0 && adjustableSales.filter(s => !refundSearch.trim() || s.ref.toLowerCase().includes(refundSearch.trim().toLowerCase())).length === 0 && (
+                <p className="text-sm text-gray-500 px-3 py-2">No transaction matches that ID.</p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setRefundStandalone(true)}
+              className="w-full px-4 py-2 border border-dashed rounded text-sm text-gray-600 hover:bg-gray-50"
+            >
+              Fund not tied to a transaction
+            </button>
           </div>
         ) : (
           <form onSubmit={handleRefundSubmit} className="space-y-4">

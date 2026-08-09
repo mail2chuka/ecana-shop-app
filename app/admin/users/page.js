@@ -290,7 +290,7 @@ export default function UsersPage() {
 
       <Modal open={showPinModal} onClose={() => setShowPinModal(false)} title="Set/Change My PIN">
         <form onSubmit={handlePinSubmit} className="space-y-4">
-          <p className="text-sm text-gray-500">This 4-digit PIN is required to apply a surcharge or fund on a sale. It's separate from your login password.</p>
+          <p className="text-sm text-gray-500">This 4-digit PIN is required to apply a surcharge or fund. It's separate from your login password.</p>
           <Field label="Your current password" required>
             <input type="password" value={pinForm.currentPassword} onChange={e => setPinForm({ ...pinForm, currentPassword: e.target.value })} className={inputCls} required />
           </Field>
