@@ -1,5 +1,7 @@
 'use client';
 
+import { FiX } from 'react-icons/fi';
+
 export function Logo({ className = 'h-8 w-8' }) {
   return (
     <svg className={className} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -150,7 +152,12 @@ export function Modal({ open, onClose, title, children, size = 'md' }) {
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className={`bg-white rounded-lg w-full ${sizes[size]} max-h-[90vh] overflow-y-auto`}>
         <div className="p-6">
-          <h2 className="text-lg font-bold mb-4">{title}</h2>
+          <div className="flex justify-between items-start gap-4 mb-4">
+            <h2 className="text-lg font-bold">{title}</h2>
+            <button type="button" onClick={onClose} className="shrink-0 text-gray-400 hover:text-gray-600" aria-label="Close">
+              <FiX size={20} />
+            </button>
+          </div>
           {children}
         </div>
       </div>
