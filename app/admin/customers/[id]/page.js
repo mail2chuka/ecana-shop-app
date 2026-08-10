@@ -124,7 +124,7 @@ export default function CustomerDetailPage() {
   const openEditModal = () => {
     setEditForm({
       name: data.customer.name, phone: data.customer.phone, address: data.customer.address || '',
-      businessName: data.customer.businessName || '', creditLimit: data.customer.creditLimit || '',
+      businessName: data.customer.businessName || '', creditLimit: data.customer.creditLimit ?? '',
     });
     setShowEditModal(true);
   };
@@ -135,7 +135,7 @@ export default function CustomerDetailPage() {
     try {
       const body = {
         name: editForm.name, phone: editForm.phone, address: editForm.address, businessName: editForm.businessName,
-        creditLimit: editForm.creditLimit ? Number(editForm.creditLimit) : null,
+        creditLimit: editForm.creditLimit === '' ? null : Number(editForm.creditLimit),
       };
       const r = await fetch(`/api/customers/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const d = await r.json();

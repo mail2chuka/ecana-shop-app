@@ -346,10 +346,11 @@ async function _h_PUT(request, { params }) {
 
       const balanceBefore = customer.balance;
       const balanceAfter = willBeCreditSale ? balanceBefore - grandTotal : balanceBefore;
+      const creditLimit = normalizeCreditLimit(customer.creditLimit);
 
-      if (willBeCreditSale && customer.creditLimit !== null && customer.creditLimit !== undefined) {
-        if (balanceAfter < -customer.creditLimit) {
-          throw new ApiError(`Credit limit exceeded. Customer can owe up to ₦${customer.creditLimit.toLocaleString()}.`, 400);
+      if (willBeCreditSale && creditLimit !== null) {
+        if (balanceAfter < -creditLimit) {
+          throw new ApiError(`Credit limit exceeded. Customer can owe up to ₦${creditLimit.toLocaleString()}.`, 400);
         }
       }
 

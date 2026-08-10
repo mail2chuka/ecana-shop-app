@@ -7,6 +7,7 @@ import { logAudit } from '@/lib/audit';
 import { requireObjectId } from '@/lib/validate';
 import { findDuplicateCustomerName } from '@/lib/customerName';
 import { can } from '@/lib/permissions';
+import { normalizeCreditLimit } from '@/lib/creditLimit';
 
 async function _h_GET(request, { params }) {
   try {
@@ -36,7 +37,7 @@ async function _h_PUT(request, { params }) {
       phone: body.phone,
       address: body.address,
       businessName: body.businessName,
-      creditLimit: body.creditLimit !== undefined ? Number(body.creditLimit) : undefined,
+      creditLimit: body.creditLimit !== undefined ? normalizeCreditLimit(body.creditLimit) : undefined,
       isActive: typeof body.isActive === 'boolean' ? body.isActive : undefined,
     };
     Object.keys(update).forEach((key) => update[key] === undefined && delete update[key]);

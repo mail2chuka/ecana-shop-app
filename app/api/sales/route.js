@@ -265,11 +265,12 @@ async function _h_POST(request) {
       const isCreditSale = !isShopSale || paymentMethod === 'balance';
       const balanceBefore = customer.balance;
       const balanceAfter = isCreditSale ? balanceBefore - grandTotal : balanceBefore;
+      const creditLimit = normalizeCreditLimit(customer.creditLimit);
 
-      if (isCreditSale && customer.creditLimit !== null && customer.creditLimit !== undefined) {
+      if (isCreditSale && creditLimit !== null) {
         // creditLimit = max they can owe (i.e. how negative balance can go)
-        if (balanceAfter < -customer.creditLimit) {
-          throw new ApiError(`Credit limit exceeded. Customer can owe up to ₦${customer.creditLimit.toLocaleString()}.`, 400);
+        if (balanceAfter < -creditLimit) {
+          throw new ApiError(`Credit limit exceeded. Customer can owe up to ₦${creditLimit.toLocaleString()}.`, 400);
         }
       }
 

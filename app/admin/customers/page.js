@@ -71,7 +71,7 @@ export default function CustomersPage() {
     try {
       const body = {
         name: form.name, phone: form.phone, address: form.address, businessName: form.businessName,
-        creditLimit: form.creditLimit ? Number(form.creditLimit) : null,
+        creditLimit: form.creditLimit === '' ? null : Number(form.creditLimit),
         openingBalance: Number(form.openingBalance) || 0,
       };
       const r = await fetch('/api/customers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });

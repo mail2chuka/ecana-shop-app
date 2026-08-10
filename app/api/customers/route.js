@@ -8,6 +8,7 @@ import { logAudit } from '@/lib/audit';
 import { generateCustomerId } from '@/lib/customerId';
 import { findDuplicateCustomerName } from '@/lib/customerName';
 import { can } from '@/lib/permissions';
+import { normalizeCreditLimit } from '@/lib/creditLimit';
 
 const DORMANT_MS = 14 * 24 * 60 * 60 * 1000;
 
@@ -76,7 +77,7 @@ export const POST = withOrg(async (request) => {
       address: body.address,
       businessName: body.businessName,
       balance: Number(body.openingBalance) || 0,
-      creditLimit: body.creditLimit ? Number(body.creditLimit) : null,
+      creditLimit: normalizeCreditLimit(body.creditLimit),
       createdBy: session.user.id,
     });
     await logAudit({ userId: session.user.id, userName: session.user.name, action: 'created', entity: 'Customer', entityId: customer._id, after: customer });
