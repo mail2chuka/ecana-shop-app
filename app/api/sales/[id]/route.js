@@ -20,6 +20,7 @@ import { verifyOwnPin } from '@/lib/verifyPassword';
 import { ApiError } from '@/lib/apiError';
 import { pluralizeUnit } from '@/lib/format';
 import { readJsonBody } from '@/lib/requestBody';
+import { normalizeCreditLimit } from '@/lib/creditLimit';
 
 async function _h_GET(request, { params }) {
   try {
