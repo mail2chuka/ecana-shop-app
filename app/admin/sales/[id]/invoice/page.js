@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime, saleItemUnitLabel } from '@/lib/format';
 import { ReceiptHeader, ReceiptFooter, PaymentDetailsBox } from '@/components/ui';
 import { shareReceiptAsPdf, shareReceiptAsJpg } from '@/lib/receiptCapture';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function SaleInvoicePage() {
   const { id } = useParams();
@@ -16,8 +17,8 @@ export default function SaleInvoicePage() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/sales/${id}`).then(r => r.json()),
-      fetch('/api/organization').then(r => r.json()),
+      apiFetch(`/api/sales/${id}`),
+      apiFetch('/api/organization'),
     ]).then(([s, o]) => {
       if (s.success) setSale(s.data);
       if (o.success) setOrg(o.data);

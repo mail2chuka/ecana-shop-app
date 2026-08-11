@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
 import { ReceiptHeader, ReceiptFooter, PaymentDetailsBox } from '@/components/ui';
 import { shareReceiptAsPdf, shareReceiptAsJpg } from '@/lib/receiptCapture';
+import { apiFetch } from '@/lib/apiClient';
 
 const METHOD_LABELS = { cash: 'Cash', transfer: 'Bank Transfer', pos: 'POS', cheque: 'Cheque' };
 
@@ -18,8 +19,8 @@ export default function PaymentReceiptPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/payments/${id}`).then(r => r.json()),
-      fetch('/api/organization').then(r => r.json()),
+      apiFetch(`/api/payments/${id}`),
+      apiFetch('/api/organization'),
     ]).then(([p, o]) => {
       if (p.success) setPayment(p.data);
       if (o.success) setOrg(o.data);

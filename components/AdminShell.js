@@ -8,6 +8,7 @@ import { FiMenu, FiX, FiLogOut, FiArrowLeft, FiSearch } from 'react-icons/fi';
 import { Logo } from '@/components/ui';
 import { STAFF_ROLES } from '@/lib/permissions';
 import { hasAnyModule } from '@/lib/modules';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 // Non-admin staff roles are restricted to these path prefixes; the dashboard ('/admin' exactly) is always allowed.
@@ -141,8 +142,7 @@ export default function AdminShell({ children }) {
     const timer = setTimeout(async () => {
       try {
         setSearchLoading(true);
-        const r = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
-        const d = await r.json();
+        const d = await apiFetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
         if (d.success) {
           setSearchResults(d.data || { links: [], users: [], products: [] });
         }

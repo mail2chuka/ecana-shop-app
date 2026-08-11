@@ -7,6 +7,7 @@ import { Loader, PageHeader, Card, Modal, FormButtons, Field, inputCls, StatusPi
 import { formatNaira, formatDate } from '@/lib/format';
 import toast from 'react-hot-toast';
 import { FiArrowLeft } from 'react-icons/fi';
+import { apiFetch } from '@/lib/apiClient';
 
 const ALL_MODULES = [
   { id: 'cement', label: 'Cement (ATC)' },
@@ -39,8 +40,7 @@ export default function OrganizationDetailPage() {
 
   const load = async () => {
     setLoading(true);
-    const r = await fetch(`/api/platform/organizations/${id}`);
-    const d = await r.json();
+    const d = await apiFetch(`/api/platform/organizations/${id}`);
     if (d.success) {
       setOrg(d.data);
       setForm({
@@ -79,11 +79,10 @@ export default function OrganizationDetailPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const r = await fetch(`/api/platform/organizations/${id}`, {
+      const d = await apiFetch(`/api/platform/organizations/${id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, trialEndsAt: form.trialEndsAt || null }),
       });
-      const d = await r.json();
       if (d.success) { toast.success('Saved'); load(); }
       else toast.error(d.error);
     } catch (err) {
@@ -98,10 +97,9 @@ export default function OrganizationDetailPage() {
     if (!confirm(goingActive ? `Reactivate ${org.name}? Staff will be able to log in again.` : `Suspend ${org.name}? Staff will not be able to log in until reactivated.`)) return;
     setTogglingActive(true);
     try {
-      const r = await fetch(`/api/platform/organizations/${id}`, {
+      const d = await apiFetch(`/api/platform/organizations/${id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive: goingActive }),
       });
-      const d = await r.json();
       if (d.success) { toast.success(goingActive ? 'Reactivated' : 'Suspended'); load(); }
       else toast.error(d.error);
     } finally {
@@ -114,10 +112,9 @@ export default function OrganizationDetailPage() {
     if (!confirm(`Extend ${org.name}'s subscription by ${label}?`)) return;
     setExtending(true);
     try {
-      const r = await fetch(`/api/platform/organizations/${id}/extend-subscription`, {
+      const d = await apiFetch(`/api/platform/organizations/${id}/extend-subscription`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan: extendPlan }),
       });
-      const d = await r.json();
       if (d.success) { toast.success(`Extended by ${label}`); load(); }
       else toast.error(d.error);
     } finally {
@@ -130,10 +127,9 @@ export default function OrganizationDetailPage() {
     if (newPassword.length < 4) return toast.error('Password must be at least 4 characters');
     setResetting(true);
     try {
-      const r = await fetch(`/api/platform/organizations/${id}/users/${resetTarget._id}/reset-password`, {
+      const d = await apiFetch(`/api/platform/organizations/${id}/users/${resetTarget._id}/reset-password`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ newPassword }),
       });
-      const d = await r.json();
       if (d.success) { toast.success(`Password reset for ${resetTarget.name}`); setResetTarget(null); setNewPassword(''); }
       else toast.error(d.error);
     } finally {

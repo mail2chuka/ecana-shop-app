@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, StatusPill, btnPrimaryCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNumber, formatDate } from '@/lib/format';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const statusColor = {
@@ -82,9 +83,9 @@ export default function ATCsPage() {
     if (sd) params.set('startDate', sd);
     if (ed) params.set('endDate', ed);
     const [a, b, t] = await Promise.all([
-      fetch(`/api/atcs?${params.toString()}`).then(r => r.json()),
-      fetch('/api/cement-brands').then(r => r.json()),
-      fetch('/api/trucks').then(r => r.json()),
+      apiFetch(`/api/atcs?${params.toString()}`),
+      apiFetch('/api/cement-brands'),
+      apiFetch('/api/trucks'),
     ]);
     if (a.success) setAllAtcs(a.data);
     if (b.success) setBrands(b.data);
@@ -123,8 +124,7 @@ export default function ATCsPage() {
     setSubmitting(true);
     try {
       const body = { ...form, bagsPaidFor: Number(form.bagsPaidFor) };
-      const r = await fetch('/api/atcs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      const d = await r.json();
+      const d = await apiFetch('/api/atcs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (d.success) { toast.success('ATC recorded'); setShowCreate(false); setForm(blankForm); load(); }
       else toast.error(d.error);
     } catch (err) {
@@ -137,12 +137,11 @@ export default function ATCsPage() {
   const handleAssign = async (e) => {
     e.preventDefault();
     if (!selectedTruck) return toast.error('Pick a truck');
-    const r = await fetch(`/api/atcs/${assignModal._id}/assign`, {
+    const d = await apiFetch(`/api/atcs/${assignModal._id}/assign`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ truckId: selectedTruck }),
     });
-    const d = await r.json();
     if (d.success) { toast.success('Truck assigned'); setAssignModal(null); setSelectedTruck(''); load(); }
     else toast.error(d.error);
   };
@@ -150,12 +149,11 @@ export default function ATCsPage() {
   const handleLoading = async (e) => {
     e.preventDefault();
     if (!loadingModal) return;
-    const r = await fetch(`/api/atcs/${loadingModal._id}/loading`, {
+    const d = await apiFetch(`/api/atcs/${loadingModal._id}/loading`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mode: loadingChoice }),
     });
-    const d = await r.json();
     if (d.success) {
       toast.success('Loading updated');
       setLoadingModal(null);
@@ -167,8 +165,7 @@ export default function ATCsPage() {
   };
 
   const handleArrive = async (atc) => {
-    const r = await fetch(`/api/atcs/${atc._id}/arrive`, { method: 'POST' });
-    const d = await r.json();
+    const d = await apiFetch(`/api/atcs/${atc._id}/arrive`, { method: 'POST' });
     if (d.success) { toast.success('Marked arrived'); load(); }
     else toast.error(d.error);
   };

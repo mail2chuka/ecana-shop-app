@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira, formatCustomerLabel } from '@/lib/format';
 import { CurrencyInput } from '@/components/ui';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function NewAggregateSalePage() {
   const router = useRouter();
@@ -34,9 +35,9 @@ export default function NewAggregateSalePage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/stonedust').then(r => r.json()),
-      fetch('/api/trucks').then(r => r.json()),
-      fetch('/api/customers').then(r => r.json()),
+      apiFetch('/api/stonedust'),
+      apiFetch('/api/trucks'),
+      apiFetch('/api/customers'),
     ]).then(([p, t, c]) => {
       if (p.success) setProducts(p.data);
       if (t.success) setTrucks(t.data.filter(x => x.type === 'stonedust'));
@@ -112,7 +113,7 @@ export default function NewAggregateSalePage() {
         lineTotal: parseFloat(total || (parseFloat(effectiveBillQty) * parseFloat(unitPrice))),
       };
 
-      const res = await fetch('/api/sales', {
+      const data = await apiFetch('/api/sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -125,7 +126,6 @@ export default function NewAggregateSalePage() {
           notes,
         }),
       });
-      const data = await res.json();
       if (data.success) {
         toast.success(`Sale ${data.data.saleNumber} created`);
         router.push(`/admin/sales/${data.data._id}`);

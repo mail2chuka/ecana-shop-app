@@ -11,6 +11,7 @@ import { ensureShopSpecialCustomers } from '@/lib/shopProvisioning';
 import { logAudit } from '@/lib/audit';
 import { requireObjectId } from '@/lib/validate';
 import { ApiError } from '@/lib/apiError';
+import { rethrowIfNextInternal } from '@/lib/routeErrors';
 
 const VALID_MODULES = ['cement', 'aggregate', 'shop'];
 const VALID_STATUSES = ['trialing', 'active', 'past_due', 'canceled'];
@@ -23,10 +24,10 @@ async function requireSuperAdmin() {
 }
 
 export async function GET(request, { params }) {
-  const session = await requireSuperAdmin();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  await dbConnect();
   try {
+    const session = await requireSuperAdmin();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    await dbConnect();
     const { id } = await params;
     requireObjectId(id, 'organization id');
     const data = await runUnscoped(async () => {
@@ -47,15 +48,16 @@ export async function GET(request, { params }) {
     });
     return NextResponse.json({ success: true, data });
   } catch (e) {
+    rethrowIfNextInternal(e);
     return NextResponse.json({ error: e.message }, { status: e.status || 500 });
   }
 }
 
 export async function PUT(request, { params }) {
-  const session = await requireSuperAdmin();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  await dbConnect();
   try {
+    const session = await requireSuperAdmin();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    await dbConnect();
     const { id } = await params;
     requireObjectId(id, 'organization id');
     const body = await request.json();
@@ -112,6 +114,7 @@ export async function PUT(request, { params }) {
 
     return NextResponse.json({ success: true, data: result });
   } catch (e) {
+    rethrowIfNextInternal(e);
     return NextResponse.json({ error: e.message }, { status: e.status || 400 });
   }
 }

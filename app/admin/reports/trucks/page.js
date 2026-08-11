@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { formatNaira } from '@/lib/format';
 import { btnPrimaryCls, theadCls, tableScrollCls } from '@/components/ui';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function TruckReportPage() {
   const [rows, setRows] = useState([]);
@@ -14,8 +15,7 @@ export default function TruckReportPage() {
 
   const fetchData = async () => {
     setLoading(true);
-    const res = await fetch(`/api/reports/trucks?startDate=${startDate}&endDate=${endDate}`);
-    const d = await res.json();
+    const d = await apiFetch(`/api/reports/trucks?startDate=${startDate}&endDate=${endDate}`);
     if (d.success) setRows(d.data);
     setLoading(false);
   };

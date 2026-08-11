@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
 import { ReceiptHeader, ReceiptFooter, PaymentDetailsBox } from '@/components/ui';
 import { shareReceiptAsPdf, shareReceiptAsJpg } from '@/lib/receiptCapture';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function StandaloneAdjustmentReceiptPage() {
   const { id } = useParams();
@@ -16,8 +17,8 @@ export default function StandaloneAdjustmentReceiptPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/adjustments/${id}`).then(r => r.json()),
-      fetch('/api/organization').then(r => r.json()),
+      apiFetch(`/api/adjustments/${id}`),
+      apiFetch('/api/organization'),
     ]).then(([a, o]) => {
       if (a.success) setAdj(a.data);
       if (o.success) setOrg(o.data);

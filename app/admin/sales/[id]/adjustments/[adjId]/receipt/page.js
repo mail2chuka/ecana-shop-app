@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime } from '@/lib/format';
 import { ReceiptHeader, ReceiptFooter, PaymentDetailsBox } from '@/components/ui';
 import { shareReceiptAsPdf, shareReceiptAsJpg } from '@/lib/receiptCapture';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function AdjustmentReceiptPage() {
   const { id, adjId } = useParams();
@@ -17,8 +18,8 @@ export default function AdjustmentReceiptPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/sales/${id}`).then(r => r.json()),
-      fetch('/api/organization').then(r => r.json()),
+      apiFetch(`/api/sales/${id}`),
+      apiFetch('/api/organization'),
     ]).then(([s, o]) => {
       if (s.success) {
         setSale(s.data);

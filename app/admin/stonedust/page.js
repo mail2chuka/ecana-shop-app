@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira } from '@/lib/format';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const blankForm = { quarry: '', size: '', currentPricePerTonne: '' };
@@ -21,8 +22,8 @@ export default function AggregatePage() {
 
   const load = async () => {
     const [p, q] = await Promise.all([
-      fetch('/api/stonedust').then(r => r.json()),
-      fetch('/api/suppliers?type=quarry').then(r => r.json()),
+      apiFetch('/api/stonedust'),
+      apiFetch('/api/suppliers?type=quarry'),
     ]);
     if (p.success) setProducts(p.data);
     if (q.success) setQuarries(q.data);
@@ -45,8 +46,7 @@ export default function AggregatePage() {
       const url = editing ? `/api/stonedust/${editing._id}` : '/api/stonedust';
       const method = editing ? 'PUT' : 'POST';
       const body = { ...form, currentPricePerTonne: Number(form.currentPricePerTonne) };
-      const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      const d = await r.json();
+      const d = await apiFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (d.success) { toast.success(editing ? 'Updated' : 'Created'); setShowModal(false); load(); }
       else toast.error(d.error);
     } catch (err) {
@@ -58,20 +58,18 @@ export default function AggregatePage() {
 
   const handleDelete = async (p) => {
     if (!confirm(`Deactivate ${p.quarryName} ${p.size}?`)) return;
-    const r = await fetch(`/api/stonedust/${p._id}`, { method: 'DELETE' });
-    const d = await r.json();
+    const d = await apiFetch(`/api/stonedust/${p._id}`, { method: 'DELETE' });
     if (d.success) { toast.success('Deactivated'); load(); }
     else toast.error(d.error);
   };
 
   const handlePriceChange = async (e) => {
     e.preventDefault();
-    const r = await fetch(`/api/stonedust/${priceModal._id}/price`, {
+    const d = await apiFetch(`/api/stonedust/${priceModal._id}/price`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ newPrice: Number(newPrice), reason: priceReason }),
     });
-    const d = await r.json();
     if (d.success) { toast.success('Price updated'); setPriceModal(null); setNewPrice(''); setPriceReason(''); load(); }
     else toast.error(d.error);
   };

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Loader, PageHeader, Card, Field, inputCls, btnPrimaryCls } from '@/components/ui';
 import { resizeImageToPng } from '@/lib/imageResize';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 export default function OrganizationSettingsPage() {
@@ -13,8 +14,7 @@ export default function OrganizationSettingsPage() {
 
   const load = async () => {
     setLoading(true);
-    const r = await fetch('/api/organization');
-    const d = await r.json();
+    const d = await apiFetch('/api/organization');
     if (d.success) {
       setForm({
         name: d.data.name || '',
@@ -38,10 +38,9 @@ export default function OrganizationSettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const r = await fetch('/api/organization', {
+      const d = await apiFetch('/api/organization', {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form),
       });
-      const d = await r.json();
       if (d.success) toast.success('Saved');
       else toast.error(d.error);
     } catch (err) {
@@ -64,8 +63,7 @@ export default function OrganizationSettingsPage() {
         body.append('smallFile', await resizeImageToPng(file, 200));
       } catch {}
 
-      const r = await fetch('/api/organization/logo', { method: 'POST', body });
-      const d = await r.json();
+      const d = await apiFetch('/api/organization/logo', { method: 'POST', body });
       if (d.success) { setForm((f) => ({ ...f, logoUrl: d.data.logoUrl, logoUrlSmall: d.data.logoUrlSmall || '' })); toast.success('Logo uploaded'); }
       else toast.error(d.error);
     } catch (err) {

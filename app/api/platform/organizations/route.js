@@ -9,6 +9,7 @@ import Sale from '@/models/Sale';
 import { runUnscoped, runWithOrg } from '@/lib/tenantScope';
 import { ensureShopSpecialCustomers } from '@/lib/shopProvisioning';
 import { ApiError } from '@/lib/apiError';
+import { rethrowIfNextInternal } from '@/lib/routeErrors';
 
 const TRIAL_DAYS = 14;
 const BUSINESS_TYPES = ['building_materials', 'vehicle_spare_parts', 'hotel_hospitality', 'supermarket'];
@@ -22,10 +23,10 @@ async function requireSuperAdmin() {
 }
 
 export async function GET() {
-  const session = await requireSuperAdmin();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  await dbConnect();
   try {
+    const session = await requireSuperAdmin();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    await dbConnect();
     const data = await runUnscoped(async () => {
       const orgs = await Organization.find().sort({ createdAt: 1 }).lean();
       const [users, custs, sales] = await Promise.all([
@@ -47,26 +48,27 @@ export async function GET() {
     });
     return NextResponse.json({ success: true, data });
   } catch (e) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    rethrowIfNextInternal(e);
+    return NextResponse.json({ error: e.message }, { status: e.status || 500 });
   }
 }
 
 export async function POST(request) {
-  const session = await requireSuperAdmin();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  await dbConnect();
-  const body = await request.json();
-  const orgName = (body.orgName || '').trim();
-  const orgPhone = (body.orgPhone || '').trim();
-  const orgEmail = (body.orgEmail || '').trim().toLowerCase();
-  const businessTypes = Array.isArray(body.businessTypes) ? body.businessTypes.filter((t) => BUSINESS_TYPES.includes(t)) : [];
-  const adminName = (body.adminName || '').trim();
-  const adminUsername = (body.adminUsername || '').trim().toLowerCase();
-  const adminPassword = body.adminPassword || '';
-  const slug = (body.slug || orgName).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  const enabledModules = Array.isArray(body.enabledModules) && body.enabledModules.length ? body.enabledModules : ['cement', 'aggregate', 'shop'];
-
   try {
+    const session = await requireSuperAdmin();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    await dbConnect();
+    const body = await request.json();
+    const orgName = (body.orgName || '').trim();
+    const orgPhone = (body.orgPhone || '').trim();
+    const orgEmail = (body.orgEmail || '').trim().toLowerCase();
+    const businessTypes = Array.isArray(body.businessTypes) ? body.businessTypes.filter((t) => BUSINESS_TYPES.includes(t)) : [];
+    const adminName = (body.adminName || '').trim();
+    const adminUsername = (body.adminUsername || '').trim().toLowerCase();
+    const adminPassword = body.adminPassword || '';
+    const slug = (body.slug || orgName).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const enabledModules = Array.isArray(body.enabledModules) && body.enabledModules.length ? body.enabledModules : ['cement', 'aggregate', 'shop'];
+
     if (!orgName || !orgPhone || !orgEmail || !adminName || !adminUsername || !adminPassword) {
       throw new ApiError('Business name, phone, email, admin name, username and password are all required', 400);
     }
@@ -98,6 +100,7 @@ export async function POST(request) {
 
     return NextResponse.json({ success: true, data: result }, { status: 201 });
   } catch (e) {
+    rethrowIfNextInternal(e);
     return NextResponse.json({ error: e.message }, { status: e.status || 400 });
   }
 }

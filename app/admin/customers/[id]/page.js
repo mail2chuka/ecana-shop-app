@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { formatNaira, formatDate, formatDateTime, formatCustomerLabel } from '@/lib/format';
 import { Modal, Field, FormButtons, inputCls, CurrencyInput, btnPrimaryCls, btnDangerCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { shareReceiptAsPdf, shareReceiptAsJpg } from '@/lib/receiptCapture';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const blankPaymentForm = {
@@ -67,8 +68,7 @@ export default function CustomerDetailPage() {
     if (sd) params.set('startDate', sd);
     if (ed) params.set('endDate', ed);
     setStatementLoading(true);
-    fetch(`/api/customers/${id}/statement?${params.toString()}`)
-      .then(r => r.json())
+    apiFetch(`/api/customers/${id}/statement?${params.toString()}`)
       .then(d => { if (d.success) setData(d.data); else toast.error(d.error); })
       .finally(() => { setLoading(false); setStatementLoading(false); });
   };
@@ -137,8 +137,7 @@ export default function CustomerDetailPage() {
         name: editForm.name, phone: editForm.phone, address: editForm.address, businessName: editForm.businessName,
         creditLimit: editForm.creditLimit === '' ? null : Number(editForm.creditLimit),
       };
-      const r = await fetch(`/api/customers/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      const d = await r.json();
+      const d = await apiFetch(`/api/customers/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (d.success) { toast.success('Updated'); setShowEditModal(false); load(); }
       else toast.error(d.error);
     } catch (err) {
@@ -153,12 +152,11 @@ export default function CustomerDetailPage() {
     if (!confirm(isActive ? `Archive ${data.customer.name}? They'll be hidden from active lists and can't be sold to until reactivated.` : `Reactivate ${data.customer.name}?`)) return;
     setTogglingActive(true);
     try {
-      const r = await fetch(`/api/customers/${id}`, {
+      const d = await apiFetch(`/api/customers/${id}`, {
         method: isActive ? 'DELETE' : 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: isActive ? undefined : JSON.stringify({ isActive: true }),
       });
-      const d = await r.json();
       if (d.success) { toast.success(isActive ? 'Archived' : 'Reactivated'); load(); }
       else toast.error(d.error);
     } catch (err) {
@@ -174,10 +172,9 @@ export default function CustomerDetailPage() {
     e.preventDefault();
     setDeleting(true);
     try {
-      const r = await fetch('/api/customers/bulk-purge', {
+      const d = await apiFetch('/api/customers/bulk-purge', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [id], confirmPin: purgePin }),
       });
-      const d = await r.json();
       if (d.success) { toast.success('Customer deleted'); router.push('/admin/customers'); }
       else { toast.error(d.error); setDeleting(false); }
     } catch (err) {
@@ -194,12 +191,11 @@ export default function CustomerDetailPage() {
 
     setSubmitting(true);
     try {
-      const r = await fetch('/api/payments', {
+      const d = await apiFetch('/api/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...paymentForm, customer: id, amount: Number(paymentForm.amount) }),
       });
-      const d = await r.json();
       if (d.success) {
         toast.success('Payment recorded');
         setShowPaymentModal(false);
@@ -235,12 +231,11 @@ export default function CustomerDetailPage() {
       const body = surchargeStandalone
         ? { amount: surchargeForm.totalAmount, reason: surchargeForm.reason, confirmPin: surchargeForm.confirmPin }
         : surchargeForm;
-      const r = await fetch(url, {
+      const d = await apiFetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      const d = await r.json();
       if (d.success) {
         toast.success('Surcharge applied');
         setShowSurcharge(false);
@@ -260,12 +255,11 @@ export default function CustomerDetailPage() {
     setSubmittingRefund(true);
     try {
       const url = refundStandalone ? `/api/customers/${id}/refund` : `/api/sales/${refundSaleId}/refund`;
-      const r = await fetch(url, {
+      const d = await apiFetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(refundForm),
       });
-      const d = await r.json();
       if (d.success) {
         toast.success('Fund applied');
         setShowRefund(false);

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Loader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira } from '@/lib/format';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const blankForm = { size: '', currentPricePerTonne: '' };
@@ -24,8 +25,8 @@ export default function QuarryDetailPage() {
 
   const load = async () => {
     const [sRes, pRes] = await Promise.all([
-      fetch('/api/suppliers?type=quarry').then(r => r.json()),
-      fetch('/api/stonedust').then(r => r.json()),
+      apiFetch('/api/suppliers?type=quarry'),
+      apiFetch('/api/stonedust'),
     ]);
     if (sRes.success) setQuarry(sRes.data.find(s => s._id === id) || null);
     if (pRes.success) setProducts(pRes.data.filter(p => p.quarry === id));
@@ -48,8 +49,7 @@ export default function QuarryDetailPage() {
       const url = editing ? `/api/stonedust/${editing._id}` : '/api/stonedust';
       const method = editing ? 'PUT' : 'POST';
       const body = { ...form, quarry: id, currentPricePerTonne: Number(form.currentPricePerTonne) };
-      const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      const d = await r.json();
+      const d = await apiFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (d.success) { toast.success(editing ? 'Updated' : 'Product added'); setShowModal(false); load(); }
       else toast.error(d.error);
     } catch (err) {
@@ -61,20 +61,18 @@ export default function QuarryDetailPage() {
 
   const handleDelete = async (p) => {
     if (!confirm(`Deactivate ${p.size}?`)) return;
-    const r = await fetch(`/api/stonedust/${p._id}`, { method: 'DELETE' });
-    const d = await r.json();
+    const d = await apiFetch(`/api/stonedust/${p._id}`, { method: 'DELETE' });
     if (d.success) { toast.success('Deactivated'); load(); }
     else toast.error(d.error);
   };
 
   const handlePriceChange = async (e) => {
     e.preventDefault();
-    const r = await fetch(`/api/stonedust/${priceModal._id}/price`, {
+    const d = await apiFetch(`/api/stonedust/${priceModal._id}/price`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ newPrice: Number(newPrice), reason: priceReason }),
     });
-    const d = await r.json();
     if (d.success) { toast.success('Price updated'); setPriceModal(null); setNewPrice(''); setPriceReason(''); load(); }
     else toast.error(d.error);
   };

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatNaira, formatDate } from '@/lib/format';
 import { btnPrimaryCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function CustomerReportPage() {
   const [rows, setRows] = useState([]);
@@ -18,8 +19,7 @@ export default function CustomerReportPage() {
     setLoading(true);
     let url = `/api/reports/customers?startDate=${startDate}&endDate=${endDate}`;
     if (search) url += `&search=${encodeURIComponent(search)}`;
-    const res = await fetch(url);
-    const d = await res.json();
+    const d = await apiFetch(url);
     if (d.success) setRows(d.data);
     setLoading(false);
   };

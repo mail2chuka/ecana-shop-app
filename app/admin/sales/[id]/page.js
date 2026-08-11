@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { formatNaira, formatDate, formatDateTime, formatSaleTypeLabel, saleItemUnitLabel } from '@/lib/format';
 import { Modal, Field, FormButtons, inputCls, CurrencyInput } from '@/components/ui';
 import { isWalkInCustomer } from '@/lib/shopStock';
+import { apiFetch } from '@/lib/apiClient';
 
 const blankSurchargeForm = { method: 'flat_total', perUnitAmount: '', totalAmount: '', reason: '', confirmPin: '' };
 const blankRefundForm = { amount: '', reason: '', confirmPin: '' };
@@ -53,9 +54,9 @@ export default function SaleDetailPage() {
 
   const load = () => {
     Promise.all([
-      fetch(`/api/sales/${id}`).then(r => r.json()),
-      fetch('/api/cement-brands').then(r => r.json()),
-      fetch('/api/trucks').then(r => r.json()),
+      apiFetch(`/api/sales/${id}`),
+      apiFetch('/api/cement-brands'),
+      apiFetch('/api/trucks'),
     ]).then(([d, b, t]) => {
       if (d.success) setSale(d.data);
       if (b.success) setBrands(b.data);
@@ -67,12 +68,11 @@ export default function SaleDetailPage() {
 
   const handleDelete = async () => {
     setDeleting(true);
-    const res = await fetch(`/api/sales/${id}`, {
+    const data = await apiFetch(`/api/sales/${id}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason: deleteReason }),
     });
-    const data = await res.json();
     setDeleting(false);
     if (data.success) {
       toast.success('Sale deleted, balance and stock reversed');
@@ -134,7 +134,7 @@ export default function SaleDetailPage() {
         actualQuantity: parseFloat(it.actualQuantity || it.billQuantity),
         unitPrice: parseFloat(it.unitPrice),
       }));
-      const r = await fetch(`/api/sales/${id}`, {
+      const d = await apiFetch(`/api/sales/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -148,7 +148,6 @@ export default function SaleDetailPage() {
           confirmPin: editPin,
         }),
       });
-      const d = await r.json();
       if (d.success) {
         toast.success('Sale updated');
         setSale(d.data);
@@ -170,12 +169,11 @@ export default function SaleDetailPage() {
     e.preventDefault();
     setSubmittingSurcharge(true);
     try {
-      const r = await fetch(`/api/sales/${id}/surcharge`, {
+      const d = await apiFetch(`/api/sales/${id}/surcharge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(surchargeForm),
       });
-      const d = await r.json();
       if (d.success) {
         toast.success('Surcharge applied');
         setSale(d.data);
@@ -194,12 +192,11 @@ export default function SaleDetailPage() {
     e.preventDefault();
     setSubmittingRefund(true);
     try {
-      const r = await fetch(`/api/sales/${id}/refund`, {
+      const d = await apiFetch(`/api/sales/${id}/refund`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(refundForm),
       });
-      const d = await r.json();
       if (d.success) {
         toast.success('Fund applied');
         setSale(d.data);

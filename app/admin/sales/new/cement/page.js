@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { formatNaira, formatCustomerLabel, pluralizeUnit } from '@/lib/format';
 import { CurrencyInput } from '@/components/ui';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function NewCementSalePage() {
   const router = useRouter();
@@ -71,9 +72,9 @@ export default function NewCementSalePage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/atcs?availableForSale=true').then(r => r.json()),
-      fetch('/api/cement-brands').then(r => r.json()),
-      fetch('/api/customers').then(r => r.json()),
+      apiFetch('/api/atcs?availableForSale=true'),
+      apiFetch('/api/cement-brands'),
+      apiFetch('/api/customers'),
     ]).then(([a, b, c]) => {
       if (a.success) setAtcs(a.data);
       if (b.success) setBrands(b.data);
@@ -187,12 +188,11 @@ export default function NewCementSalePage() {
           notes: dist.notes,
         };
 
-        const r = await fetch('/api/sales', {
+        const d = await apiFetch('/api/sales', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(saleBody),
         });
-        const d = await r.json();
         if (!d.success) throw new Error(`Failed for ${dist.customerName}: ${d.error}`);
       }
 

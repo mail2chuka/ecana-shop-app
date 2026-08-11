@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatDate, formatCustomerLabel } from '@/lib/format';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const blankForm = {
@@ -39,8 +40,8 @@ export default function PaymentsPage() {
     if (sd) params.set('startDate', sd);
     if (ed) params.set('endDate', ed);
     const [p, c] = await Promise.all([
-      fetch(`/api/payments?${params.toString()}`).then(r => r.json()),
-      fetch('/api/customers').then(r => r.json()),
+      apiFetch(`/api/payments?${params.toString()}`),
+      apiFetch('/api/customers'),
     ]);
     if (p.success) setPayments(p.data);
     if (c.success) setCustomers(c.data);
@@ -91,7 +92,7 @@ export default function PaymentsPage() {
 
     setSubmitting(true);
     try {
-      const r = await fetch('/api/payments', {
+      const d = await apiFetch('/api/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -99,7 +100,6 @@ export default function PaymentsPage() {
           amount: Number(form.amount),
         }),
       });
-      const d = await r.json();
 
       if (d.success) {
         toast.success('Payment recorded');

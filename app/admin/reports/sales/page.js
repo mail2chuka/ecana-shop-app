@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatNaira, formatDate } from '@/lib/format';
 import { btnPrimaryCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
+import { apiFetch } from '@/lib/apiClient';
 
 function periodToDateRange(period, groupBy) {
   if (groupBy === 'year') return { start: `${period}-01-01`, end: `${period}-12-31` };
@@ -32,8 +33,8 @@ export default function SalesReportPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/cement-brands').then(r => r.json()),
-      fetch('/api/stonedust').then(r => r.json()),
+      apiFetch('/api/cement-brands'),
+      apiFetch('/api/stonedust'),
     ]).then(([b, p]) => {
       if (b.success) setCementBrands(b.data);
       if (p.success) setStoneProducts(p.data);
@@ -44,8 +45,7 @@ export default function SalesReportPage() {
     setLoading(true);
     const params = new URLSearchParams({ startDate, endDate, groupBy, sortDir: overrideSortDir || sortDir });
     if (brandId) params.set('brandId', brandId);
-    const res = await fetch(`/api/reports/sales?${params.toString()}`);
-    const d = await res.json();
+    const d = await apiFetch(`/api/reports/sales?${params.toString()}`);
     if (d.success) setData(d.data);
     setLoading(false);
   };

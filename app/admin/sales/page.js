@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { Loader, PageHeader, Card, EmptyRow, StatusPill, inputCls, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatDate } from '@/lib/format';
 import { hasModule } from '@/lib/modules';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 export default function SalesPage() {
@@ -28,8 +29,7 @@ export default function SalesPage() {
     if (filter.status) params.set('status', filter.status);
     if (filter.startDate) params.set('startDate', filter.startDate);
     if (filter.endDate) params.set('endDate', filter.endDate);
-    const r = await fetch(`/api/sales?${params.toString()}`);
-    const d = await r.json();
+    const d = await apiFetch(`/api/sales?${params.toString()}`);
     if (d.success) setSales(d.data);
     setLoading(false);
   };
@@ -39,12 +39,11 @@ export default function SalesPage() {
   const deleteSale = async (sale) => {
     const reason = prompt(`Delete sale ${sale.saleNumber}? This permanently removes it and reverses balance/stock. Reason:`);
     if (!reason) return;
-    const r = await fetch(`/api/sales/${sale._id}`, {
+    const d = await apiFetch(`/api/sales/${sale._id}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason }),
     });
-    const d = await r.json();
     if (d.success) { toast.success('Sale deleted, balance and stock reversed'); load(); }
     else toast.error(d.error);
   };

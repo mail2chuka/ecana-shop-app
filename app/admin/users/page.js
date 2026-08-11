@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, StatusPill, btnPrimaryCls, btnDangerCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatCustomerLabel } from '@/lib/format';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const ROLE_LABELS = {
@@ -36,8 +37,8 @@ export default function UsersPage() {
   const load = async () => {
     setLoading(true);
     const [u, c] = await Promise.all([
-      fetch('/api/users').then(r => r.json()),
-      fetch('/api/customers').then(r => r.json()),
+      apiFetch('/api/users'),
+      apiFetch('/api/customers'),
     ]);
     if (u.success) setUsers(u.data);
     if (c.success) setCustomers(c.data);
@@ -83,13 +84,11 @@ export default function UsersPage() {
           body.email = form.email;
           body.username = form.username;
         }
-        const r = await fetch(`/api/users/${editingUser._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        const d = await r.json();
+        const d = await apiFetch(`/api/users/${editingUser._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         if (d.success) { toast.success('Updated'); setShowModal(false); load(); }
         else toast.error(d.error);
       } else {
-        const r = await fetch('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
-        const d = await r.json();
+        const d = await apiFetch('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
         if (d.success) {
           toast.success(d.data.username ? `User created — username: ${d.data.username}` : 'User created');
           setShowModal(false); load();
@@ -107,11 +106,10 @@ export default function UsersPage() {
     if (pinForm.newPin !== pinForm.confirmPin) return toast.error('PINs do not match');
     setSubmittingPin(true);
     try {
-      const r = await fetch('/api/users/pin', {
+      const d = await apiFetch('/api/users/pin', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ currentPassword: pinForm.currentPassword, newPin: pinForm.newPin }),
       });
-      const d = await r.json();
       if (d.success) { toast.success('PIN updated'); setShowPinModal(false); setPinForm(blankPinForm); }
       else toast.error(d.error);
     } catch (err) {
@@ -123,16 +121,14 @@ export default function UsersPage() {
 
   const toggleActive = async (u) => {
     if (!confirm(`${u.isActive ? 'Deactivate' : 'Reactivate'} ${u.name}?`)) return;
-    const r = await fetch(`/api/users/${u._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive: !u.isActive }) });
-    const d = await r.json();
+    const d = await apiFetch(`/api/users/${u._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive: !u.isActive }) });
     if (d.success) { toast.success(u.isActive ? 'Deactivated' : 'Reactivated'); load(); }
     else toast.error(d.error);
   };
 
   const handleDelete = async (u) => {
     if (!confirm(`Permanently delete ${u.name}'s account? This cannot be undone — use Deactivate instead if you just want to disable their login.`)) return;
-    const r = await fetch(`/api/users/${u._id}`, { method: 'DELETE' });
-    const d = await r.json();
+    const d = await apiFetch(`/api/users/${u._id}`, { method: 'DELETE' });
     if (d.success) { toast.success('User deleted'); load(); }
     else toast.error(d.error);
   };

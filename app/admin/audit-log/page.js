@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { formatDateTime } from '@/lib/format';
 import { theadCls, tableScrollCls } from '@/components/ui';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function AuditLogPage() {
   const [logs, setLogs] = useState([]);
@@ -11,8 +12,7 @@ export default function AuditLogPage() {
 
   useEffect(() => {
     const q = entity ? `?entity=${entity}` : '';
-    fetch(`/api/audit-log${q}`)
-      .then(r => r.json())
+    apiFetch(`/api/audit-log${q}`)
       .then(d => { if (d.success) setLogs(d.data); })
       .finally(() => setLoading(false));
   }, [entity]);

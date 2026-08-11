@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Loader, PageHeader, Card } from '@/components/ui';
 import { formatNaira, formatNumber, pluralizeUnit } from '@/lib/format';
 import { hasAnyModule } from '@/lib/modules';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 // Mirrors the `allow` lists on the matching sidebar links in components/AdminShell.js — a shortcut
@@ -55,8 +56,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/dashboard')
-      .then(r => r.json())
+    apiFetch('/api/dashboard')
       .then(d => { if (d.success) setStats(d.data); })
       .catch(() => toast.error('Failed to load'))
       .finally(() => setLoading(false));

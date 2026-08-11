@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader, PageHeader, Card, EmptyRow, StatusPill, btnPrimaryCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatDate } from '@/lib/format';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const statusColor = { trialing: 'blue', active: 'green', past_due: 'amber', canceled: 'gray' };
@@ -18,8 +19,7 @@ export default function SubscriptionPage() {
 
   const load = async () => {
     setLoading(true);
-    const r = await fetch('/api/subscription');
-    const d = await r.json();
+    const d = await apiFetch('/api/subscription');
     if (d.success) setData(d.data);
     else toast.error(d.error || 'Failed to load');
     setLoading(false);
@@ -31,8 +31,7 @@ export default function SubscriptionPage() {
     const reference = searchParams.get('reference');
     if (!reference) return;
     setVerifying(true);
-    fetch(`/api/subscription/paystack/verify?reference=${encodeURIComponent(reference)}`)
-      .then((r) => r.json())
+    apiFetch(`/api/subscription/paystack/verify?reference=${encodeURIComponent(reference)}`)
       .then((d) => {
         if (d.success) toast.success(d.data.alreadyProcessed ? 'Payment already recorded' : 'Payment confirmed — subscription extended');
         else toast.error(d.error || 'Could not confirm payment');
@@ -48,10 +47,9 @@ export default function SubscriptionPage() {
   const pay = async (plan) => {
     setPaying(plan);
     try {
-      const r = await fetch('/api/subscription/paystack/initialize', {
+      const d = await apiFetch('/api/subscription/paystack/initialize', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan }),
       });
-      const d = await r.json();
       if (d.success) window.location.href = d.data.authorizationUrl;
       else { toast.error(d.error); setPaying(null); }
     } catch (err) {

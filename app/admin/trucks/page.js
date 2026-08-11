@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, StatusPill, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const blankForm = { plateNumber: '', driverName: '', driverPhone: '', type: 'cement', capacityTonnes: '', ownership: 'own' };
@@ -15,8 +16,7 @@ export default function TrucksPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const load = async () => {
-    const r = await fetch('/api/trucks');
-    const d = await r.json();
+    const d = await apiFetch('/api/trucks');
     if (d.success) setTrucks(d.data);
     setLoading(false);
   };
@@ -48,8 +48,7 @@ export default function TrucksPage() {
       const url = editing ? `/api/trucks/${editing._id}` : '/api/trucks';
       const method = editing ? 'PUT' : 'POST';
       const body = { ...form, capacityTonnes: form.capacityTonnes ? Number(form.capacityTonnes) : null };
-      const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      const d = await r.json();
+      const d = await apiFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (d.success) { toast.success(editing ? 'Updated' : 'Created'); setShowModal(false); load(); }
       else toast.error(d.error);
     } catch (err) {
@@ -61,8 +60,7 @@ export default function TrucksPage() {
 
   const handleDelete = async (t) => {
     if (!confirm(`Deactivate ${t.plateNumber}?`)) return;
-    const r = await fetch(`/api/trucks/${t._id}`, { method: 'DELETE' });
-    const d = await r.json();
+    const d = await apiFetch(`/api/trucks/${t._id}`, { method: 'DELETE' });
     if (d.success) { toast.success('Deactivated'); load(); }
     else toast.error(d.error);
   };

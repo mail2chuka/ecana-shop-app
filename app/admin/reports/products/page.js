@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { formatNaira } from '@/lib/format';
 import { btnPrimaryCls, theadCls, tableScrollCls } from '@/components/ui';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function ProductReportPage() {
   const [rows, setRows] = useState([]);
@@ -17,8 +18,8 @@ export default function ProductReportPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/cement-brands').then(r => r.json()),
-      fetch('/api/stonedust').then(r => r.json()),
+      apiFetch('/api/cement-brands'),
+      apiFetch('/api/stonedust'),
     ]).then(([b, p]) => {
       if (b.success) setCementBrands(b.data);
       if (p.success) setStoneProducts(p.data);
@@ -29,8 +30,7 @@ export default function ProductReportPage() {
     setLoading(true);
     const params = new URLSearchParams({ startDate, endDate });
     if (brandId) params.set('brandId', brandId);
-    const res = await fetch(`/api/reports/products?${params.toString()}`);
-    const d = await res.json();
+    const d = await apiFetch(`/api/reports/products?${params.toString()}`);
     if (d.success) setRows(d.data);
     setLoading(false);
   };

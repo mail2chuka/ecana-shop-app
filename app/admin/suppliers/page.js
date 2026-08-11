@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card, StatusPill, EmptyRow, Modal, FormButtons, Field, inputCls, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const blankForm = { name: '', type: 'quarry', address: '', phone: '' };
@@ -16,8 +17,7 @@ export default function SuppliersPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const load = async () => {
-    const r = await fetch('/api/suppliers?type=quarry');
-    const d = await r.json();
+    const d = await apiFetch('/api/suppliers?type=quarry');
     if (d.success) setSuppliers(d.data);
     setLoading(false);
   };
@@ -42,8 +42,7 @@ export default function SuppliersPage() {
     try {
       const url = editing ? `/api/suppliers/${editing._id}` : '/api/suppliers';
       const method = editing ? 'PUT' : 'POST';
-      const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
-      const d = await r.json();
+      const d = await apiFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       if (d.success) {
         toast.success(editing ? 'Updated' : 'Created');
         setShowModal(false);
@@ -60,8 +59,7 @@ export default function SuppliersPage() {
 
   const handleDelete = async (s) => {
     if (!confirm(`Deactivate ${s.name}?`)) return;
-    const r = await fetch(`/api/suppliers/${s._id}`, { method: 'DELETE' });
-    const d = await r.json();
+    const d = await apiFetch(`/api/suppliers/${s._id}`, { method: 'DELETE' });
     if (d.success) { toast.success('Deactivated'); load(); }
     else toast.error(d.error);
   };

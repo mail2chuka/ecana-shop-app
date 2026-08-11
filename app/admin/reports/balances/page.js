@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatNaira } from '@/lib/format';
 import { tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
+import { apiFetch } from '@/lib/apiClient';
 
 const formatMonth = (ym) => {
   const [y, m] = ym.split('-').map(Number);
@@ -22,8 +23,7 @@ export default function BalancesReportPage() {
     const params = new URLSearchParams({ filter });
     if (monthFrom) params.set('monthFrom', monthFrom);
     if (monthTo) params.set('monthTo', monthTo);
-    const res = await fetch(`/api/reports/balances?${params.toString()}`);
-    const d = await res.json();
+    const d = await apiFetch(`/api/reports/balances?${params.toString()}`);
     if (d.success) setData(d.data);
     setLoading(false);
   };

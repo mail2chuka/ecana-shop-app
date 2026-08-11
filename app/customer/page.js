@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { formatNaira, formatDate, formatCustomerLabel } from '@/lib/format';
 import { Loader, Card, theadCls, tableScrollCls } from '@/components/ui';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 export default function CustomerPortalPage() {
@@ -10,8 +11,7 @@ export default function CustomerPortalPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/customer-portal/statement')
-      .then(r => r.json())
+    apiFetch('/api/customer-portal/statement')
       .then(d => { if (d.success) setData(d.data); else toast.error(d.error); })
       .finally(() => setLoading(false));
   }, []);

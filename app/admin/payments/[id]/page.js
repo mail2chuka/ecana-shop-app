@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card, Modal, Field, FormButtons, inputCls, CurrencyInput, btnPrimaryCls } from '@/components/ui';
 import { formatNaira, formatDateTime } from '@/lib/format';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const METHOD_LABELS = { cash: 'Cash', transfer: 'Bank Transfer', pos: 'POS', cheque: 'Cheque' };
@@ -23,8 +24,7 @@ export default function PaymentDetailPage() {
   const [saving, setSaving] = useState(false);
 
   const load = () => {
-    fetch(`/api/payments/${id}`)
-      .then(r => r.json())
+    apiFetch(`/api/payments/${id}`)
       .then(d => { if (d.success) setPayment(d.data); else toast.error(d.error || 'Failed to load'); })
       .finally(() => setLoading(false));
   };
@@ -48,12 +48,11 @@ export default function PaymentDetailPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const r = await fetch(`/api/payments/${id}`, {
+      const d = await apiFetch(`/api/payments/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...editForm, amount: Number(editForm.amount) }),
       });
-      const d = await r.json();
       if (d.success) {
         toast.success('Payment updated');
         setPayment(d.data);

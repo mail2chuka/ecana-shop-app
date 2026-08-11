@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira } from '@/lib/format';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const blankForm = { name: '', abbreviation: '', grade: '', bagSize: 50, currentPricePerBag: '', depot: '' };
@@ -20,7 +21,7 @@ export default function CementBrandsPage() {
   const [priceReason, setPriceReason] = useState('');
 
   const load = async () => {
-    const b = await fetch('/api/cement-brands').then(r => r.json());
+    const b = await apiFetch('/api/cement-brands');
     if (b.success) setBrands(b.data);
     setLoading(false);
   };
@@ -49,8 +50,7 @@ export default function CementBrandsPage() {
       const url = editing ? `/api/cement-brands/${editing._id}` : '/api/cement-brands';
       const method = editing ? 'PUT' : 'POST';
       const body = { ...form, currentPricePerBag: Number(form.currentPricePerBag), bagSize: Number(form.bagSize) };
-      const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      const d = await r.json();
+      const d = await apiFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (d.success) {
         toast.success(editing ? 'Updated' : 'Created');
         setShowModal(false);
@@ -65,8 +65,7 @@ export default function CementBrandsPage() {
 
   const handleDelete = async (b) => {
     if (!confirm(`Deactivate ${b.name}?`)) return;
-    const r = await fetch(`/api/cement-brands/${b._id}`, { method: 'DELETE' });
-    const d = await r.json();
+    const d = await apiFetch(`/api/cement-brands/${b._id}`, { method: 'DELETE' });
     if (d.success) { toast.success('Deactivated'); load(); }
     else toast.error(d.error);
   };
@@ -74,12 +73,11 @@ export default function CementBrandsPage() {
   const handlePriceChange = async (e) => {
     e.preventDefault();
     if (!newPrice || newPrice <= 0) return toast.error('Enter a valid price');
-    const r = await fetch(`/api/cement-brands/${priceModal._id}/price`, {
+    const d = await apiFetch(`/api/cement-brands/${priceModal._id}/price`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ newPrice: Number(newPrice), reason: priceReason }),
     });
-    const d = await r.json();
     if (d.success) {
       toast.success('Price updated');
       setPriceModal(null);

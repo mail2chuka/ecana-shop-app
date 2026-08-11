@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card, Modal, Field, FormButtons, inputCls, CurrencyInput, btnPrimaryCls } from '@/components/ui';
 import { formatNaira, formatDateTime } from '@/lib/format';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const blankEditForm = { amount: '', reason: '', confirmPin: '' };
@@ -21,8 +22,7 @@ export default function StandaloneAdjustmentDetailPage() {
   const [saving, setSaving] = useState(false);
 
   const load = () => {
-    fetch(`/api/adjustments/${id}`)
-      .then(r => r.json())
+    apiFetch(`/api/adjustments/${id}`)
       .then(d => { if (d.success) setAdj(d.data); else toast.error(d.error || 'Failed to load'); })
       .finally(() => setLoading(false));
   };
@@ -38,12 +38,11 @@ export default function StandaloneAdjustmentDetailPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const r = await fetch(`/api/adjustments/${id}`, {
+      const d = await apiFetch(`/api/adjustments/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...editForm, amount: Number(editForm.amount) }),
       });
-      const d = await r.json();
       if (d.success) {
         toast.success(`${label} updated`);
         setAdj(d.data);

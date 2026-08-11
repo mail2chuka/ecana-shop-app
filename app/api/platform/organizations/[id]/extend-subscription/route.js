@@ -7,6 +7,7 @@ import { runUnscoped, runWithOrg } from '@/lib/tenantScope';
 import { extendSubscription } from '@/lib/subscription';
 import { requireObjectId } from '@/lib/validate';
 import { ApiError } from '@/lib/apiError';
+import { rethrowIfNextInternal } from '@/lib/routeErrors';
 
 async function requireSuperAdmin() {
   const session = await getServerSession(authOptions);
@@ -15,10 +16,10 @@ async function requireSuperAdmin() {
 }
 
 export async function POST(request, { params }) {
-  const session = await requireSuperAdmin();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  await dbConnect();
   try {
+    const session = await requireSuperAdmin();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    await dbConnect();
     const { id } = await params;
     requireObjectId(id, 'organization id');
     const { plan } = await request.json();
@@ -35,6 +36,7 @@ export async function POST(request, { params }) {
 
     return NextResponse.json({ success: true, data: updated });
   } catch (e) {
+    rethrowIfNextInternal(e);
     return NextResponse.json({ error: e.message }, { status: e.status || 400 });
   }
 }

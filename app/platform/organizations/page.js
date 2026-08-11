@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, StatusPill, btnPrimaryCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatDate } from '@/lib/format';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const ALL_MODULES = [
@@ -38,8 +39,7 @@ export default function PlatformOrganizationsPage() {
 
   const load = async () => {
     setLoading(true);
-    const r = await fetch('/api/platform/organizations');
-    const d = await r.json();
+    const d = await apiFetch('/api/platform/organizations');
     if (d.success) setOrgs(d.data);
     else toast.error(d.error || 'Failed to load');
     setLoading(false);
@@ -65,10 +65,9 @@ export default function PlatformOrganizationsPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const r = await fetch('/api/platform/organizations', {
+      const d = await apiFetch('/api/platform/organizations', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form),
       });
-      const d = await r.json();
       if (d.success) { toast.success('Organization created'); setShowModal(false); setForm(blankForm); load(); }
       else toast.error(d.error);
     } catch (err) {

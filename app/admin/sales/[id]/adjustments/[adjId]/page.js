@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card, Modal, Field, FormButtons, inputCls, CurrencyInput, btnPrimaryCls } from '@/components/ui';
 import { formatNaira, formatDateTime } from '@/lib/format';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const blankEditForm = { amount: '', method: 'flat_total', reason: '', confirmPin: '' };
@@ -22,8 +23,7 @@ export default function AdjustmentDetailPage() {
   const [saving, setSaving] = useState(false);
 
   const load = () => {
-    fetch(`/api/sales/${id}`)
-      .then(r => r.json())
+    apiFetch(`/api/sales/${id}`)
       .then(d => {
         if (d.success) {
           setSale(d.data);
@@ -49,12 +49,11 @@ export default function AdjustmentDetailPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const r = await fetch(`/api/sales/${id}/adjustments/${adjId}`, {
+      const d = await apiFetch(`/api/sales/${id}/adjustments/${adjId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...editForm, amount: Number(editForm.amount) }),
       });
-      const d = await r.json();
       if (d.success) {
         toast.success(`${label} updated`);
         setSale(d.data);

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, StatusPill, btnPrimaryCls, tableActionCls, tableDangerActionCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatNumber, formatDate, formatCustomerLabel } from '@/lib/format';
 import { isWalkInCustomer, isShopCustomer } from '@/lib/shopStock';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const blankProductForm = { name: '', unit: '', price: '', cementBrand: '' };
@@ -57,7 +58,7 @@ export default function ShopPage() {
     const params = new URLSearchParams({ type: 'shop' });
     if (sd) params.set('startDate', sd);
     if (ed) params.set('endDate', ed);
-    const s = await fetch(`/api/sales?${params.toString()}`).then(r => r.json());
+    const s = await apiFetch(`/api/sales?${params.toString()}`);
     if (s.success) setSales(s.data);
     setHistoryLoading(false);
   };
@@ -71,8 +72,8 @@ export default function ShopPage() {
   const load = async () => {
     setLoading(true);
     const [p, c] = await Promise.all([
-      fetch('/api/shop-products').then(r => r.json()),
-      fetch('/api/customers').then(r => r.json()),
+      apiFetch('/api/shop-products'),
+      apiFetch('/api/customers'),
     ]);
     if (p.success) setProducts(p.data);
     if (c.success) {
@@ -127,8 +128,7 @@ export default function ShopPage() {
       const url = editingProduct ? `/api/shop-products/${editingProduct._id}` : '/api/shop-products';
       const method = editingProduct ? 'PUT' : 'POST';
       const body = { ...productForm, price: productForm.price === '' ? undefined : Number(productForm.price) };
-      const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      const d = await r.json();
+      const d = await apiFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (d.success) { toast.success(editingProduct ? 'Updated' : 'Product added'); setShowProductModal(false); load(); }
       else toast.error(d.error);
     } catch (err) {
@@ -140,8 +140,7 @@ export default function ShopPage() {
 
   const handleDeactivateProduct = async (p) => {
     if (!confirm(`Deactivate ${p.name}?`)) return;
-    const r = await fetch(`/api/shop-products/${p._id}`, { method: 'DELETE' });
-    const d = await r.json();
+    const d = await apiFetch(`/api/shop-products/${p._id}`, { method: 'DELETE' });
     if (d.success) { toast.success('Deactivated'); load(); }
     else toast.error(d.error);
   };
@@ -153,8 +152,7 @@ export default function ShopPage() {
     setStockInSubmitting(true);
     try {
       const body = { product: stockInForm.product, quantity: Number(stockInForm.quantity), description: stockInForm.description };
-      const r = await fetch('/api/shop-products/stock-in', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      const d = await r.json();
+      const d = await apiFetch('/api/shop-products/stock-in', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (d.success) { toast.success('Stock added'); setShowStockInModal(false); load(); }
       else toast.error(d.error);
     } catch (err) {
@@ -216,7 +214,7 @@ export default function ShopPage() {
         actualQuantity: c.qty,
         unitPrice: c.price,
       }));
-      const r = await fetch('/api/sales', {
+      const d = await apiFetch('/api/sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -231,7 +229,6 @@ export default function ShopPage() {
           paymentMethod,
         }),
       });
-      const d = await r.json();
       if (d.success) {
         toast.success(`Sale ${d.data.saleNumber} recorded`);
         setCart([]); setSelectedCustomer(null); setCustomerSearch('');
@@ -249,12 +246,11 @@ export default function ShopPage() {
   const deleteSale = async (sale) => {
     const reason = prompt(`Delete sale ${sale.saleNumber}? This permanently removes it and restores stock. Reason:`);
     if (!reason) return;
-    const r = await fetch(`/api/sales/${sale._id}`, {
+    const d = await apiFetch(`/api/sales/${sale._id}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason }),
     });
-    const d = await r.json();
     if (d.success) { toast.success('Sale deleted, stock restored'); load(); }
     else toast.error(d.error);
   };

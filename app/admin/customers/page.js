@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Loader, PageHeader, Card, EmptyRow, Modal, FormButtons, Field, inputCls, CurrencyInput, btnPrimaryCls, theadCls, tableScrollCls } from '@/components/ui';
 import { formatNaira, formatCustomerLabel } from '@/lib/format';
+import { apiFetch } from '@/lib/apiClient';
 import toast from 'react-hot-toast';
 
 const blankForm = {
@@ -34,8 +35,7 @@ export default function CustomersPage() {
     setLoading(true);
     const params = new URLSearchParams();
     if (q) params.set('search', q);
-    const r = await fetch(`/api/customers?${params.toString()}`);
-    const d = await r.json();
+    const d = await apiFetch(`/api/customers?${params.toString()}`);
     if (d.success) setCustomers(d.data);
     setLoading(false);
   };
@@ -74,8 +74,7 @@ export default function CustomersPage() {
         creditLimit: form.creditLimit === '' ? null : Number(form.creditLimit),
         openingBalance: Number(form.openingBalance) || 0,
       };
-      const r = await fetch('/api/customers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      const d = await r.json();
+      const d = await apiFetch('/api/customers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (d.success) { toast.success('Created'); setShowModal(false); load(search); }
       else toast.error(d.error);
     } catch (err) {

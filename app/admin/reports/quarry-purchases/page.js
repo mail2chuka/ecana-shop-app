@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatNaira, formatDate } from '@/lib/format';
 import { btnPrimaryCls, tableActionCls, theadCls, tableScrollCls } from '@/components/ui';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function QuarryPurchasesReportPage() {
   const [rows, setRows] = useState([]);
@@ -17,15 +18,14 @@ export default function QuarryPurchasesReportPage() {
   const [orientation, setOrientation] = useState('portrait');
 
   useEffect(() => {
-    fetch('/api/suppliers?type=quarry').then(r => r.json()).then(d => { if (d.success) setQuarries(d.data); });
+    apiFetch('/api/suppliers?type=quarry').then(d => { if (d.success) setQuarries(d.data); });
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
     const params = new URLSearchParams({ startDate, endDate });
     if (quarryId) params.set('quarry', quarryId);
-    const res = await fetch(`/api/quarry-purchases?${params.toString()}`);
-    const d = await res.json();
+    const d = await apiFetch(`/api/quarry-purchases?${params.toString()}`);
     if (d.success) setRows(d.data);
     setLoading(false);
   };
